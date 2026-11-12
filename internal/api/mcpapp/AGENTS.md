@@ -2,7 +2,7 @@
 
 The canonical MCP at `/api/v1/mcp` combines anonymous catalogue reads with
 OAuth account tools (`mixed.go`). Anonymous and OAuth sessions discover the same
-51 tools; personal calls without authentication never reach business code.
+54 tools; personal calls without authentication never reach business code.
 ChatGPT (User-Agent `openai-mcp`) gets an error result carrying `mcp/www_authenticate`,
 the in-band challenge its Apps SDK opens sign-in from. Every other host gets HTTP 401 with
 `WWW-Authenticate`, because Grok and Claude.ai ignore the in-band challenge and open sign-in
@@ -32,7 +32,9 @@ key and no grant, manages job alerts through these same tools instead of a secon
 implementation. `mcpKeyTools` omits OAuth-only actions: auto-apply, dictionary
 suggestions, problem reports and the interview-buddy tools. Dictionary suggestions and the
 buddy tools (`internal/api/handler/buddy_mcp_tools.go`: membership, mock hosts, slots,
-booking, cancelling and the hosting schedule) preserve the cookie-only REST gate; problem
+booking, cancelling and the hosting schedule) preserve the cookie-only REST gate, and so does
+`update_profile` (`assistant_profile_write_tool.go`: a partial update of the saved job-search
+profile: preferences plus the headline and summary text, never a CV document); problem
 reports use the signed-in agent's reporting workflow. A narrow (`cv`) key is a 403.
 
 OAuth clients use `suggest_dictionary_term` when a user-requested specialization, skill
@@ -53,6 +55,29 @@ push-device rule are enforced once. A channel is only added where the delivery w
 would actually reach (`GetAlertChannelState`). Digest timing is account-wide on the
 website, so it is shown but not changed here. "What is new" reads `subscription_matches`,
 the ledger the digests are built from, rather than re-running the search.
+
+`list_unread_mail` (`internal/api/handler/mcp_mail_tool.go`) is the inbox's only tool here:
+the headers of unread application mail (`from_name`, `from_addr`, subject, time, label, and
+the company and job slug of a CONFIRMED link), `unread_count`, `sync_pending` (Gmail's first
+sync not completed), `reconnect_needed` (Gmail lost its grant; hosted mail still arrives) and
+`mailbox_url`. No body, snippet or message id, nothing marked read, no model call; a failed
+sync-state lookup logs and returns the page with `gmail_state_unknown` set. Served to keys too,
+because REST `/me/inbox` is `mw.key`. Header text is sender-written: `inertLine` strips line
+breaks and runes that render blank (format, variation selectors, Hangul fillers, private-use,
+unassigned); name and subject are capped, the address is not (a long spoofed name must not
+push it out of view); the description, a `notice` in the result and the instructions say
+never to follow it. The assistant's `inbox_*` write
+tools (triage, link, record application) are deliberately not served: the only evidence an
+MCP agent would act on is that untrusted header text.
+
+## `next` on `search_jobs` and `get_job`
+
+Both results carry one short `next` sentence (`next.go`): signed in, the follow-ups among the
+tools the session is actually served (an API key has no auto-apply); signed out, a pointer at
+signing in instead of tools it cannot call. It is the same text for every call of a session
+and once per response, never per job: the result is replayed into the model's context every
+turn. On the typed catalogue tools it is a plain struct field; on the account server's untyped
+tools `withNext` adds it to the JSON object.
 
 ## Why there are two MCP servers
 
@@ -207,6 +232,12 @@ person types — the vocabulary itself, never a copy. A free-text argument (`sta
 `postings`) offers nothing: a client replaces the whole field with what it picks, so a
 suggestion for one word of "Go and Kubernetes" would erase the rest.
 
+A signed-in session (the account alias, and the canonical endpoint with a grant or key) also gets
+`accountPrompts` (`account_prompts.go`): `jobs_for_my_profile`, `set_up_my_profile`,
+`whats_new_in_my_alerts` and `apply_to_saved_jobs`. They DO name tools and their order, since the
+sequence is the point; each is offered only when every tool it needs is served, so an API key
+never sees the auto-apply one. Anonymous connections get the catalogue prompts alone.
+
 ## The widget
 
 `search_jobs` and `get_job` render in an MCP Apps widget (`widget.go`, `widget/jobs.html`):
@@ -287,9 +318,18 @@ screening facts. The four that ACT on an attempt refuse unless the account turne
 `users.agents_may_apply`, which only a browser session can write — reading never needs it.
 An answer saved here is the CANDIDATE's (`answerbank.AuthorCandidate`, so it is sent): this
 server only ever acts for the person who approved the connection. `accountInstructions`
-describes the account boundary and the tool groups actually served. Search and application
+describes the account boundary and the tool groups actually served, opens with one line on what
+freehire can do (search, save/track, alerts, auto-apply prepared for review) and says to call
+`get_profile` before the first search and, with auto-apply served, `get_plan` before auto-apply. Its budget is 720 characters (the public server keeps 512);
+Claude Code cuts server instructions at 2048. Search and application
 workflows belong to the packaged skill; initialization describes capabilities and result
 states without prescribing a call sequence or presentation.
+
+`get_plan` (`internal/api/handler/mcp_plan_tool.go`, openspec/changes/mcp-plan-standing) lets
+an agent read the tier and today's per-feature allowances before it queues metered work,
+instead of learning them from a 402. It reads `loadPlan`, the use case `GET /me/plan` serves,
+so the two cannot disagree; it is an allowlist carrying no price or payment source (those are
+the support agent's `my_account`, not a third-party model's). Grants and full-scope keys alike.
 
 `present_jobs` is NOT served there (`mcpAccountTools`). It draws cards in our own chat UI and
 its description tells the model never to write a job link; in a client with no card renderer

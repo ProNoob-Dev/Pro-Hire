@@ -1315,14 +1315,23 @@ type Querier interface {
 	// once instead of repeating the FILTER expressions in a HAVING.
 	ComputeInsightsRoleStatsGlobal(ctx context.Context, prevTs pgtype.Timestamptz) ([]ComputeInsightsRoleStatsGlobalRow, error)
 	// Compute on the read connection; publish the result separately on the writer.
-	// The salary history: effective-salary percentiles per (category, currency, period,
-	// month a posting was PUBLISHED), the current month and the eleven before it. Open and
-	// closed postings alike — a posting closed since still records what was offered that
-	// month — and canonical, public ones only. A month a posting belongs to is its
-	// existence date (see the file header), so one found in June but published in March
-	// counts in March. Months under @min_sample are not stored: a line through a handful
-	// of postings a month is noise drawn as a trend.
+	// The salary history: effective-salary percentiles per (currency, period, month a
+	// posting was PUBLISHED), the current month and the eleven before it, for every role ×
+	// grade scope — CUBE(category, seniority), '' meaning every value, so "all roles" and
+	// "all grades" are rows of their own. Country-agnostic: the per-country history is
+	// ComputeInsightsSalaryMonthlyByCountry, kept apart because unnesting countries would
+	// count a posting once per country here. Open and closed postings alike — a posting
+	// closed since still records what was offered that month — and canonical, public ones
+	// only. A month a posting belongs to is its existence date (see the file header), so
+	// one found in June but published in March counts in March. A posting without a grade
+	// counts toward its role's all-grades row but has no grade row: grouping(seniority) = 0
+	// with seniority '' would collide with the all-grades row. Months under @min_sample
+	// are not stored: a line through a handful of postings a month is noise drawn as a trend.
 	ComputeInsightsSalaryMonthly(ctx context.Context, arg ComputeInsightsSalaryMonthlyParams) ([]ComputeInsightsSalaryMonthlyRow, error)
+	// Compute on the read connection; publish the result separately on the writer.
+	// The per-country salary history: ComputeInsightsSalaryMonthly's scopes and rules with
+	// the country each posting is in (unnest), so a posting in two countries counts in both.
+	ComputeInsightsSalaryMonthlyByCountry(ctx context.Context, arg ComputeInsightsSalaryMonthlyByCountryParams) ([]ComputeInsightsSalaryMonthlyByCountryRow, error)
 	// Compute on the read connection; publish the result separately on the writer.
 	// Per-country salary bands (same CUBE of role scope, country from unnest).
 	ComputeInsightsSalaryStatsByCountry(ctx context.Context, minSample int32) ([]ComputeInsightsSalaryStatsByCountryRow, error)
@@ -1689,6 +1698,9 @@ type Querier interface {
 	// Link a provider identity to an account (first OAuth sign-in). The composite
 	// primary key rejects a duplicate identity.
 	CreateUserIdentity(ctx context.Context, arg CreateUserIdentityParams) error
+	// A partial update based on a missing-row snapshot must not replace a profile that
+	// another writer created meanwhile. No returned row means the caller must reload.
+	CreateUserProfileIfAbsent(ctx context.Context, arg CreateUserProfileIfAbsentParams) (UserProfile, error)
 	// Turn ONE email digest off, scoped to its owner. Deactivate only — it cannot
 	// create a subscription and cannot turn one back on, so a leaked link can silence
 	// somebody but never sign them up for anything. Returns the affected row count; 0
@@ -4017,7 +4029,8 @@ type Querier interface {
 	ListBookingsDueForReminder(ctx context.Context, arg ListBookingsDueForReminderParams) ([]ListBookingsDueForReminderRow, error)
 	// Audience reader and ledger writer for one-off campaigns (internal/engage/broadcast).
 	// Everyone who can be mailed and has not received this campaign yet. A non-empty half ('a' or
-	// 'b') narrows that to one side of a split test.
+	// 'b') narrows that to one side of a split test, and a non-empty timezones list to the
+	// accounts whose stored timezone is one of them (how a campaign reaches one country).
 	//
 	// No signup window, unlike the onboarding queries: a campaign is addressed to the
 	// whole audience by definition, and the launch it announces matters as much to
@@ -4668,8 +4681,9 @@ type Querier interface {
 	// seniorities are the per-grade bands. Bands below the sample floor are already
 	// absent from the rollup.
 	ListInsightsSalaryByCategory(ctx context.Context, category string) ([]ListInsightsSalaryByCategoryRow, error)
-	// One category's stored months, every (currency, period) it has.
-	ListInsightsSalaryHistory(ctx context.Context, category string) ([]ListInsightsSalaryHistoryRow, error)
+	// One role × grade × country scope's stored months ('' = every value), every
+	// (currency, period) it has.
+	ListInsightsSalaryHistory(ctx context.Context, arg ListInsightsSalaryHistoryParams) ([]ListInsightsSalaryHistoryRow, error)
 	// All retained weekly snapshots for a set of skills (a caller's own profile
 	// skills), newest first per skill.
 	ListInsightsSkillHistory(ctx context.Context, skills []string) ([]InsightsSkillHistory, error)
@@ -6202,6 +6216,10 @@ type Querier interface {
 	// scheduled runs says cmd/push-receipts is not draining — the one failure this queue can
 	// have and the one it would otherwise report as a perfectly healthy backlog.
 	PushTicketOutboxMetrics(ctx context.Context) (PushTicketOutboxMetricsRow, error)
+	// The owner's verdict on their own support conversation, only once it holds a reply: a blank
+	// session is handed back on the next create, so a vote on it would land on a conversation not
+	// yet had. 0 rows means not theirs, not support, or nothing answered yet.
+	RateSupportSession(ctx context.Context, arg RateSupportSessionParams) (int64, error)
 	// A withdrawn mentor resubmits for review: back to pending, pause switch cleared, no
 	// auto-approval. The status guard is symmetric with DecideMentorProfile's — it makes
 	// resubmitting a profile that was never withdrawn match no row, which the repository

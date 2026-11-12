@@ -64,6 +64,8 @@ func mcpAccountTools(assistants *assistantHandlers, origin string) []assistant.T
 	// Dictionary suggestions are cookie-only over REST; keep the corresponding
 	// account tool with OAuth grants rather than widening full-scope API keys.
 	all = append(all, assistants.dictionaryMCPTools()...)
+	// Profile writes are cookie-only over REST (PUT /me/profile), so grant-only here too.
+	all = append(all, assistants.profileMCPTools()...)
 	all = append(all, assistants.buddies.mcpTools()...)
 	return append(all, assistants.problemMCPTools()...)
 }
@@ -81,6 +83,10 @@ func mcpKeyTools(assistants *assistantHandlers, origin string) []assistant.Tool 
 	all := append(assistants.assistantDiscoveryTools(), assistants.assistantTrackingTools()...)
 	all = append(all, assistants.reportMCPTools()...)
 	all = append(all, assistants.subscriptionMCPTools(origin)...)
+	// REST /me/inbox admits a full-scope key, so the headers-only mail read does too.
+	all = append(all, assistants.unreadMailTool(origin))
+	// Read-only, and GET /me/plan is open to a key over REST.
+	all = append(all, assistants.planMCPTool(origin))
 	// An MCP client keeps every result in its context, so it gets the bounded variants.
 	for i, t := range all {
 		switch t.Name {

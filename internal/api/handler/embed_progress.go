@@ -2,11 +2,13 @@ package handler
 
 import (
 	"bufio"
+	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/valyala/fasthttp"
 
+	"github.com/strelov1/freehire/internal/api/apigen"
 	"github.com/strelov1/freehire/internal/search/embedprogress"
 )
 
@@ -29,18 +31,28 @@ func newEmbedProgressHandlers(source embedProgressSource) *embedProgressHandlers
 	return &embedProgressHandlers{source: source, pingInterval: sseKeepalive}
 }
 
-func (h *embedProgressHandlers) register(api fiber.Router) {
-	api.Get("/stats/embeddings", h.Progress)
+func (h *embedProgressHandlers) register(api fiber.Router, contract fiber.Handler) {
+	api.Get("/stats/embeddings", contract)
 	api.Get("/stats/embeddings/stream",
 		h.Stream)
 }
 
-// Progress answers the current progress document. Unmeasured figures are null.
-func (h *embedProgressHandlers) Progress(c *fiber.Ctx) error {
+// GetEmbeddingProgress answers the current progress document. Unmeasured figures are null.
+func (h *embedProgressHandlers) GetEmbeddingProgress(context.Context) (*apigen.GetEmbeddingProgressOK, error) {
 	if h.source == nil {
-		return fiber.ErrServiceUnavailable
+		return nil, fiber.ErrServiceUnavailable
 	}
-	return c.JSON(fiber.Map{"data": h.source.Current()})
+	p := h.source.Current()
+	out := apigen.EmbeddingProgress{
+		Eligible: nilInt64(p.Eligible), Covered: nilInt64(p.Covered), SnapshotCovered: nilInt64(p.SnapshotCovered),
+		Queued: nilInt64(p.Queued), EtaSeconds: nilInt64(p.ETASeconds),
+		SnapshotAt: nilDateTime(p.SnapshotAt), MeasuredAt: nilDateTime(p.MeasuredAt),
+		RatePerMinute: apigen.NilFloat64{Null: true},
+	}
+	if p.RatePerMinute != nil {
+		out.RatePerMinute = apigen.NewNilFloat64(*p.RatePerMinute)
+	}
+	return &apigen.GetEmbeddingProgressOK{Data: out}, nil
 }
 
 // Stream sends the current document at once (once one has been sampled) and then one

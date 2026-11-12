@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -49,10 +50,27 @@ func stampsAccount(signedIn bool) mcp.Middleware {
 func newMixedServer(tools []assistant.Tool, userID int64, origin string, reader Reader) *mcp.Server {
 	instructions := "Public catalogue tools work without signing in. Personal tools require OAuth for this account. " +
 		"Geography filters form a union. "
-	account := accountInstructions(tools)
+	// An anonymous connection must not be told to call get_profile first: the call would
+	// answer with a sign-in challenge before an otherwise public search. It hears about the
+	// account through the result's next hint instead.
+	described := tools
+	if userID == 0 {
+		described = slices.DeleteFunc(slices.Clone(tools), func(t assistant.Tool) bool { return t.Name == "get_profile" })
+	}
+	account := accountInstructions(described)
 	instructions += strings.TrimPrefix(account, accountServerInstructions)
-	server := newCatalogueServer(reader, origin, instructions, "mixed")
+	if userID == 0 {
+		reader = forAnonymous(reader)
+	}
+	next := signedOutNext(origin)
+	if userID != 0 {
+		next = signedInNext(tools)
+	}
+	server := newCatalogueServer(reader, origin, instructions, "mixed", next)
 	server.AddReceivingMiddleware(stampsAccount(userID != 0))
+	if userID != 0 {
+		addPromptSpecs(server, accountPrompts(tools))
+	}
 	for _, tool := range tools {
 		// Preserve the public schemas, previews and widgets on the canonical endpoint.
 		switch tool.Name {

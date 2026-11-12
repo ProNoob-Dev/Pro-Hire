@@ -190,3 +190,89 @@ func TestToolLogClassifiesFailuresWithoutErrorText(t *testing.T) {
 		})
 	}
 }
+
+// A rejected call names the arguments it got wrong, never their values; a search that drops
+// filters names the filters, never what was asked for in them.
+func TestToolLogNamesBadArgumentsAndIgnoredFilters(t *testing.T) {
+	const private = "private-value@example.invalid"
+	records := captureToolLogs(t)
+	reader := readerThatFinds(t)
+	reader.searchJobs = func(context.Context, SearchInput) (SearchJobsResult, error) {
+		return SearchJobsResult{Jobs: []JobSummary{{Slug: "a"}}, IgnoredParams: []string{"skills=" + private, "work_mode=" + private}}, nil
+	}
+	session := connect(t, reader)
+
+	for _, tc := range []struct {
+		name string
+		args map[string]any
+		key  string
+		want string
+	}{
+		{"wrong type", map[string]any{"limit": private}, "bad_args", "limit"},
+		{"unknown arguments", map[string]any{"work_mode_x": private, "salary_min_x": private}, "bad_args", "salary_min_x,work_mode_x"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: toolSearchJobs, Arguments: tc.args}); err != nil {
+				t.Fatal(err)
+			}
+			nextToolLog(t, records)
+			finish := nextToolLog(t, records)
+			raw, _ := json.Marshal(finish)
+			if finish["outcome"] != "rejected" || finish[tc.key] != tc.want || strings.Contains(string(raw), private) {
+				t.Fatalf("unexpected log (want %s=%s, no value): %s", tc.key, tc.want, raw)
+			}
+		})
+	}
+
+	t.Run("ignored filters", func(t *testing.T) {
+		if _, err := session.CallTool(context.Background(), &mcp.CallToolParams{Name: toolSearchJobs, Arguments: map[string]any{"query": "go"}}); err != nil {
+			t.Fatal(err)
+		}
+		nextToolLog(t, records)
+		finish := nextToolLog(t, records)
+		raw, _ := json.Marshal(finish)
+		if finish["ignored"] != "skills,work_mode" || strings.Contains(string(raw), private) {
+			t.Fatalf("unexpected log: %s", raw)
+		}
+	})
+}
+
+func TestLoggableNamesAreBounded(t *testing.T) {
+	got := loggableNames([]string{"a", "a", "b c", strings.Repeat("x", 41), "ok.name-1", "c", "d", "e", "f", "g"})
+	if strings.Join(got, ",") != "a,c,d,e,ok.name-1" {
+		t.Errorf("names = %v", got)
+	}
+}
+
+// An account tool that refuses an argument logs its name, from the typed error rather than
+// the message, and the name does not travel back in the response diagnostics.
+func TestToolLogNamesTheArgumentAHandlerRefused(t *testing.T) {
+	records := captureToolLogs(t)
+	tool := assistant.Tool{Name: "strict", Schema: map[string]any{"type": "object"},
+		Run: func(_ context.Context, _ int64, raw json.RawMessage) (any, error) {
+			var in struct{}
+			return nil, assistant.DecodeArgs(raw, &in)
+		}}
+	server := NewAccountServer([]assistant.Tool{tool}, 1, "", nil)
+	clientT, serverT := mcp.NewInMemoryTransports()
+	go func() { _ = server.Run(t.Context(), serverT) }()
+	session, err := mcp.NewClient(&mcp.Implementation{Name: "test", Version: "0"}, nil).Connect(t.Context(), clientT, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = session.Close() })
+
+	res, err := session.CallTool(t.Context(), &mcp.CallToolParams{Name: "strict", Arguments: map[string]any{"bogus": "private-value"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	nextToolLog(t, records)
+	finish := nextToolLog(t, records)
+	raw, _ := json.Marshal(finish)
+	if finish["outcome"] != "tool_error" || finish["error_code"] != "invalid_request" || finish["bad_args"] != "bogus" || strings.Contains(string(raw), "private-value") {
+		t.Errorf("unexpected log: %s", raw)
+	}
+	if diag, _ := res.Meta[diagnosticsMetaKey].(map[string]any); diag[badArgsKey] != nil {
+		t.Errorf("bad_args leaked into the response diagnostics: %v", diag)
+	}
+}

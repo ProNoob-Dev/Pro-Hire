@@ -1,3 +1,4 @@
+import type { components } from '../generated/api.js';
 import type { Stage } from '../generated/contracts';
 
 /** Per-tab row counts for the my-jobs page, from the listing's meta. `viewed`
@@ -47,11 +48,7 @@ export type ActivityGranularity = 'day' | 'week' | 'month';
 /** One period on the job-activity dashboard: the ISO date labelling the bucket
  *  and the counts of vacancies added vs. removed within it. The backend returns a
  *  dense, gap-free series (empty periods carry zeros). */
-export interface ActivityPoint {
-  period: string;
-  added: number;
-  removed: number;
-}
+export type ActivityPoint = components['schemas']['ActivityPoint'];
 
 /** How many of a company's OBSERVABLE applications were answered — the applicant had a
  *  connected mailbox, so a reply would have been seen. Absent from the company payload
@@ -83,11 +80,7 @@ export interface CompanyHiring {
  *  new-signup count. The backend returns a dense, gap-free series (days with no
  *  new signups repeat the running total and carry `new: 0`); `total` is
  *  monotonically non-decreasing. */
-export interface UserGrowthPoint {
-  date: string;
-  total: number;
-  new: number;
-}
+export type UserGrowthPoint = components['schemas']['GrowthPoint'];
 
 /** Aggregate engagement counts across all users: jobs saved, applications marked,
  *  jobs viewed, and what people build on top — CVs uploaded and tailored, people with
@@ -104,17 +97,7 @@ export interface UserGrowthPoint {
  *  underlying column carries a count (null before the first rollup): the column shipped
  *  without a backfill and the nginx history to recover is past logrotate's window, so
  *  render the two together — the number alone reads as the life of the site. */
-export interface EngagementStats {
-  saved: number;
-  applied: number;
-  viewed: number;
-  viewed_since: string | null;
-  cvs_uploaded: number;
-  cvs_tailored: number;
-  alert_subscribers: number;
-  inboxes_connected: number;
-  saved_searches: number;
-}
+export type EngagementStats = components['schemas']['Engagement'];
 
 /** How big the catalogue is, as one snapshot.
  *
@@ -129,139 +112,40 @@ export interface EngagementStats {
  *  `exact` is false when the backend had no published snapshot and fell back to an
  *  approximate open-job count. On that path only `open_jobs`, `sources` and
  *  `ats_platforms` are meaningful; the rest are zero. */
-export interface CatalogScale {
-  open_jobs: number;
-  unique_open_jobs: number;
-  companies: number;
-  sources: number;
-  ats_platforms: number;
-  telegram_channels: number;
-  computed_at: string;
-  exact: boolean;
-}
+export type CatalogScale = components['schemas']['CatalogScale'];
 
 /** Semantic-embedding coverage of the catalogue, behind the public /semantic-search
  *  page (`GET /api/v1/stats/embeddings` and its stream). Every figure is `null`
  *  until it has been measured — render that as "measuring", never as 0. */
-export interface EmbedProgress {
-  eligible: number | null;
-  covered: number | null;
-  snapshot_covered: number | null;
-  queued: number | null;
-  rate_per_minute: number | null;
-  eta_seconds: number | null;
-  snapshot_at: string | null;
-  measured_at: string | null;
-}
+export type EmbedProgress = components['schemas']['EmbeddingProgress'];
 
 /** The derived health verdict for a provider (and the fleet) on the public
  *  /status page. */
-export type HealthStatus = 'operational' | 'degraded' | 'down';
+export type HealthStatus = components['schemas']['HealthStatus'];
 
 /** How a source is shaped: a multi-tenant ATS platform, a many-company job
  *  aggregator, a single company's own careers page, or an unclassified source. */
-export type ProviderKind = 'ats' | 'aggregator' | 'company' | 'social' | 'other';
+export type ProviderKind = components['schemas']['ProviderKind'];
 
-/** One provider's health on the public /status page: board counts, freshness, and
- *  the derived status. Sanitized — no error text or board identifiers are exposed.
- *  Timestamps are RFC3339 strings, or null when the provider has never run/succeeded. */
-interface ProviderHealth {
-  provider: string;
-  kind: ProviderKind;
-  status: HealthStatus;
-  total_boards: number;
-  healthy_boards: number;
-  cooled_boards: number;
-  last_run: string | null;
-  last_success: string | null;
-  ingested_total: number;
-}
+/** The public status read (`GET /api/v1/status`): the site/API's own live status (`site`,
+ *  with the trailing 90 days of recorded daily status, oldest first, omitting any day with
+ *  no sample), the ingest-fleet overall (worst-provider) verdict, the generation timestamp,
+ *  `last_job_added_at` (when the pipeline last wrote a public job, null before any), and
+ *  one sanitized entry per provider: no error text or board identifiers.
+ *  `site.pool_pressure` is reported, never judged: it is a single instant. */
+export type IngestStatus = components['schemas']['IngestStatus'];
 
-/** One day's recorded worst-of-day site status. A day with no recorded
- *  sample simply has no entry in `SiteHealth.history` — it is never
- *  reported as "operational" by default. */
-interface SiteHistoryEntry {
-  day: string;
-  status: HealthStatus;
-}
-
-/** The site/API's own live health, independent of the ingest fleet's status
- *  (`overall`). `database` is "up" or "down"; `error_rate` is the fraction of
- *  5xx responses over the trailing `window_minutes`, computed from the
- *  server's own recent traffic. `history` is the trailing 90 days' recorded
- *  daily status, oldest first, omitting any day with no recorded sample. */
-interface SiteHealth {
-  status: HealthStatus;
-  database: 'up' | 'down';
-  error_rate: number;
-  /** Fraction of the database connection pool held at once, 0..1. Answers a different
-   *  question from `error_rate`: that one describes requests that FINISHED, this one
-   *  describes requests that cannot start. Reported, never judged: it is a single
-   *  instant, and the live pool touches its ceiling in ordinary bursts, so `status`
-   *  above does not read it. Judging it needs an average over minutes, which the
-   *  Grafana rule does and this page cannot. */
-  pool_pressure: number;
-  window_minutes: number;
-  history: SiteHistoryEntry[];
-}
-
-/** The public status read: the site/API's own live status, plus the
- *  ingest-fleet overall (worst-provider) verdict, the generation timestamp,
- *  and one entry per provider. */
-export interface IngestStatus {
-  overall: HealthStatus;
-  generated_at: string;
-  providers: ProviderHealth[];
-  site: SiteHealth;
-}
-
-/** What the catalogue currently holds under one source, as measured by the daily
- *  snapshot. Two counts on purpose: `open` is every open posting, duplicates and all,
- *  and is the denominator the overlap figures are arithmetic on; `browsable` is the
- *  de-duplicated count the search index holds, which is what /jobs?source=… actually
- *  shows and therefore what the page displays.
+/** One entry on the public source catalogue (`GET /api/v1/sources`).
  *
- *  `browsable` is null when the search index could not be measured — NOT zero. A zero
- *  meaning "we could not measure this" must never be rendered as "this source has no
- *  jobs".
+ *  `jobs.open` is every open posting, duplicates and all; `jobs.browsable` is the
+ *  de-duplicated count the search index holds, and is null when that could not be
+ *  measured, NOT zero: a zero meaning "we could not measure this" must never be rendered
+ *  as "this source has no jobs". `ats_matched`/`ats_unmatched` are present for aggregators
+ *  only; "unmatched" is the absence of evidence, never "exclusive".
  *
- *  `ats_matched`/`ats_unmatched` are present for aggregators only. "Unmatched" means the
- *  dedup pass found no first-party ATS posting to pair a posting with — the absence of
- *  evidence, not evidence of absence. Do not render it as "exclusive". */
-interface SourceJobs {
-  open: number;
-  browsable: number | null;
-  ats_matched?: number;
-  ats_unmatched?: number;
-  measured_at: string;
-}
-
-/** One source's crawl-fleet health, derived exactly as the /status page derives it.
- *  Absent on a source with no board_health record at all — the normal state for a source
- *  that is not a crawl adapter. */
-interface SourceHealth {
-  status: HealthStatus;
-  total_boards: number;
-  healthy_boards: number;
-  cooled_boards: number;
-  last_run: string | null;
-  last_success: string | null;
-  ingested_total: number;
-}
-
-/** One entry on the public source catalogue. `jobs` is null when the snapshot has never
- *  covered this source; `health` is null when it has no crawl-health record. Both absences
- *  are answers, not missing data.
+ *  `jobs` is null when the snapshot has never covered the source; `health` is null when it
+ *  has no crawl-health record. Both absences are answers, not missing data.
  *
  *  No logo field: a source's brand mark is resolved from its DISPLAY NAME client-side (see
- *  sourceLogoUrl). A host was tried and shipped the wrong brand — an ATS posting's URL is
- *  often on the employer's own domain. */
-export interface SourceEntry {
-  source: string;
-  kind: ProviderKind;
-  /** Whether the source is a crawl adapter; false for the Telegram pipeline, employer
-   *  vacancies and hand-curated intake, which have no board to crawl. */
-  adapter: boolean;
-  jobs: SourceJobs | null;
-  health: SourceHealth | null;
-}
+ *  sourceLogoUrl). A host was tried and shipped the wrong brand. */
+export type SourceEntry = components['schemas']['SourceEntry'];

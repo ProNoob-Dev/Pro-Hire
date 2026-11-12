@@ -74,9 +74,16 @@ type contractHandlers struct {
 	*directApplyHandlers
 	*jobsHandlers
 	*searchHandlers
+	*matchHandlers
+	*autofillHandlers
+	*intentHandlers
+	*embedProgressHandlers
+	*assistantHandlers
 	*companiesHandlers
 	*resumeHandlers
 	*cvHandlers
+	*inboxHandlers
+	*authHandlers
 }
 
 var _ apigen.Handler = contractHandlers{}
@@ -363,4 +370,14 @@ func hasNULIn(query url.Values) bool {
 		}
 	}
 	return false
+}
+
+// int64s widens rollup integers to the contract's int64, never nil: the field is a
+// required array, so an absent value is [] rather than null.
+func int64s(v []int32) []int64 {
+	out := make([]int64, len(v))
+	for i, x := range v {
+		out[i] = int64(x)
+	}
+	return out
 }

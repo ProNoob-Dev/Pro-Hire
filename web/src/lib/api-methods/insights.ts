@@ -61,11 +61,15 @@ export function insightsApi({ request, requestData }: Http) {
   /** Every seniority's salary bands for one category, in a single call (the
    *  per-category salary page). Rows carry their own `seniority` ('' = the
    *  category-wide band). */
-  /** One category's monthly salary history, every (currency, period) it has. */
-  async function insightsSalaryHistory(category: string): Promise<InsightSalaryMonth[]> {
-    return requestData<InsightSalaryMonth[]>(
-      `/api/v1/insights/salary/history?category=${encodeURIComponent(category)}`,
-    );
+  /** One role × grade × country scope's monthly salary history, every (currency,
+   *  period) it has; an empty part means every value. */
+  async function insightsSalaryHistory(scope: {
+    category: string;
+    seniority: string;
+    country: string;
+  }): Promise<InsightSalaryMonth[]> {
+    const q = new URLSearchParams(Object.entries(scope).filter(([, v]) => v));
+    return requestData<InsightSalaryMonth[]>(`/api/v1/insights/salary/history?${q}`);
   }
 
   async function insightsSalaryByCategory(category: string): Promise<InsightSalaryBand[]> {
@@ -78,6 +82,18 @@ export function insightsApi({ request, requestData }: Http) {
    *  scope as a whole — so the rows carry no seniority and are not merged. */
   async function insightsSalaryByCategoryInCountry(category: string, country: string): Promise<InsightSalaryBand[]> {
     const q = new URLSearchParams({ category, country });
+    return requestData<InsightSalaryBand[]>(`/api/v1/insights/salary?${q}`);
+  }
+
+  /** The salary bands for any role × grade × country scope (/analytics); an empty
+   *  part means every value. A category-only scope also returns its per-seniority
+   *  bands, each row tagged with its own `seniority`. */
+  async function insightsSalary(scope: {
+    category: string;
+    seniority: string;
+    country: string;
+  }): Promise<InsightSalaryBand[]> {
+    const q = new URLSearchParams(Object.entries(scope).filter(([, v]) => v));
     return requestData<InsightSalaryBand[]>(`/api/v1/insights/salary?${q}`);
   }
 
@@ -148,6 +164,7 @@ export function insightsApi({ request, requestData }: Http) {
     insightsSalaryHistory,
     insightsSalaryByCategory,
     insightsSalaryByCategoryInCountry,
+    insightsSalary,
     insightsCompanies,
     marketPulse,
     sitemapJobs,

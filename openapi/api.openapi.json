@@ -109,6 +109,27 @@
     },
     {
       "name": "CV"
+    },
+    {
+      "name": "Mail"
+    },
+    {
+      "name": "Fit"
+    },
+    {
+      "name": "Autofill"
+    },
+    {
+      "name": "Support"
+    },
+    {
+      "name": "Assistant"
+    },
+    {
+      "name": "Auto-apply"
+    },
+    {
+      "name": "Auth"
     }
   ],
   "paths": {
@@ -223,6 +244,644 @@
         },
         "tags": [
           "Search"
+        ]
+      }
+    },
+    "/assistant/sessions": {
+      "post": {
+        "operationId": "createAssistantSession",
+        "description": "Starts a conversation. `preset` picks the kind; `job` names the application an\ninterview, debrief or apply session is held against. A session already held for the\nsame application, or the same search request, is handed back (200); a new one is a 201.",
+        "parameters": [
+          {
+            "name": "preset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "job",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AssistantSession"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The request has succeeded and a new resource has been created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AssistantSession"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantSessionRequest"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAssistantSessions",
+        "description": "The caller's chat conversations, newest activity first.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantSessionList"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ]
+      }
+    },
+    "/assistant/sessions/{id}": {
+      "get": {
+        "operationId": "getAssistantSession",
+        "description": "One owned conversation with its transcript.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AssistantSessionDetail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAssistantSession",
+        "description": "Removes an owned conversation and its transcript.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ]
+      }
+    },
+    "/assistant/sessions/{id}/cancel": {
+      "post": {
+        "operationId": "cancelAssistantTurn",
+        "description": "Stops the turn running in the session; a session with nothing running is not an error.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ]
+      }
+    },
+    "/assistant/sessions/{id}/extend": {
+      "post": {
+        "operationId": "postAssistantExtend",
+        "description": "Buys a tailoring session another ceiling's worth of turns. 204 when plan limits are\nnot wired.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AssistantExtension"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "402": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantPlanRefusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ]
+      }
+    },
+    "/assistant/sessions/{id}/voice-token": {
+      "post": {
+        "operationId": "postAssistantVoiceToken",
+        "description": "Mints the short-lived credential for a voice call on an interview session.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AssistantVoiceToken"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ]
+      }
+    },
+    "/assistant/sessions/{id}/voice-turns": {
+      "post": {
+        "operationId": "postAssistantVoiceTurn",
+        "description": "Appends one completed spoken turn to an interview session's transcript.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Assistant"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantVoiceTurn"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "getAuthMe",
+        "description": "Readable with a session or an API key, narrow scope included.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AuthUser"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/oauth/providers": {
+      "get": {
+        "operationId": "listOauthProviders",
+        "description": "The names of the enabled sign-in providers.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/password/forgot": {
+      "post": {
+        "operationId": "forgotPassword",
+        "description": "Always answers 202, whether or not the address has an account.",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "The request has been accepted for processing, but processing has not yet completed."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthPasswordForgot"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/password/reset": {
+      "post": {
+        "operationId": "resetPassword",
+        "description": "Public: the mailed code is the credential. Revokes every session.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AuthPasswordResetResult"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthPasswordReset"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify/confirm": {
+      "post": {
+        "operationId": "confirmEmailVerification",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AuthUser"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthCode"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/verify/request": {
+      "post": {
+        "operationId": "requestEmailVerification",
+        "description": "Mails the caller a fresh verification code.",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "The request has been accepted for processing, but processing has not yet completed."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
         ]
       }
     },
@@ -2656,10 +3315,28 @@
     "/insights/salary/history": {
       "get": {
         "operationId": "insightsSalaryHistory",
-        "description": "The category is required.",
+        "description": "One role × grade × country scope's monthly history; an absent part means every value.",
         "parameters": [
           {
             "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "seniority",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "country",
             "in": "query",
             "required": false,
             "schema": {
@@ -3497,6 +4174,164 @@
         ]
       }
     },
+    "/jobs/{slug}/auto-apply": {
+      "post": {
+        "operationId": "postJobAutoApply",
+        "description": "Starts an auto-apply attempt for the job; a repeat for a live attempt succeeds too.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AutoApplyQueued"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantPlanRefusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auto-apply"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteJobAutoApply",
+        "description": "Withdraws the caller's attempt on the job.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AutoApplyCancelled"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auto-apply"
+        ]
+      }
+    },
+    "/jobs/{slug}/auto-apply/retry": {
+      "post": {
+        "operationId": "postJobAutoApplyRetry",
+        "description": "Re-arms a stuck attempt, or refreshes the answer preview of one awaiting review.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AutoApplyRetried"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auto-apply"
+        ]
+      }
+    },
     "/jobs/{slug}/copies": {
       "get": {
         "operationId": "jobCopies",
@@ -3760,6 +4595,96 @@
         ]
       }
     },
+    "/jobs/{slug}/fit": {
+      "get": {
+        "operationId": "getJobFit",
+        "description": "Alias of `getMatchAnalysis`.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitAnalysisResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
+        ]
+      },
+      "post": {
+        "operationId": "runJobFit",
+        "description": "Alias of `runMatchAnalysis`.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitAnalysisResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitRefusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
+        ]
+      }
+    },
     "/jobs/{slug}/ghost-report": {
       "post": {
         "operationId": "createGhostReport",
@@ -3849,6 +4774,144 @@
         },
         "tags": [
           "Feedback"
+        ]
+      }
+    },
+    "/jobs/{slug}/match": {
+      "get": {
+        "operationId": "getJobMatch",
+        "description": "How well the job's skills are covered by the caller's profile, plus the advisory\nhard-constraint blockers. Deterministic, no model. A caller without a profile is a 404.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {}
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
+        ]
+      }
+    },
+    "/jobs/{slug}/match-analysis": {
+      "get": {
+        "operationId": "getMatchAnalysis",
+        "description": "The cached fit analysis for a job; never calls the model.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitAnalysisResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
+        ]
+      },
+      "post": {
+        "operationId": "runMatchAnalysis",
+        "description": "Runs the fit analysis and caches it. An unconfigured or failing model answers a null analysis.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitAnalysisResponse"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Client error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitRefusal"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
         ]
       }
     },
@@ -4666,6 +5729,176 @@
         ]
       }
     },
+    "/me/api-keys": {
+      "post": {
+        "operationId": "createApiKey",
+        "description": "Creates a key and returns its plaintext token, this once. Behind the recent-auth gate.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "The request has succeeded and a new resource has been created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ApiKeyCreated"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyCreate"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listApiKeys",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ApiKey"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/AccountTotalMeta"
+                    }
+                  },
+                  "description": "An unpaginated, owner-scoped list."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/api-keys/{id}": {
+      "delete": {
+        "operationId": "revokeApiKey",
+        "description": "An id that is not the caller's is a 404. Behind the recent-auth gate.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/api-plan": {
+      "get": {
+        "operationId": "getApiPlan",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ApiKeyPlan"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
     "/me/applications/{id}": {
       "patch": {
         "operationId": "trackApplication",
@@ -4818,6 +6051,195 @@
         },
         "tags": [
           "Tracking"
+        ]
+      }
+    },
+    "/me/attribution": {
+      "post": {
+        "operationId": "reportSignupAttribution",
+        "description": "A failure to store or send never surfaces as an error.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AccountAttributionResult"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountAttribution"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/auto-apply/{queueId}/review": {
+      "post": {
+        "operationId": "postAutoApplyReview",
+        "description": "Records the approve or decline decision for a tailored queue entry.",
+        "parameters": [
+          {
+            "name": "queueId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AutoApplyDecision"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auto-apply"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoApplyReviewRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/autofill-profile": {
+      "get": {
+        "operationId": "getAutofillProfile",
+        "description": "The caller's canonical form fields, all empty bar the account email when no source\nstates a contact. Keys are the profile's own and the set grows with it.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {}
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Autofill"
+        ]
+      }
+    },
+    "/me/autofill/run": {
+      "post": {
+        "operationId": "runAutofill",
+        "description": "Fills the form in the caller's own browser through the browser-tool channel. Paid AI\nroute (unmetered). Only the extension's own Bearer session is admitted; anything else\nis a 403. The report names what was filled, deferred and left unmapped.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {}
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Autofill"
         ]
       }
     },
@@ -5219,7 +6641,7 @@
                   ],
                   "properties": {
                     "data": {
-                      "$ref": "#/components/schemas/BuddyConversation"
+                      "$ref": "#/components/schemas/Conversation"
                     }
                   },
                   "description": "A single item: `{\"data\": ...}`."
@@ -7776,6 +9198,41 @@
         ]
       }
     },
+    "/me/email": {
+      "post": {
+        "operationId": "requestEmailChange",
+        "description": "Mails a confirmation code to the new address. Behind the recent-auth gate.",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "The request has been accepted for processing, but processing has not yet completed."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthEmailChange"
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/email-groups": {
       "get": {
         "operationId": "getMyEmailGroups",
@@ -7862,6 +9319,496 @@
             }
           }
         }
+      }
+    },
+    "/me/emails": {
+      "post": {
+        "operationId": "ingestEmails",
+        "description": "A batch of messages the caller's own mail client fetched, as `messages`: a list of\nobjects with `external_id`, `thread_id`, `from_addr`, `from_name`, `subject`, `body_text`,\n`body_html` and `received_at`. The mail service validates the batch and refuses it whole with a 400.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxIngested"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          }
+        }
+      }
+    },
+    "/me/emails/{id}": {
+      "get": {
+        "operationId": "getEmail",
+        "description": "Opening a message marks it read. 404 for another user's, or an id that is not a number.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/emails/{id}/application": {
+      "post": {
+        "operationId": "createApplicationFromEmail",
+        "description": "Records the application from the email and links it, dated by the email. 409 while a suggestion is pending.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboxLinkTarget"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/emails/{id}/confirm": {
+      "post": {
+        "operationId": "confirmEmailLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/emails/{id}/delete": {
+      "post": {
+        "operationId": "deleteEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/emails/{id}/link": {
+      "post": {
+        "operationId": "linkEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboxLinkTarget"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/emails/{id}/reject": {
+      "post": {
+        "operationId": "rejectEmailLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/emails/{id}/restore": {
+      "post": {
+        "operationId": "restoreEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/emails/{id}/triage": {
+      "post": {
+        "operationId": "triageEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InboxTriage"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/emails/{id}/unlink": {
+      "post": {
+        "operationId": "unlinkEmail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
       }
     },
     "/me/experience": {
@@ -8222,6 +10169,354 @@
         ]
       }
     },
+    "/me/gmail": {
+      "get": {
+        "operationId": "gmailStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GmailStatus"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      },
+      "delete": {
+        "operationId": "gmailDisconnect",
+        "description": "Revokes the grant (best effort) and purges the token and the synced Gmail mail.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GmailDisconnected"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/gmail/sync": {
+      "post": {
+        "operationId": "syncGmail",
+        "description": "Starts a background sync. Registered only where Gmail is configured.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/GmailSyncStarted"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/inbox": {
+      "get": {
+        "operationId": "getInbox",
+        "description": "The caller's mail, newest first, without deleted messages. Filters: `source`, `status`,\n`link`, `q`, `unread`, `unclassified`, `include_other`; `body` adds each message's body\n(pages are then capped lower). A page param that does not read falls back to its default.",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "link",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "unclassified",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "include_other",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "body",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/inbox/read-all": {
+      "post": {
+        "operationId": "markAllReadInbox",
+        "description": "Marks every unread message matching the same filters as the listing.",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "link",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "unread",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "unclassified",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "include_other",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxMarked"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
     "/me/interviews": {
       "get": {
         "operationId": "getInterviews",
@@ -8380,6 +10675,174 @@
         }
       }
     },
+    "/me/language": {
+      "patch": {
+        "operationId": "updateLanguage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AuthUser"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountLanguageUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/mailbox": {
+      "get": {
+        "operationId": "getMailbox",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailboxStatus"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      },
+      "post": {
+        "operationId": "claimMailbox",
+        "description": "Registered only where a receiving domain is configured.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailboxStatus"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      },
+      "delete": {
+        "operationId": "releaseMailbox",
+        "description": "Drops the mailbox and its received mail; Gmail mail stays.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailboxStatus"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
     "/me/market-pulse": {
       "get": {
         "operationId": "getMarketPulse",
@@ -8425,6 +10888,55 @@
         "tags": [
           "Account"
         ]
+      }
+    },
+    "/me/match-text": {
+      "post": {
+        "operationId": "matchText",
+        "description": "The same coverage for a posting that need not be in the catalogue.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {}
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FitMatchTextRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/me/mentorship/availability": {
@@ -9254,6 +11766,261 @@
         }
       }
     },
+    "/me/notifications": {
+      "get": {
+        "operationId": "listNotifications",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/notifications/read-all": {
+      "post": {
+        "operationId": "markAllNotificationsRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/NotificationsMarked"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/notifications/{id}": {
+      "get": {
+        "operationId": "getNotification",
+        "description": "Another user's id, or one that does not exist, is a 404.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Notification"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/notifications/{id}/read": {
+      "post": {
+        "operationId": "markNotificationRead",
+        "description": "Idempotent; another user's id, or one that does not exist, is a 404.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/oauth-grants": {
+      "get": {
+        "operationId": "listOauthGrants",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AccountOauthGrant"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/AccountTotalMeta"
+                    }
+                  },
+                  "description": "An unpaginated, owner-scoped list."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/me/oauth-grants/{id}": {
+      "delete": {
+        "operationId": "revokeOauthGrant",
+        "description": "An id that is not the caller's is a 404. Behind the recent-auth gate.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
+    },
     "/me/onboarding/complete": {
       "post": {
         "operationId": "completeOnboarding",
@@ -9713,6 +12480,160 @@
             }
           }
         }
+      }
+    },
+    "/me/push-tokens": {
+      "post": {
+        "operationId": "registerPushToken",
+        "description": "Registers or refreshes the device's push token; a token is reassigned to the caller.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenRegister"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listPushTokens",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PushToken"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/AccountTotalMeta"
+                    }
+                  },
+                  "description": "An unpaginated, owner-scoped list."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      },
+      "delete": {
+        "operationId": "unregisterPushToken",
+        "description": "A token that is not the caller's is a 404.",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenRemove"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/me/push-tokens/test": {
+      "post": {
+        "operationId": "testPushToken",
+        "description": "Sends a test push to the caller's own registered tokens, never anyone else's.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PushTokenTestResult"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
       }
     },
     "/me/referrals/cv-options": {
@@ -10943,6 +13864,56 @@
         ]
       }
     },
+    "/me/timezone": {
+      "patch": {
+        "operationId": "updateTimezone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AuthUser"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountTimezoneUpdate"
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/tracking": {
       "get": {
         "operationId": "listTrackedJobs",
@@ -11009,6 +13980,38 @@
         },
         "tags": [
           "Tracking"
+        ]
+      }
+    },
+    "/me/tracking/analyses": {
+      "get": {
+        "operationId": "listMyAnalyses",
+        "description": "The jobs the caller has run the fit analysis on, newest first.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitAnalysedJobs"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Fit"
         ]
       }
     },
@@ -11226,6 +14229,247 @@
         ]
       }
     },
+    "/me/tracking/{slug}": {
+      "get": {
+        "operationId": "getTrackedApplication",
+        "description": "The caller's application for a job slug with its linked mail. 404 when not tracked.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxApplicationDetail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/tracking/{slug}/followup": {
+      "get": {
+        "operationId": "getApplicationFollowUp",
+        "description": "409 unless the application is waiting on a reply.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailFollowUpDraft"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      },
+      "post": {
+        "operationId": "recordApplicationFollowUp",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful."
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/tracking/{slug}/mail-recall": {
+      "post": {
+        "operationId": "recallApplicationMail",
+        "description": "Sweeps the mailbox for mail belonging to the application and records suggestions. Paid AI.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MailRecallResult"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ]
+      }
+    },
+    "/me/tracking/{slug}/mail-recall/link": {
+      "post": {
+        "operationId": "linkRecalledMail",
+        "description": "Imports a message the sweep proposed and links it to the application.",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/InboxEmail"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Mail"
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailRecalledPick"
+              }
+            }
+          }
+        }
+      }
+    },
     "/me/usage": {
       "get": {
         "operationId": "getMyUsage",
@@ -11265,6 +14509,95 @@
         "tags": [
           "Account"
         ]
+      }
+    },
+    "/me/username": {
+      "get": {
+        "operationId": "getUsername",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AccountUsername"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      },
+      "put": {
+        "operationId": "claimUsername",
+        "description": "Claims or changes the username.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AccountUsername"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountUsernameClaim"
+              }
+            }
+          }
+        }
       }
     },
     "/me/watchlist": {
@@ -12462,6 +15795,55 @@
         }
       }
     },
+    "/search/interpret": {
+      "post": {
+        "operationId": "interpretSearch",
+        "description": "Turns a written description of a job search into filter values. Open to signed-out\ncallers too, and a free AI route for every account. A description that resolved nothing\nis a 200 with `empty: true`.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {}
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Search"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchIntentRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/sources": {
       "get": {
         "operationId": "listSources",
@@ -12524,6 +15906,47 @@
                   "properties": {
                     "data": {
                       "$ref": "#/components/schemas/CatalogScale"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Stats"
+        ]
+      }
+    },
+    "/stats/embeddings": {
+      "get": {
+        "operationId": "getEmbeddingProgress",
+        "description": "The embedding backfill's current progress document. Figures not yet measured are null.\nThe `/stats/embeddings/stream` route is Server-Sent Events and stays hand-written.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/EmbeddingProgress"
                     }
                   },
                   "description": "A single item: `{\"data\": ...}`."
@@ -13133,6 +16556,144 @@
         "tags": [
           "Search"
         ]
+      }
+    },
+    "/support/sessions": {
+      "post": {
+        "operationId": "createSupportSession",
+        "description": "Starts a support conversation. The blank one the caller already has is handed back\n(200) rather than adding another; a new one is a 201.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SupportSession"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "The request has succeeded and a new resource has been created as a result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SupportSession"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/support/sessions/{id}/cancel": {
+      "post": {
+        "operationId": "cancelSupportTurn",
+        "description": "Stops the turn running in a support session.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/support/sessions/{id}/rating": {
+      "post": {
+        "operationId": "rateSupportSession",
+        "description": "Records the caller's verdict on their own support conversation.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "There is no content to send for this request, but the headers may be useful. "
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Support"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupportRating"
+              }
+            }
+          }
+        }
       }
     },
     "/talent": {
@@ -13776,6 +17337,57 @@
           }
         }
       }
+    },
+    "/username/check": {
+      "get": {
+        "operationId": "checkUsername",
+        "description": "Public: a name picker probes before the caller is signed in.",
+        "parameters": [
+          {
+            "name": "value",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "explode": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request has succeeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AccountUsernameAvailability"
+                    }
+                  },
+                  "description": "A single item: `{\"data\": ...}`."
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Account"
+        ]
+      }
     }
   },
   "components": {
@@ -13845,6 +17457,194 @@
       }
     },
     "schemas": {
+      "AccountAttribution": {
+        "type": "object",
+        "properties": {
+          "utm_source": {
+            "type": "string"
+          },
+          "utm_medium": {
+            "type": "string"
+          },
+          "utm_campaign": {
+            "type": "string"
+          },
+          "utm_content": {
+            "type": "string"
+          },
+          "utm_term": {
+            "type": "string"
+          },
+          "referrer_host": {
+            "type": "string"
+          },
+          "landing_path": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "ga_client_id": {
+            "type": "string"
+          },
+          "ga_session_id": {
+            "type": "string"
+          }
+        },
+        "description": "How a just-created account arrived. Every field is optional and untrusted."
+      },
+      "AccountAttributionResult": {
+        "type": "object",
+        "required": [
+          "ga4_sent"
+        ],
+        "properties": {
+          "ga4_sent": {
+            "type": "boolean",
+            "description": "Whether the server sent the GA4 `sign_up`, so the browser stays out of it."
+          }
+        }
+      },
+      "AccountLanguageUpdate": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "string"
+          }
+        }
+      },
+      "AccountOauthGrant": {
+        "type": "object",
+        "required": [
+          "id",
+          "client_name",
+          "created_at",
+          "expires_at",
+          "last_used_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "A connected MCP client."
+      },
+      "AccountTimezoneUpdate": {
+        "type": "object",
+        "properties": {
+          "timezone": {
+            "type": "string"
+          },
+          "only_if_unset": {
+            "type": "boolean",
+            "description": "Leave a timezone that is already set alone."
+          }
+        }
+      },
+      "AccountTotalMeta": {
+        "type": "object",
+        "required": [
+          "total"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AccountUsername": {
+        "type": "object",
+        "required": [
+          "username",
+          "updated_at"
+        ],
+        "properties": {
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null until claimed or allocated."
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for a lazy default that was never explicitly claimed."
+          }
+        }
+      },
+      "AccountUsernameAvailability": {
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "properties": {
+          "available": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AccountUsernameClaim": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          }
+        }
+      },
       "ActivityMeta": {
         "type": "object",
         "required": [
@@ -13962,6 +17762,190 @@
           }
         }
       },
+      "ApiKey": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "token_prefix",
+          "scope",
+          "created_at",
+          "last_used_at",
+          "expires_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "token_prefix": {
+            "type": "string",
+            "description": "What identifies the key in a list."
+          },
+          "scope": {
+            "type": "string",
+            "description": "What the key may reach: `full`, or `cv` for the tailoring agent."
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "The public, secret-free shape of an API key."
+      },
+      "ApiKeyCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Required: an empty name is refused with a 400."
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null or absent: the key never expires."
+          },
+          "scope": {
+            "type": "string",
+            "description": "Absent or empty mints a full-scope key; `embed` is the only other value a client may ask for."
+          }
+        }
+      },
+      "ApiKeyCreated": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "token_prefix",
+          "scope",
+          "created_at",
+          "last_used_at",
+          "expires_at",
+          "token"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "token_prefix": {
+            "type": "string",
+            "description": "What identifies the key in a list."
+          },
+          "scope": {
+            "type": "string",
+            "description": "What the key may reach: `full`, or `cv` for the tailoring agent."
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "description": "The key plus its plaintext token, revealed exactly once, in the answer that creates it."
+      },
+      "ApiKeyPlan": {
+        "type": "object",
+        "required": [
+          "tier"
+        ],
+        "properties": {
+          "tier": {
+            "type": "string",
+            "enum": [
+              "",
+              "api",
+              "api_data"
+            ],
+            "description": "The API product tier the account holds; empty for none."
+          },
+          "until": {
+            "type": "string",
+            "format": "date-time",
+            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+          }
+        }
+      },
       "ApplyJob": {
         "type": "object",
         "properties": {
@@ -13975,6 +17959,358 @@
               }
             ],
             "description": "The day the application was sent, `2026-07-29`. Absent, null or empty means now."
+          }
+        }
+      },
+      "AssistantExtension": {
+        "type": "object",
+        "required": [
+          "turns",
+          "ceiling",
+          "unlimited",
+          "allowance"
+        ],
+        "properties": {
+          "turns": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ceiling": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unlimited": {
+            "type": "boolean"
+          },
+          "allowance": {}
+        }
+      },
+      "AssistantPlanRefusal": {
+        "type": "object",
+        "required": [
+          "error",
+          "allowance"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "allowance": {},
+          "upgrade_url": {
+            "type": "string",
+            "description": "Absent for a fair-use refusal and for a caller already on the top plan."
+          }
+        },
+        "description": "The 402 a spent or missing allowance answers with."
+      },
+      "AssistantSession": {
+        "type": "object",
+        "required": [
+          "id",
+          "preset",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "search_context": {},
+          "cv_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "One conversation."
+      },
+      "AssistantSessionDetail": {
+        "type": "object",
+        "required": [
+          "session",
+          "messages"
+        ],
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/AssistantSession"
+          },
+          "messages": {}
+        },
+        "description": "A conversation with its full transcript; `messages` is the stored transcript as is."
+      },
+      "AssistantSessionList": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantSession"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/AssistantSessionListMeta"
+          }
+        }
+      },
+      "AssistantSessionListMeta": {
+        "type": "object",
+        "required": [
+          "total"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AssistantSessionRequest": {
+        "type": "object",
+        "properties": {
+          "search_query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "description": "Optional body of a session create: binds a general chat to a fixed search."
+      },
+      "AssistantVoiceToken": {
+        "type": "object",
+        "required": [
+          "value",
+          "model",
+          "calls_url"
+        ],
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "calls_url": {
+            "type": "string"
+          }
+        }
+      },
+      "AssistantVoiceTurn": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthCode": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthEmailChange": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthPasswordForgot": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthPasswordReset": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthPasswordResetResult": {
+        "type": "object",
+        "required": [
+          "reset"
+        ],
+        "properties": {
+          "reset": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuthUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "role",
+          "beta_tester",
+          "email_verified",
+          "has_password",
+          "created_at",
+          "timezone",
+          "language",
+          "onboarding_completed_at",
+          "tier",
+          "agent_connected"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "beta_tester": {
+            "type": "boolean"
+          },
+          "email_verified": {
+            "type": "boolean",
+            "description": "An affordance only: the server never trusts the client's copy of it."
+          },
+          "has_password": {
+            "type": "boolean",
+            "description": "False for an OAuth-only account."
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The account's IANA name, null until set."
+          },
+          "language": {
+            "type": "string"
+          },
+          "onboarding_completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null for an account that never finished (or declined) the onboarding wizard."
+          },
+          "tier": {
+            "type": "string",
+            "description": "The resolved plan: `free`, `pro` or `ultra`."
+          },
+          "agent_connected": {
+            "type": "boolean",
+            "description": "Whether the account holds a live API key or MCP grant."
+          }
+        },
+        "description": "The account as the SPA and the CLI read it."
+      },
+      "AutoApplyCancelled": {
+        "type": "object",
+        "required": [
+          "cancelled"
+        ],
+        "properties": {
+          "cancelled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AutoApplyDecision": {
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string"
+          }
+        }
+      },
+      "AutoApplyQueued": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "AutoApplyRetried": {
+        "type": "object",
+        "required": [
+          "retried"
+        ],
+        "properties": {
+          "retried": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AutoApplyReviewRequest": {
+        "type": "object",
+        "properties": {
+          "decision": {
+            "type": "string",
+            "description": "`approved` or `declined`."
           }
         }
       },
@@ -14256,97 +18592,7 @@
           }
         }
       },
-      "BuddyConversation": {
-        "type": "object",
-        "required": [
-          "id",
-          "kind",
-          "status_for_me",
-          "counterpart",
-          "unread",
-          "last_message_at",
-          "created_at"
-        ],
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "kind": {
-            "type": "string"
-          },
-          "status_for_me": {
-            "type": "string"
-          },
-          "counterpart": {
-            "$ref": "#/components/schemas/BuddyConversationCounterpart"
-          },
-          "unread": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "last_message_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time",
-                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
-          }
-        }
-      },
-      "BuddyConversationCounterpart": {
-        "type": "object",
-        "required": [
-          "persona",
-          "reachable",
-          "detail"
-        ],
-        "properties": {
-          "persona": {
-            "type": "string"
-          },
-          "reachable": {
-            "type": "boolean"
-          },
-          "detail": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/BuddyCounterpartDetail"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        }
-      },
       "BuddyCounterpart": {
-        "type": "object",
-        "required": [
-          "handle",
-          "card_summary"
-        ],
-        "properties": {
-          "handle": {
-            "type": "string"
-          },
-          "card_summary": {
-            "$ref": "#/components/schemas/ConversationCardSummary"
-          }
-        },
-        "description": "The buddy persona's own shape. Nothing here names the account behind it."
-      },
-      "BuddyCounterpartDetail": {
         "type": "object",
         "required": [
           "handle",
@@ -14360,7 +18606,7 @@
             "$ref": "#/components/schemas/BuddyCardSummary"
           }
         },
-        "description": "The persona's own detail; null when the other side is not reachable."
+        "description": "The buddy persona's own shape. Nothing here names the account behind it."
       },
       "BuddyFeedEntry": {
         "type": "object",
@@ -14424,7 +18670,12 @@
             "$ref": "#/components/schemas/BuddyReactions"
           },
           "type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "applied",
+              "interview",
+              "offer"
+            ]
           },
           "day": {
             "type": "string"
@@ -14499,7 +18750,11 @@
             "type": "string"
           },
           "role": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "host",
+              "guest"
+            ]
           },
           "counterpart": {
             "anyOf": [
@@ -14522,10 +18777,14 @@
             "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
           },
           "topic": {
-            "type": "string"
+            "$ref": "#/components/schemas/BuddyMockTopic"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "cancelled"
+            ]
           },
           "meeting_url": {
             "anyOf": [
@@ -14600,17 +18859,10 @@
             "$ref": "#/components/schemas/BuddyCardSummary"
           },
           "topics": {
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuddyMockTopic"
+            }
           },
           "next_slot": {
             "$ref": "#/components/schemas/BuddyMockNextSlot"
@@ -14859,17 +19111,10 @@
             "type": "string"
           },
           "topics": {
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuddyMockTopic"
+            }
           },
           "paused": {
             "type": "boolean"
@@ -14923,17 +19168,10 @@
             "format": "int64"
           },
           "topics": {
-            "anyOf": [
-              {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              {
-                "type": "null"
-              }
-            ]
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuddyMockTopic"
+            }
           }
         }
       },
@@ -14984,6 +19222,15 @@
           }
         }
       },
+      "BuddyMockTopic": {
+        "type": "string",
+        "enum": [
+          "coding",
+          "system_design",
+          "behavioral"
+        ],
+        "description": "The mock-interview topics."
+      },
       "BuddyMockWeekly": {
         "type": "object",
         "properties": {
@@ -15026,6 +19273,18 @@
           }
         }
       },
+      "BuddyReactionChoice": {
+        "type": "string",
+        "enum": [
+          "",
+          "congrats",
+          "luck",
+          "rooting",
+          "same",
+          "insight"
+        ],
+        "description": "The reactions a member may give a feed event; \"\" is none."
+      },
       "BuddyReactions": {
         "type": "object",
         "required": [
@@ -15041,7 +19300,7 @@
             }
           },
           "mine": {
-            "type": "string"
+            "$ref": "#/components/schemas/BuddyReactionChoice"
           }
         },
         "description": "Count per kind (no key for a kind nobody chose) and the viewer's own choice, \"\" for none."
@@ -15063,7 +19322,7 @@
             "type": "string"
           },
           "topic": {
-            "type": "string"
+            "$ref": "#/components/schemas/BuddyMockTopic"
           },
           "day": {
             "type": "string"
@@ -15570,10 +19829,19 @@
             "format": "int64"
           },
           "kind": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "buddy"
+            ]
           },
           "status_for_me": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing",
+              "open",
+              "closed"
+            ]
           },
           "counterpart": {
             "$ref": "#/components/schemas/ConversationCounterpart"
@@ -15602,26 +19870,6 @@
         },
         "description": "`unread` and `last_message_at` mean something on the list only; elsewhere they are 0 and null."
       },
-      "ConversationCardSummary": {
-        "type": "object",
-        "required": [
-          "category",
-          "seniority",
-          "country"
-        ],
-        "properties": {
-          "category": {
-            "type": "string"
-          },
-          "seniority": {
-            "type": "string"
-          },
-          "country": {
-            "type": "string"
-          }
-        },
-        "description": "A buddy's card, reduced to what an invitation shows."
-      },
       "ConversationCounterpart": {
         "type": "object",
         "required": [
@@ -15631,7 +19879,10 @@
         ],
         "properties": {
           "persona": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "buddy"
+            ]
           },
           "reachable": {
             "type": "boolean"
@@ -15708,10 +19959,19 @@
             "format": "int64"
           },
           "kind": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "buddy"
+            ]
           },
           "reason": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "spam",
+              "harassment",
+              "scam",
+              "other"
+            ]
           },
           "note": {
             "type": "string"
@@ -16647,6 +20907,112 @@
         },
         "description": "A patch: an absent switch keeps its stored value. Searches can only be turned off."
       },
+      "EmbeddingProgress": {
+        "type": "object",
+        "required": [
+          "eligible",
+          "covered",
+          "snapshot_covered",
+          "queued",
+          "rate_per_minute",
+          "eta_seconds",
+          "snapshot_at",
+          "measured_at"
+        ],
+        "properties": {
+          "eligible": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "covered": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshot_covered": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "queued": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rate_per_minute": {
+            "anyOf": [
+              {
+                "type": "number",
+                "format": "double"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "eta_seconds": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "snapshot_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "measured_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Every figure is null until it has been measured."
+      },
       "EmployerAccount": {
         "type": "object",
         "required": [
@@ -17203,6 +21569,139 @@
           }
         }
       },
+      "FitAnalysedJob": {
+        "type": "object",
+        "required": [
+          "slug",
+          "title",
+          "company",
+          "closed",
+          "overall_score",
+          "verdict",
+          "analysed_at",
+          "stale"
+        ],
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "closed": {
+            "type": "boolean"
+          },
+          "overall_score": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "analysed_at": {
+            "type": "string",
+            "format": "date-time",
+            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        },
+        "description": "One analysed job in the caller's list."
+      },
+      "FitAnalysedJobs": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FitAnalysedJob"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/FitAnalysedJobsMeta"
+          }
+        }
+      },
+      "FitAnalysedJobsMeta": {
+        "type": "object",
+        "required": [
+          "allowance"
+        ],
+        "properties": {
+          "allowance": {
+            "description": "Where the caller stands on the fit allowance today; null when it cannot be read."
+          }
+        }
+      },
+      "FitAnalysis": {
+        "type": "object",
+        "required": [
+          "has_cv",
+          "stale",
+          "analysis"
+        ],
+        "properties": {
+          "has_cv": {
+            "type": "boolean"
+          },
+          "stale": {
+            "type": "boolean"
+          },
+          "analysis": {},
+          "allowance": {},
+          "tailor_allowance": {}
+        },
+        "description": "The fit analysis for one job. `has_cv` is false when the caller has no stored CV;\n`stale` marks a cached analysis whose CV or job changed since; `analysis` is null when\nnone is cached or the model is unconfigured. The allowances ride on reads only and are\nabsent when they cannot be read."
+      },
+      "FitAnalysisResponse": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/FitAnalysis"
+          }
+        }
+      },
+      "FitMatchTextRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "description": "A job posting scraped off any page."
+      },
+      "FitRefusal": {
+        "type": "object",
+        "required": [
+          "error",
+          "allowance"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "allowance": {},
+          "upgrade_url": {
+            "type": "string",
+            "description": "Absent for a fair-use refusal and for a caller already on the top plan."
+          }
+        },
+        "description": "The 402 a spent or missing fit allowance answers with."
+      },
       "GeoSet": {
         "type": "object",
         "properties": {
@@ -17266,6 +21765,62 @@
           }
         }
       },
+      "GmailDisconnected": {
+        "type": "object",
+        "required": [
+          "connected"
+        ],
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GmailStatus": {
+        "type": "object",
+        "required": [
+          "connected",
+          "available",
+          "calendar_connected",
+          "mentor_calendar_connected",
+          "mentor_busy_sync_connected"
+        ],
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "calendar_connected": {
+            "type": "boolean"
+          },
+          "mentor_calendar_connected": {
+            "type": "boolean"
+          },
+          "mentor_busy_sync_connected": {
+            "type": "boolean"
+          }
+        },
+        "description": "Whether Gmail is connected. `email` and `status` are sent only when a connection row\nexists; `available` says whether the connect flow is configured on this deployment."
+      },
+      "GmailSyncStarted": {
+        "type": "object",
+        "required": [
+          "started"
+        ],
+        "properties": {
+          "started": {
+            "type": "boolean"
+          }
+        }
+      },
       "GrowthPoint": {
         "type": "object",
         "required": [
@@ -17289,6 +21844,15 @@
             "description": "That day's own signups."
           }
         }
+      },
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "operational",
+          "degraded",
+          "down"
+        ],
+        "description": "The derived health verdict for a provider, the fleet or the site."
       },
       "IgnoredMeta": {
         "type": "object",
@@ -17318,6 +21882,431 @@
         },
         "description": "A query param the endpoint did not read: unknown, or known but unreadable\n(`min_years=lots`). Either way the answer is wider than the caller asked for."
       },
+      "InboxApplicationDetail": {
+        "type": "object",
+        "required": [
+          "job",
+          "viewed_at",
+          "saved_at",
+          "applied_at",
+          "followed_up_at",
+          "emails",
+          "events"
+        ],
+        "properties": {
+          "job": {
+            "description": "The job in the shared wire shape."
+          },
+          "viewed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "saved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "applied_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stage": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "followed_up_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboxApplicationEmail"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimelineEvent"
+            },
+            "description": "The ledger, newest first."
+          },
+          "stage_suggestion": {
+            "description": "The stage the newest classified message implies; absent when there is nothing to offer."
+          },
+          "auto_apply": {
+            "description": "The caller's live auto-apply attempt for this job; absent when none exists."
+          }
+        },
+        "description": "The job, the caller's interaction with it, the linked mail and the history."
+      },
+      "InboxApplicationEmail": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "from_addr",
+          "from_name",
+          "subject",
+          "received_at",
+          "read"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "source": {
+            "type": "string"
+          },
+          "from_addr": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "status_signal": {
+            "type": "string"
+          },
+          "link_source": {
+            "type": "string"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+          },
+          "read": {
+            "type": "boolean"
+          }
+        }
+      },
+      "InboxEmail": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "external_id",
+          "from_addr",
+          "from_name",
+          "subject",
+          "body_text",
+          "body_html",
+          "received_at",
+          "read"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "source": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "from_addr": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "body_text": {
+            "type": "string"
+          },
+          "body_html": {
+            "type": "string"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "status_signal": {
+            "type": "string"
+          },
+          "link_source": {
+            "type": "string"
+          },
+          "linked_slug": {
+            "type": "string"
+          },
+          "linked_company": {
+            "type": "string"
+          },
+          "suggested_slug": {
+            "type": "string"
+          },
+          "suggested_company": {
+            "type": "string"
+          }
+        },
+        "description": "One message with its body. The internal raw-MIME pointer is not exposed."
+      },
+      "InboxIngested": {
+        "type": "object",
+        "required": [
+          "inserted",
+          "updated"
+        ],
+        "properties": {
+          "inserted": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "InboxLinkTarget": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "Names the application: a catalogue job's slug. Required, 400 when empty."
+      },
+      "InboxLinking": {
+        "type": "object",
+        "properties": {
+          "status_signal": {
+            "type": "string"
+          },
+          "link_source": {
+            "type": "string"
+          },
+          "linked_slug": {
+            "type": "string"
+          },
+          "linked_company": {
+            "type": "string"
+          },
+          "suggested_slug": {
+            "type": "string"
+          },
+          "suggested_company": {
+            "type": "string"
+          }
+        },
+        "description": "The classification and link overlay every message carries; each is absent when empty."
+      },
+      "InboxMarked": {
+        "type": "object",
+        "required": [
+          "marked"
+        ],
+        "properties": {
+          "marked": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "InboxMessage": {
+        "type": "object",
+        "required": [
+          "id",
+          "source",
+          "external_id",
+          "from_addr",
+          "from_name",
+          "subject",
+          "snippet",
+          "received_at",
+          "read"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "source": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          },
+          "from_addr": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "snippet": {
+            "type": "string"
+          },
+          "body_text": {
+            "type": "string"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "status_signal": {
+            "type": "string"
+          },
+          "link_source": {
+            "type": "string"
+          },
+          "linked_slug": {
+            "type": "string"
+          },
+          "linked_company": {
+            "type": "string"
+          },
+          "suggested_slug": {
+            "type": "string"
+          },
+          "suggested_company": {
+            "type": "string"
+          }
+        },
+        "description": "One row of the listing. `body_text` is sent only when the listing asked for bodies."
+      },
+      "InboxMeta": {
+        "type": "object",
+        "required": [
+          "total",
+          "limit",
+          "offset",
+          "hidden"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "hidden": {
+            "type": "integer",
+            "format": "int64",
+            "description": "How many messages the default filter suppressed."
+          }
+        }
+      },
+      "InboxPage": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboxMessage"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/InboxMeta"
+          }
+        }
+      },
+      "InboxTriage": {
+        "type": "object",
+        "properties": {
+          "signal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "number",
+                "format": "float"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Stored for display; gates nothing."
+          }
+        },
+        "description": "The verdict an agent records for one message. Left-out fields read as empty."
+      },
       "IngestStatus": {
         "type": "object",
         "required": [
@@ -17329,7 +22318,7 @@
         ],
         "properties": {
           "overall": {
-            "type": "string"
+            "$ref": "#/components/schemas/HealthStatus"
           },
           "generated_at": {
             "type": "string"
@@ -17992,6 +22981,133 @@
           }
         },
         "description": "Where and how the caller wants to work. Every member is optional on a save; an\nentirely empty block clears it. Echoed back normalised, with `remote`, `base` and\n`relocation` always present."
+      },
+      "MailFollowUpDraft": {
+        "type": "object",
+        "required": [
+          "subject",
+          "body",
+          "days_silent"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "recipient_name": {
+            "type": "string"
+          },
+          "days_silent": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "A chase the candidate sends themselves; `recipient` is absent when nobody ever replied."
+      },
+      "MailRecallResult": {
+        "type": "object",
+        "required": [
+          "scanned",
+          "suggested",
+          "invitations"
+        ],
+        "properties": {
+          "scanned": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "suggested": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailRecalledEmail"
+            }
+          },
+          "invitations": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MailRecalledEmail": {
+        "type": "object",
+        "required": [
+          "id",
+          "from_addr",
+          "from_name",
+          "subject",
+          "received_at",
+          "invitation"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "provider_id": {
+            "type": "string"
+          },
+          "from_addr": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time",
+            "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+          },
+          "invitation": {
+            "type": "boolean"
+          }
+        },
+        "description": "One message the recall sweep proposes. `id` is 0 for a message the search found."
+      },
+      "MailRecalledPick": {
+        "type": "object",
+        "properties": {
+          "provider_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "description": "The message the caller picked out of a sweep. Required, 400 when empty."
+      },
+      "MailboxStatus": {
+        "type": "object",
+        "required": [
+          "available",
+          "address"
+        ],
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
       },
       "MarketPulseMeta": {
         "type": "object",
@@ -18740,6 +23856,115 @@
           }
         }
       },
+      "Notification": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "body",
+          "public_slug",
+          "created_at",
+          "read_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "public_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "jobs": {
+            "description": "The stored snapshot of a multi-job digest; left out for every other kind."
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "read_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "NotificationListMeta": {
+        "type": "object",
+        "required": [
+          "total",
+          "unread_count",
+          "limit",
+          "offset"
+        ],
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unread_count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "limit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "offset": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "NotificationPage": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/NotificationListMeta"
+          }
+        }
+      },
       "NotificationSettings": {
         "type": "object",
         "required": [
@@ -18880,6 +24105,18 @@
           }
         },
         "description": "Every field is read as its zero value when left out. Times are `HH:MM`."
+      },
+      "NotificationsMarked": {
+        "type": "object",
+        "required": [
+          "marked"
+        ],
+        "properties": {
+          "marked": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       },
       "OnboardingCompleted": {
         "type": "object",
@@ -19118,18 +24355,42 @@
             "type": "string"
           },
           "interval": {
-            "type": "string",
-            "description": "`month` or `year`."
+            "$ref": "#/components/schemas/PlanPriceInterval"
           },
           "default": {
             "type": "boolean",
             "description": "The price a new subscriber is sold unless they choose another."
           },
           "tier": {
-            "type": "string",
-            "description": "The plan the price buys: `pro`, `ultra`, `api` or `api_data`."
+            "$ref": "#/components/schemas/PlanPriceTier",
+            "description": "The plan the price buys."
           }
         }
+      },
+      "PlanPriceInterval": {
+        "type": "string",
+        "enum": [
+          "month",
+          "year"
+        ]
+      },
+      "PlanPriceTier": {
+        "type": "string",
+        "enum": [
+          "pro",
+          "ultra",
+          "api",
+          "api_data"
+        ]
+      },
+      "PlanSource": {
+        "type": "string",
+        "enum": [
+          "stripe",
+          "revenuecat",
+          "granted"
+        ],
+        "description": "Where a paid plan was bought."
       },
       "PlanStanding": {
         "type": "object",
@@ -19140,8 +24401,7 @@
         ],
         "properties": {
           "plan": {
-            "type": "string",
-            "description": "The tier name: `free`, `pro`, `ultra`."
+            "$ref": "#/components/schemas/PlanTier"
           },
           "resets_at": {
             "type": "string",
@@ -19155,8 +24415,8 @@
             "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
           },
           "pro_source": {
-            "type": "string",
-            "description": "Where the plan was bought: `stripe`, `revenuecat` or `granted`. Absent on the free plan."
+            "$ref": "#/components/schemas/PlanSource",
+            "description": "Where the plan was bought. Absent on the free plan."
           },
           "allowances": {
             "type": "array",
@@ -19165,6 +24425,15 @@
             }
           }
         }
+      },
+      "PlanTier": {
+        "type": "string",
+        "enum": [
+          "free",
+          "pro",
+          "ultra"
+        ],
+        "description": "The tiers a caller can be on."
       },
       "PlanTierAllowance": {
         "type": "object",
@@ -19658,6 +24927,17 @@
           }
         }
       },
+      "ProviderKind": {
+        "type": "string",
+        "enum": [
+          "ats",
+          "aggregator",
+          "company",
+          "social",
+          "other"
+        ],
+        "description": "How a source is shaped."
+      },
       "PulseCompetition": {
         "type": "object",
         "required": [
@@ -19748,6 +25028,95 @@
             ]
           }
         }
+      },
+      "PushToken": {
+        "type": "object",
+        "required": [
+          "token",
+          "platform",
+          "created_at",
+          "last_seen_at"
+        ],
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time",
+                "x-ogen-time-format": "2006-01-02T15:04:05.999999999Z07:00"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "PushTokenRegister": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "description": "`ios` or `android`."
+          }
+        }
+      },
+      "PushTokenRemove": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "PushTokenTestResult": {
+        "type": "object",
+        "required": [
+          "devices",
+          "sent",
+          "pruned",
+          "failed"
+        ],
+        "properties": {
+          "devices": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sent": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pruned": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "What a self-test send did per registered device."
       },
       "RecentThread": {
         "type": "object",
@@ -20557,7 +25926,8 @@
           "sample_size",
           "p25",
           "p50",
-          "p75"
+          "p75",
+          "quantiles"
         ],
         "properties": {
           "seniority": {
@@ -20584,6 +25954,14 @@
           "p75": {
             "type": "integer",
             "format": "int64"
+          },
+          "quantiles": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The salary at every 5th percentile from 5 to 95 (19 values); empty until the rollup has computed them."
           }
         }
       },
@@ -20601,7 +25979,7 @@
             }
           },
           "meta": {
-            "$ref": "#/components/schemas/CategoryMeta"
+            "$ref": "#/components/schemas/SalaryMeta"
           }
         }
       },
@@ -21074,6 +26452,18 @@
           }
         }
       },
+      "SearchIntentRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "The description of the search; refused over the length limit."
+          },
+          "previous": {
+            "description": "The result being refined, echoed back from a prior answer."
+          }
+        }
+      },
       "SiteHealth": {
         "type": "object",
         "required": [
@@ -21086,12 +26476,14 @@
         ],
         "properties": {
           "status": {
-            "type": "string",
-            "description": "operational, degraded or down."
+            "$ref": "#/components/schemas/HealthStatus"
           },
           "database": {
             "type": "string",
-            "description": "\"up\" or \"down\"."
+            "enum": [
+              "up",
+              "down"
+            ]
           },
           "error_rate": {
             "type": "number",
@@ -21127,7 +26519,7 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/HealthStatus"
           }
         }
       },
@@ -21308,7 +26700,7 @@
             "type": "string"
           },
           "kind": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProviderKind"
           },
           "adapter": {
             "type": "boolean",
@@ -21351,7 +26743,7 @@
         ],
         "properties": {
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/HealthStatus"
           },
           "total_boards": {
             "type": "integer",
@@ -21447,10 +26839,10 @@
             "type": "string"
           },
           "kind": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProviderKind"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/HealthStatus"
           },
           "total_boards": {
             "type": "integer",
@@ -21986,6 +27378,45 @@
           }
         },
         "description": "One recognised piece of the query: a dictionary term, or text still being typed."
+      },
+      "SupportRating": {
+        "type": "object",
+        "required": [
+          "helpful"
+        ],
+        "properties": {
+          "helpful": {
+            "type": "boolean",
+            "description": "Whether the conversation helped. A later vote replaces an earlier one."
+          }
+        }
+      },
+      "SupportSession": {
+        "type": "object",
+        "required": [
+          "id",
+          "preset",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "preset": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "search_context": {},
+          "cv_id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
       },
       "SurveyResponses": {
         "type": "object",

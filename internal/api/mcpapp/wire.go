@@ -76,6 +76,10 @@ type SearchJobsResult struct {
 	Semantic string `json:"semantic,omitempty" jsonschema:"unavailable: a semantic request was answered by keywords only"`
 	// TotalIsLowerBound: the total is "this many and maybe more", not a count.
 	TotalIsLowerBound bool `json:"total_is_lower_bound,omitempty" jsonschema:"true: total is a minimum, not a count — say 'at least', never 'of N'"`
+	// Notice is set when an anonymous caller's page was shortened (see anonymousReader).
+	Notice string `json:"notice,omitempty" jsonschema:"set when fewer results were returned than asked because the caller is anonymous; tell the user and that connecting a freehire account lifts it"`
+	// Next is one sentence naming what else freehire can do with these results (nextHints).
+	Next string `json:"next,omitempty" jsonschema:"what else freehire can do with these results"`
 }
 
 // The two values of SearchJobsResult.Semantic.
@@ -120,6 +124,8 @@ type JobResult struct {
 	FakeFreshness *bool    `json:"fake_freshness,omitempty" jsonschema:"true when the posted date is recent but freehire has seen the posting for 90 days or more; present whenever reality is"`
 	GhostLevel    string   `json:"ghost_level,omitempty" jsonschema:"possible or likely: observed signs that the posting is not being actively filled; absent when there is too little evidence"`
 	GhostCriteria []string `json:"ghost_criteria,omitempty" jsonschema:"the signs behind ghost_level: evergreen_posting, ats_absent (gone from the employer's own board), silent_applications, user_reports"`
+	// Next is one sentence naming what else freehire can do with this posting (nextHints).
+	Next string `json:"next,omitempty" jsonschema:"what else freehire can do with this posting"`
 }
 
 // Requirement is one stated requirement and whether it is binding.
@@ -225,7 +231,8 @@ type ResearchMetadata struct {
 // SimilarJobsResult is what similar_jobs answers: the posting's nearest neighbours, nearest
 // first. Empty where none have been computed yet, which is true of the newest postings.
 type SimilarJobsResult struct {
-	Jobs []JobSummary `json:"jobs"`
+	Jobs   []JobSummary `json:"jobs"`
+	Notice string       `json:"notice,omitempty" jsonschema:"set when fewer results were returned than asked because the caller is anonymous; tell the user and that connecting a freehire account lifts it"`
 }
 
 // SalaryStatsResult is what salary_stats answers. Currencies and pay periods are never

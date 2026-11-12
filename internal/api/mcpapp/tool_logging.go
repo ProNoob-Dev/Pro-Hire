@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -71,12 +72,17 @@ func observeTool(ctx context.Context, surface, name string) func(*mcp.CallToolRe
 		if outcome == "canceled" || outcome == "deadline_exceeded" {
 			code = outcome
 		}
+		var badArgs []string
 		if metadata != nil && !metadata.state.ran {
 			outcome, code = "rejected", "invalid_request"
+			badArgs = badArgNames(result)
 		}
 		if result != nil && result.IsError {
 			if code == "" {
 				code = resultErrorCode(result)
+			}
+			if code == "invalid_request" && badArgs == nil {
+				badArgs = handlerBadArgs(result)
 			}
 			if result.Meta == nil {
 				result.Meta = mcp.Meta{}
@@ -87,6 +93,9 @@ func observeTool(ctx context.Context, surface, name string) func(*mcp.CallToolRe
 		mcpToolCalls.WithLabelValues(surface, name, outcome, code).Inc()
 		mcpToolDuration.WithLabelValues(surface, name).Observe(elapsed.Seconds())
 		attrs := []any{"outcome", outcome, "error_code", code, "duration_ms", elapsed.Milliseconds()}
+		if len(badArgs) > 0 {
+			attrs = append(attrs, "bad_args", strings.Join(badArgs, ","))
+		}
 		if metadata != nil {
 			mcpClientCalls.WithLabelValues(surface, metadata.client).Inc()
 			if outcome == "success" && metadata.reportCategory != "" {
@@ -108,6 +117,17 @@ func observeTool(ctx context.Context, surface, name string) func(*mcp.CallToolRe
 }
 
 const diagnosticsMetaKey = "freehire.me/diagnostics"
+
+// badArgsKey carries, inside the diagnostics, the names of the arguments a handler blamed
+// for an invalid_request. observeTool logs them and replaces the diagnostics before the
+// result leaves, so they never reach the client.
+const badArgsKey = "bad_args"
+
+func handlerBadArgs(result *mcp.CallToolResult) []string {
+	diagnostics, _ := result.Meta[diagnosticsMetaKey].(map[string]any)
+	names, _ := diagnostics[badArgsKey].([]string)
+	return loggableNames(names)
+}
 
 func resultErrorCode(result *mcp.CallToolResult) string {
 	diagnostics, _ := result.Meta[diagnosticsMetaKey].(map[string]any)

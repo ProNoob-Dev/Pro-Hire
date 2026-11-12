@@ -52,7 +52,7 @@ func realGateAssistantApp(t *testing.T, pool *pgxpool.Pool, iss *auth.Issuer, mo
 		paidAI: paidAIGate(entitlementOf(plans)),
 		cookie: auth.RequireAuth(iss, testVersions),
 		key:    auth.RequireAuthOrKey(iss, testVersions, apiKeys{queries}),
-	})
+	}, newContract(contractHandlers{assistantHandlers: h}))
 	return app
 }
 
@@ -99,7 +99,7 @@ func TestPaidAIFitStreamRefusesFree(t *testing.T) {
 	(&matchHandlers{}).register(app.Group("/api/v1"), middleware{
 		paidAI: paidAIGate(entitlementOf(plans)),
 		key:    auth.RequireAuthOrKey(iss, testVersions, apiKeys{queries}),
-	})
+	}, newContract(contractHandlers{}))
 
 	userID, token := assistantUser(t, pool, iss, "paid-gate-fit@example.test", false)
 	insertAutoApplyJob(t, pool, "any-job")

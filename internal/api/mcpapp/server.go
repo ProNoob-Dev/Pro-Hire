@@ -23,7 +23,8 @@ const serverInstructions = "freehire provides anonymous, read-only access to agg
 	"search_jobs/get_job: postings; check_jobs_open: open status; similar_jobs: related postings; " +
 	"search_companies/get_company: employers; salary_stats/job_market_stats: pay and demand; " +
 	"list_filter_values: supported filters. Results include source boards and employer links " +
-	"where available. Geography filters form a union. ignored_params identifies unrecognized filter values."
+	"where available. Geography filters form a union. ignored_params identifies unrecognized filter values." +
+	" Search sees the start of a description; get_job has the rest."
 
 // Tool names. Unlike the OJCP transport's, they feed no manifest — there is nothing here
 // that ADVERTISES a tool separately from registering it, so they are constants only because
@@ -91,10 +92,10 @@ func Handler(r Reader, origin string) http.Handler {
 }
 
 func newServer(r Reader, origin string) *mcp.Server {
-	return newCatalogueServer(r, origin, serverInstructions, "public")
+	return newCatalogueServer(forAnonymous(r), origin, serverInstructions, "public", signedOutNext(origin))
 }
 
-func newCatalogueServer(r Reader, origin, instructions, surface string) *mcp.Server {
+func newCatalogueServer(r Reader, origin, instructions, surface string, next nextHints) *mcp.Server {
 	server := mcp.NewServer(Identity("freehire", Version, origin),
 		&mcp.ServerOptions{
 			Instructions:      instructions,
@@ -127,7 +128,12 @@ func newCatalogueServer(r Reader, origin, instructions, surface string) *mcp.Ser
 		Annotations: readOnly(),
 		Meta:        rendersInWidget(),
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in SearchInput) (*mcp.CallToolResult, SearchJobsResult, error) {
-		return toolResult(r.SearchJobs(ctx, in))
+		out, err := r.SearchJobs(ctx, in)
+		// The anonymous cap notice already says to connect an account; say it once.
+		if err == nil && out.Notice == "" {
+			out.Next = next.search
+		}
+		return toolResult(out, err)
 	})
 
 	AddObservedTool(server, surface, &mcp.Tool{
@@ -141,7 +147,11 @@ func newCatalogueServer(r Reader, origin, instructions, surface string) *mcp.Ser
 		Annotations: readOnly(),
 		Meta:        rendersInWidget(),
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in JobDetailInput) (*mcp.CallToolResult, JobResult, error) {
-		return toolResult(r.JobDetail(ctx, in.Slug))
+		out, err := r.JobDetail(ctx, in.Slug)
+		if err == nil {
+			out.Next = next.job
+		}
+		return toolResult(out, err)
 	})
 
 	AddObservedTool(server, surface, &mcp.Tool{
@@ -211,8 +221,12 @@ func toolResult[T any](out T, err error) (*mcp.CallToolResult, T, error) {
 	if errors.Is(err, search.ErrTooManyAlternatives) {
 		message = "the query has more than 5 OR alternatives; split them into several searches of at most 5 each and combine the results"
 	}
+	diagnostics := map[string]any{"error_code": publicErrorCode(err)}
+	if errors.Is(err, search.ErrTooManyAlternatives) {
+		diagnostics[badArgsKey] = []string{"query"}
+	}
 	return &mcp.CallToolResult{
-		Meta:    mcp.Meta{diagnosticsMetaKey: map[string]any{"error_code": publicErrorCode(err)}},
+		Meta:    mcp.Meta{diagnosticsMetaKey: diagnostics},
 		IsError: true,
 		Content: []mcp.Content{&mcp.TextContent{Text: message}},
 	}, zero, nil

@@ -89,8 +89,8 @@ func (f assistantFilterArgs) values() (url.Values, error) {
 	vals := url.Values{}
 	for name, list := range f {
 		if _, ok := search.StringFacets[name]; !ok {
-			return nil, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unknown filter %q — call the facets tool for the valid filter names and values; valid names are: %s",
-				name, strings.Join(assistantFacetNames(), ", ")))
+			return nil, assistant.BadArg("filters."+name, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unknown filter %q — call the facets tool for the valid filter names and values; valid names are: %s",
+				name, strings.Join(assistantFacetNames(), ", "))))
 		}
 		for _, v := range list {
 			if v = strings.TrimSpace(v); v != "" {
@@ -135,8 +135,10 @@ func (h *assistantHandlers) facets(full bool) assistant.Tool {
 	if !full {
 		description = "List the live filter vocabulary. Without `facet`: every filter's name with how many values it " +
 			"has, plus numeric ranges. With `facet`: that filter's values with a vacancy count each, optionally only " +
-			"those containing `contains`. Filter values are the market's own; an invented one matches nothing."
-		properties["facet"] = map[string]any{"type": "string", "description": "A filter name to list the values of, e.g. skills, cities, metros."}
+			"those containing `contains`. Filter values are the market's own; an invented one matches nothing. " +
+			"`company_slug` lists the 50 busiest companies (slug, name, count) under the filters; `contains` searches the " +
+			"1,200 busiest of them, so narrow the filters to reach a small employer."
+		properties["facet"] = map[string]any{"type": "string", "description": "A filter name to list the values of, e.g. skills, cities, metros, company_slug."}
 		properties["contains"] = map[string]any{"type": "string", "description": "With facet: keep only values containing this text, e.g. berlin; for skills a known alias also finds its value, e.g. golang finds go."}
 	}
 	return assistant.Tool{
@@ -166,7 +168,7 @@ func (h *assistantHandlers) facets(full bool) assistant.Tool {
 			if !full && facet != "" {
 				// Count only the named facet: one attribute costs Meili a fraction of all of them.
 				if !listableFacet(facet) {
-					return nil, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unknown facet %q; valid facets are: %s", facet, strings.Join(listableFacets(), ", ")))
+					return nil, assistant.BadArg("facet", fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("unknown facet %q; valid facets are: %s", facet, strings.Join(listableFacets(), ", "))))
 				}
 				attrs = facetAttributes(facet)
 			}
@@ -176,6 +178,9 @@ func (h *assistantHandlers) facets(full bool) assistant.Tool {
 			})
 			if err != nil {
 				return nil, searchToolError(err)
+			}
+			if !full && facet == companyFacetParam {
+				return h.companyIndex(ctx, res, in.Contains), nil
 			}
 			view := facetView(res)
 			if full {
@@ -187,11 +192,29 @@ func (h *assistantHandlers) facets(full bool) assistant.Tool {
 }
 
 // listableFacet reports whether the MCP facets can list a facet's values by name: every
-// public facet but the company one, whose distribution is millions long.
+// public facet. company_slug is answered as the busiest companies, not all of its values.
 func listableFacet(name string) bool {
 	_, isString := search.StringFacets[name]
 	_, isExtra := facetExtraParams[name]
-	return (isString || isExtra) && name != companyFacetParam
+	return isString || isExtra
+}
+
+// companyIndex answers facet=company_slug: the companies whose slug contains the text, busiest
+// first and capped at topCompaniesLimit, each with its display name. A space in the text
+// matches the slug's hyphen, so "acme corp" finds acme-corp.
+func (h *assistantHandlers) companyIndex(ctx context.Context, res search.FacetResult, contains string) map[string]any {
+	// shortcut: res holds only the busiest 1,200 companies (the engine's per-facet cap), so a
+	// small employer is found only under filters narrow enough to fit; upgrade to an index facet search.
+	needle := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(contains)), " ", "-")
+	kept := map[string]int64{}
+	for slug, n := range res.Facets[companyAttr] {
+		if strings.Contains(slug, needle) {
+			kept[slug] = n
+		}
+	}
+	top := topCompanies(kept)
+	h.search.nameCompanies(ctx, top)
+	return map[string]any{"total": res.Total, "facet": companyFacetParam, "companies": top, "matching_companies": len(kept)}
 }
 
 // listableFacets is every name listableFacet accepts, sorted so the error a model reads is stable.
@@ -217,7 +240,7 @@ func facetIndex(view facetPayload, facet, contains string) map[string]any {
 		// it, so a narrow filter does not hide that the facet exists. Numeric ones are in stats.
 		sizes := map[string]int{}
 		for _, name := range listableFacets() {
-			if !facetExtraParams[name].statOnly {
+			if !facetExtraParams[name].statOnly && name != companyFacetParam {
 				sizes[name] = 0
 			}
 		}
@@ -277,7 +300,7 @@ func (h *assistantHandlers) searchJobs(full bool) assistant.Tool {
 		Schema: map[string]any{
 			"type": "object",
 			"properties": map[string]any{
-				"query":   map[string]any{"type": "string", "description": "Free-text query. Omit to browse the freshest postings under the filters. Operators: double quotes require every quoted word in any order (not a phrase); -word excludes; uppercase OR between terms matches any alternative (at most 5); title: at the start of an alternative matches it in the title only, e.g. title:\"product owner\" OR title:produktchef."},
+				"query":   map[string]any{"type": "string", "description": "Free-text query, matched against title, company, location and the start of the description (not the full text, so details such as equity or visa may be missing from the match). Use few, specific words. Omit to browse the freshest postings under the filters. Operators: double quotes require every quoted word in any order (not a phrase); -word excludes; uppercase OR between terms matches any alternative (at most 5); title: at the start of an alternative matches it in the title only, e.g. title:\"product owner\" OR title:produktchef."},
 				"filters": assistantFilterSchema("Facet filters; values must come from the facets tool."),
 				"limit":   map[string]any{"type": "integer", "description": fmt.Sprintf("How many vacancies to return (default %d, max %d).", assistantDefaultSearchLimit, assistantMaxSearchLimit)},
 				"offset":  map[string]any{"type": "integer", "description": "Skip this many results (paging)."},
@@ -371,9 +394,9 @@ func (h *assistantHandlers) searchJobs(full bool) assistant.Tool {
 func searchToolError(err error) error {
 	switch {
 	case errors.Is(err, search.ErrTooManyAlternatives):
-		return fiber.NewError(fiber.StatusBadRequest, search.ErrTooManyAlternatives.Error())
+		return assistant.BadArg("query", fiber.NewError(fiber.StatusBadRequest, search.ErrTooManyAlternatives.Error()))
 	case errors.Is(err, search.ErrBadQuery):
-		return fiber.NewError(fiber.StatusBadRequest, "invalid search query")
+		return assistant.BadArg("query", fiber.NewError(fiber.StatusBadRequest, "invalid search query"))
 	}
 	return err
 }
@@ -415,7 +438,7 @@ func (h *assistantHandlers) getJobTool() assistant.Tool {
 				return nil, err
 			}
 			if in.Slug == "" {
-				return nil, fiber.NewError(fiber.StatusBadRequest, "slug is required")
+				return nil, assistant.BadArg("slug", fiber.NewError(fiber.StatusBadRequest, "slug is required"))
 			}
 			job, err := agentJobBySlug(ctx, h.queries, in.Slug)
 			if err != nil {
@@ -453,7 +476,7 @@ func (h *assistantHandlers) getCompanyTool() assistant.Tool {
 				return nil, err
 			}
 			if in.Slug == "" {
-				return nil, fiber.NewError(fiber.StatusBadRequest, "slug is required")
+				return nil, assistant.BadArg("slug", fiber.NewError(fiber.StatusBadRequest, "slug is required"))
 			}
 			company, canonical, err := companyBySlugOrAlias(ctx, h.queries, in.Slug)
 			if canonical != "" {
@@ -515,10 +538,10 @@ func (h *assistantHandlers) marketFitTool() assistant.Tool {
 			}
 			skills := nonEmptyStrings(in.Skills)
 			if len(skills) == 0 {
-				return nil, fiber.NewError(fiber.StatusBadRequest, "skills is required — list the canonical slugs to measure")
+				return nil, assistant.BadArg("skills", fiber.NewError(fiber.StatusBadRequest, "skills is required — list the canonical slugs to measure"))
 			}
 			if len(skills) > maxCoverageSkills {
-				return nil, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("too many skills (max %d)", maxCoverageSkills))
+				return nil, assistant.BadArg("skills", fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("too many skills (max %d)", maxCoverageSkills)))
 			}
 			vals, err := in.Filters.values()
 			if err != nil {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -23,8 +25,43 @@ import (
 // durable, where the profile page's values persist and drive the ranked feed,
 // subscriptions and fit analysis.
 type noProfileResult struct {
-	Profile any    `json:"profile"`
+	Profile any `json:"profile"`
+	// Account is the connected account's email, masked: which account the agent is bound
+	// to is the one thing a person cannot see from inside the agent, and the full address
+	// never reaches the model.
+	Account string `json:"account,omitempty"`
 	Next    string `json:"next"`
+	// Background and CV (its deprecated alias, see profileToolResult) are still served: the
+	// headline and summary live apart from the preferences row, so a candidate can have text
+	// and no saved preferences, and update_profile can write one without the other.
+	Background *resumeextract.Professional `json:"background,omitempty"`
+	CV         *resumeextract.Professional `json:"cv,omitempty"`
+}
+
+// maskAccountEmail keeps the first character of the local part and the domain: j***@gmail.com.
+// A value without a usable "@" is fully hidden.
+func maskAccountEmail(email string) string {
+	at := strings.LastIndex(email, "@")
+	if at < 1 {
+		return ""
+	}
+	first, _ := utf8.DecodeRuneInString(email)
+	return string(first) + "***" + email[at:]
+}
+
+// noProfileNext tells the agent which account it is connected as, so a person who saved
+// their profile under another account is sent to reconnect instead of re-entering it.
+func noProfileNext(masked string) string {
+	next := "The user has not saved a profile yet. If you have update_profile, offer to " +
+		"save what they tell you and call it once they agree; otherwise point them at " +
+		"/my/profile to fill it in. Either way it persists and drives their " +
+		"recommendations, which answers given only in this conversation do not."
+	if masked == "" {
+		return next
+	}
+	return "This agent is connected as " + masked + ", and that account has no saved profile. " +
+		"If it is not the account the user signs in with on the site, tell them to reconnect " +
+		"while signed in to the right one. Otherwise: " + next
 }
 
 // getProfileTool reads the caller's own saved profile: the specializations, skills
@@ -43,7 +80,9 @@ func (h *assistantHandlers) getProfileTool() assistant.Tool {
 			"want, the skills they want to avoid, where and how they will work, and their CV " +
 			"(headline, years, experience, education — contacts are not included). Call this " +
 			"before asking the user what they are looking for; only ask about what the profile " +
-			"does not answer. The experience section reports the SHAPE of what they have told us — " +
+			"does not answer. The background block (headline, summary, years, education) is part of the " +
+			"profile, not a CV document — CV documents are read and edited with cv_get and cv_edit; " +
+			"`cv` repeats it under its old name. The experience section reports the SHAPE of what they have told us — " +
 			"which roles we know and how much evidence each carries — not the achievements " +
 			"themselves. Takes no arguments.",
 		Schema: map[string]any{"type": "object", "properties": map[string]any{}},
@@ -57,11 +96,14 @@ func (h *assistantHandlers) getProfileTool() assistant.Tool {
 			}
 			profile, err := h.profile.userProfile.Get(ctx, userID)
 			if errors.Is(err, userprofile.ErrNotFound) {
-				return noProfileResult{
-					Next: "The user has not saved a profile yet. Point them at /my/profile to " +
-						"fill it in — it persists and drives their recommendations — rather than " +
-						"collecting the same answers in this conversation.",
-				}, nil
+				masked := ""
+				if h.queries != nil {
+					if user, uerr := h.queries.GetUserByID(ctx, userID); uerr == nil {
+						masked = maskAccountEmail(user.Email)
+					}
+				}
+				text := h.profileTextBlock(ctx, userID)
+				return noProfileResult{Background: text, CV: text, Account: masked, Next: noProfileNext(masked)}, nil
 			}
 			if err != nil {
 				return nil, err
@@ -80,12 +122,22 @@ func (h *assistantHandlers) getProfileTool() assistant.Tool {
 // and defeat trimming, so content is fetched per question through experience_search and
 // the summary tells the agent where it is worth asking one.
 type profileToolResult struct {
-	Specializations     []string                    `json:"specializations"`
-	Skills              []string                    `json:"skills"`
-	ExcludedSkills      []string                    `json:"excluded_skills,omitempty"`
-	LocationPreferences any                         `json:"location_preferences,omitempty"`
-	CV                  *resumeextract.Professional `json:"cv,omitempty"`
-	Experience          *experienceSummary          `json:"experience,omitempty"`
+	Specializations     []string `json:"specializations"`
+	Skills              []string `json:"skills"`
+	Seniorities         []string `json:"seniorities,omitempty"`
+	JobLanguages        []string `json:"job_languages,omitempty"`
+	ExcludedSkills      []string `json:"excluded_skills,omitempty"`
+	LocationPreferences any      `json:"location_preferences,omitempty"`
+	// Background is the candidate's professional self-description: headline, summary,
+	// years, education, languages (work history is left to Experience). It is profile data,
+	// not a CV document, which is why it is named for what it is and not "cv".
+	Background *resumeextract.Professional `json:"background,omitempty"`
+	// CV is the same block under its original name, kept so a reader written against it does
+	// not break. Deprecated: drop it once get_profile's description has told agents to read
+	// `background` for a few weeks (revisit after 2026-12-01); it doubles this block in every
+	// transcript until then.
+	CV         *resumeextract.Professional `json:"cv,omitempty"`
+	Experience *experienceSummary          `json:"experience,omitempty"`
 }
 
 // experienceSummary is the bank at a glance.
@@ -117,22 +169,31 @@ type employmentSummary struct {
 	Achievements int       `json:"achievements"`
 }
 
+// profileTextBlock is the candidate's headline, summary, years, education and languages, or
+// nil when nothing is known. The block already carries the whole work history, which is the
+// very thing the experience summary exists to keep out of the transcript, so it is dropped.
+func (h *assistantHandlers) profileTextBlock(ctx context.Context, userID int64) *resumeextract.Professional {
+	block := h.profile.structuredCV(ctx, userID)
+	if block == nil {
+		return nil
+	}
+	trimmed := *block
+	trimmed.Experience = nil
+	return &trimmed
+}
+
 // profileToolResult assembles the agent's view of a caller's profile.
 func (h *assistantHandlers) profileToolResult(ctx context.Context, userID int64, profile userprofile.Profile) profileToolResult {
 	out := profileToolResult{
 		Specializations:     profile.Specializations,
 		Skills:              profile.Skills,
+		Seniorities:         profile.Seniorities,
+		JobLanguages:        profile.JobLanguages,
 		ExcludedSkills:      profile.ExcludedSkills,
 		LocationPreferences: profile.LocationPreferences,
-		CV:                  h.profile.structuredCV(ctx, userID),
 	}
-	// The CV block already carries the whole work history, which is the very thing this
-	// summary exists to keep out of the transcript.
-	if out.CV != nil {
-		trimmed := *out.CV
-		trimmed.Experience = nil
-		out.CV = &trimmed
-	}
+	out.CV = h.profileTextBlock(ctx, userID)
+	out.Background = out.CV
 	if summary := h.experienceSummary(ctx, userID, profile.Skills); summary != nil {
 		out.Experience = summary
 	}
