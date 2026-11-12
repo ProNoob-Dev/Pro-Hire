@@ -7,6 +7,9 @@ name: Sync fork with upstream
 # conflict needs a manual resolve — nothing is ever force-pushed.
 # Note: GitHub pauses scheduled runs on repos with no activity for 60 days;
 # any push to the repo wakes the schedule back up.
+# `workflows: write` is required: upstream sometimes changes workflow files
+# (e.g. contract.yml), and GitHub Apps cannot create/update workflow files
+# without it.
 
 on:
   schedule:
@@ -15,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  workflows: write
 
 jobs:
   sync:
