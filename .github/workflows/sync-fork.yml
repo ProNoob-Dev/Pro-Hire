@@ -7,9 +7,9 @@ name: Sync fork with upstream
 # conflict needs a manual resolve — nothing is ever force-pushed.
 # Note: GitHub pauses scheduled runs on repos with no activity for 60 days;
 # any push to the repo wakes the schedule back up.
-# `workflows: write` is required: upstream sometimes changes workflow files
-# (e.g. contract.yml), and GitHub Apps cannot create/update workflow files
-# without it.
+# Uses the FORK_SYNC_TOKEN repo secret (a PAT with workflow scope):
+# the default GITHUB_TOKEN is a GitHub App token and cannot create/update
+# workflow files, so upstream workflow changes would fail the sync.
 
 on:
   schedule:
@@ -18,7 +18,6 @@ on:
 
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   sync:
@@ -26,7 +25,7 @@ jobs:
     steps:
       - name: Sync main with upstream
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.FORK_SYNC_TOKEN }}
         run: |
           gh api "repos/${{ github.repository }}/merge-upstream" \
             -f branch=main \
