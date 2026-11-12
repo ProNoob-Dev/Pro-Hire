@@ -4,14 +4,204 @@ package apigen
 
 import (
 	"context"
+
+	"github.com/go-faster/jx"
 )
 
 // Handler handles operations described by OpenAPI v3 specification.
 type Handler interface {
+	// AcceptConversation implements acceptConversation operation.
+	//
+	// Opens a pending conversation the caller did not start. The id is declared a string and parsed in Go,
+	// which keeps the 400 text.
+	//
+	// POST /me/conversations/{id}/accept
+	AcceptConversation(ctx context.Context, params AcceptConversationParams) (*AcceptConversationOK, error)
+	// AddAtom implements addAtom operation.
+	//
+	// The body is an achievement; its provenance is set by the route, whatever the body says.
+	//
+	// POST /me/experience/atoms
+	AddAtom(ctx context.Context, req jx.Raw) (*AddAtomCreated, error)
+	// AddAvailabilityOverride implements addAvailabilityOverride operation.
+	//
+	// POST /me/mentorship/availability/overrides
+	AddAvailabilityOverride(ctx context.Context, req *BuddyMockRule) (*AddAvailabilityOverrideCreated, error)
+	// AddEmployment implements addEmployment operation.
+	//
+	// The body is a place; its shape is the bank's.
+	//
+	// POST /me/experience/employments
+	AddEmployment(ctx context.Context, req jx.Raw) (*AddEmploymentCreated, error)
 	// AddToWatchlist implements addToWatchlist operation.
 	//
 	// PUT /me/watchlist/{slug}
 	AddToWatchlist(ctx context.Context, params AddToWatchlistParams) (*AddToWatchlistOK, error)
+	// AgentSearchJobs implements agentSearchJobs operation.
+	//
+	// The same query as `/jobs/search`, always with the full description in the chosen format.
+	//
+	// GET /agent/jobs/search
+	AgentSearchJobs(ctx context.Context, params AgentSearchJobsParams) (*AgentJobSearchPageHeaders, error)
+	// ApproveCompanyRelation implements approveCompanyRelation operation.
+	//
+	// Moderators only. Approving again resumes a move that failed part-way.
+	//
+	// POST /company-relations/{id}/approve
+	ApproveCompanyRelation(ctx context.Context, params ApproveCompanyRelationParams) (*ApproveCompanyRelationOK, error)
+	// ApproveEmployerClaim implements approveEmployerClaim operation.
+	//
+	// Moderators only. The user id travels as a string so a non-number keeps its 400.
+	//
+	// POST /employer/claims/{user_id}/approve
+	ApproveEmployerClaim(ctx context.Context, params ApproveEmployerClaimParams) (*ApproveEmployerClaimOK, error)
+	// ApproveSubmission implements approveSubmission operation.
+	//
+	// Moderators only. 404 for an unknown id, 409 for one already decided.
+	//
+	// POST /submissions/{id}/approve
+	ApproveSubmission(ctx context.Context, params ApproveSubmissionParams) (*ApproveSubmissionOK, error)
+	// BanUser implements banUser operation.
+	//
+	// POST /moderation/users/{id}/ban
+	BanUser(ctx context.Context, req *BanRequest, params BanUserParams) (*BanUserOK, error)
+	// BlockConversation implements blockConversation operation.
+	//
+	// Closes every conversation with the other participant and stops either from starting another, of any
+	// kind.
+	//
+	// POST /me/conversations/{id}/block
+	BlockConversation(ctx context.Context, params BlockConversationParams) error
+	// BookSession implements bookSession operation.
+	//
+	// POST /mentors/{slug}/bookings
+	BookSession(ctx context.Context, req *MentorshipBookingBody, params BookSessionParams) (*BookSessionCreated, error)
+	// BuddyActivity implements buddyActivity operation.
+	//
+	// GET /me/buddies/profiles/{handle}/activity
+	BuddyActivity(ctx context.Context, params BuddyActivityParams) (*BuddyActivityOK, error)
+	// BuddyFeed implements buddyFeed operation.
+	//
+	// GET /me/buddies/feed
+	BuddyFeed(ctx context.Context, params BuddyFeedParams) (*BuddyFeedPage, error)
+	// BuddyHiddenApplications implements buddyHiddenApplications operation.
+	//
+	// GET /me/buddies/hidden-applications
+	BuddyHiddenApplications(ctx context.Context) (*BuddyHiddenApplicationsOK, error)
+	// BuddyHideApplication implements buddyHideApplication operation.
+	//
+	// PUT /me/buddies/hidden-applications/{id}
+	BuddyHideApplication(ctx context.Context, params BuddyHideApplicationParams) error
+	// BuddyInvite implements buddyInvite operation.
+	//
+	// POST /me/buddies/invite
+	BuddyInvite(ctx context.Context, req *BuddyInviteBody) (*BuddyInviteCreated, error)
+	// BuddyJoin implements buddyJoin operation.
+	//
+	// POST /me/buddies
+	BuddyJoin(ctx context.Context) (*BuddyJoinOK, error)
+	// BuddyLeave implements buddyLeave operation.
+	//
+	// DELETE /me/buddies
+	BuddyLeave(ctx context.Context) error
+	// BuddyMockAvailabilityGet implements buddyMockAvailabilityGet operation.
+	//
+	// GET /me/buddies/mocks/availability
+	BuddyMockAvailabilityGet(ctx context.Context) (*BuddyMockAvailabilityGetOK, error)
+	// BuddyMockBook implements buddyMockBook operation.
+	//
+	// POST /me/buddies/profiles/{handle}/mocks
+	BuddyMockBook(ctx context.Context, req *BuddyMockBook, params BuddyMockBookParams) (*BuddyMockBookCreated, error)
+	// BuddyMockCancel implements buddyMockCancel operation.
+	//
+	// POST /me/buddies/mocks/{id}/cancel
+	BuddyMockCancel(ctx context.Context, params BuddyMockCancelParams) error
+	// BuddyMockHosts implements buddyMockHosts operation.
+	//
+	// GET /me/buddies/mocks/hosts
+	BuddyMockHosts(ctx context.Context, params BuddyMockHostsParams) (*BuddyMockHostsPage, error)
+	// BuddyMockList implements buddyMockList operation.
+	//
+	// GET /me/buddies/mocks
+	BuddyMockList(ctx context.Context) (*BuddyMockListOK, error)
+	// BuddyMockOverrideAdd implements buddyMockOverrideAdd operation.
+	//
+	// POST /me/buddies/mocks/availability/overrides
+	BuddyMockOverrideAdd(ctx context.Context, req *BuddyMockRule) (*BuddyMockOverrideAddCreated, error)
+	// BuddyMockReview implements buddyMockReview operation.
+	//
+	// POST /me/buddies/mocks/{id}/review
+	BuddyMockReview(ctx context.Context, req *BuddyMockReviewBody, params BuddyMockReviewParams) error
+	// BuddyMockReviews implements buddyMockReviews operation.
+	//
+	// GET /me/buddies/profiles/{handle}/mock-reviews
+	BuddyMockReviews(ctx context.Context, params BuddyMockReviewsParams) (*BuddyMockReviewsOK, error)
+	// BuddyMockRuleDelete implements buddyMockRuleDelete operation.
+	//
+	// DELETE /me/buddies/mocks/availability/{id}
+	BuddyMockRuleDelete(ctx context.Context, params BuddyMockRuleDeleteParams) error
+	// BuddyMockSettingsGet implements buddyMockSettingsGet operation.
+	//
+	// The caller's own settings, or null before the first save.
+	//
+	// GET /me/buddies/mocks/settings
+	BuddyMockSettingsGet(ctx context.Context) (*BuddyMockSettingsGetOK, error)
+	// BuddyMockSettingsSave implements buddyMockSettingsSave operation.
+	//
+	// PUT /me/buddies/mocks/settings
+	BuddyMockSettingsSave(ctx context.Context, req *BuddyMockSettings) (*BuddyMockSettingsSaveOK, error)
+	// BuddyMockSlots implements buddyMockSlots operation.
+	//
+	// GET /me/buddies/profiles/{handle}/mock-slots
+	BuddyMockSlots(ctx context.Context, params BuddyMockSlotsParams) (*BuddyMockSlotsPage, error)
+	// BuddyMockWeeklyReplace implements buddyMockWeeklyReplace operation.
+	//
+	// PUT /me/buddies/mocks/availability/weekly
+	BuddyMockWeeklyReplace(ctx context.Context, req *BuddyMockWeekly) error
+	// BuddyProfile implements buddyProfile operation.
+	//
+	// GET /me/buddies/profiles/{handle}
+	BuddyProfile(ctx context.Context, params BuddyProfileParams) (*BuddyProfileOK, error)
+	// BuddyReact implements buddyReact operation.
+	//
+	// PUT /me/buddies/feed/{id}/reaction
+	BuddyReact(ctx context.Context, req *BuddyReactBody, params BuddyReactParams) (*BuddyReactOK, error)
+	// BuddyShowApplication implements buddyShowApplication operation.
+	//
+	// DELETE /me/buddies/hidden-applications/{id}
+	BuddyShowApplication(ctx context.Context, params BuddyShowApplicationParams) error
+	// BuddySimilar implements buddySimilar operation.
+	//
+	// GET /me/buddies/similar
+	BuddySimilar(ctx context.Context, params BuddySimilarParams) (*BuddySimilarPage, error)
+	// BuddyStatus implements buddyStatus operation.
+	//
+	// GET /me/buddies
+	BuddyStatus(ctx context.Context) (*BuddyStatusOK, error)
+	// BuddyUnreact implements buddyUnreact operation.
+	//
+	// DELETE /me/buddies/feed/{id}/reaction
+	BuddyUnreact(ctx context.Context, params BuddyUnreactParams) (*BuddyUnreactOK, error)
+	// CancelSession implements cancelSession operation.
+	//
+	// POST /me/mentorship/sessions/{id}/cancel
+	CancelSession(ctx context.Context, req OptMentorshipCancelBody, params CancelSessionParams) (*CancelSessionOK, error)
+	// CatalogScale implements catalogScale operation.
+	//
+	// The catalogue size. Never fails: a cold cache degrades to an estimate and `exact` says so.
+	//
+	// GET /stats/catalog
+	CatalogScale(ctx context.Context) (*CatalogScaleOK, error)
+	// ClaimEmployerCompany implements claimEmployerCompany operation.
+	//
+	// Starts a claim: reserves the company and mails a code to the work email.
+	//
+	// POST /employer/claim
+	ClaimEmployerCompany(ctx context.Context, req *EmployerClaim) (*ClaimEmployerCompanyCreated, error)
+	// ClearApplicationStage implements clearApplicationStage operation.
+	//
+	// DELETE /me/applications/{id}/stage
+	ClearApplicationStage(ctx context.Context, params ClearApplicationStageParams) (*ClearApplicationStageOK, error)
 	// ClearCompanyVote implements clearCompanyVote operation.
 	//
 	// DELETE /companies/{slug}/vote
@@ -20,10 +210,54 @@ type Handler interface {
 	//
 	// DELETE /jobs/{slug}/vote
 	ClearJobVote(ctx context.Context, params ClearJobVoteParams) (*ClearJobVoteOK, error)
+	// ClearStage implements clearStage operation.
+	//
+	// Drops the stage and the apply date; the saved mark, views and notes stay.
+	//
+	// DELETE /jobs/{slug}/stage
+	ClearStage(ctx context.Context, params ClearStageParams) (*ClearStageOK, error)
+	// CloseEmployerVacancy implements closeEmployerVacancy operation.
+	//
+	// POST /employer/jobs/{slug}/close
+	CloseEmployerVacancy(ctx context.Context, params CloseEmployerVacancyParams) (*CloseEmployerVacancyOK, error)
+	// CloseThread implements closeThread operation.
+	//
+	// Moderators only: closes a thread.
+	//
+	// POST /threads/{id}/close
+	CloseThread(ctx context.Context, params CloseThreadParams) (*CloseThreadOK, error)
+	// CompanySubindustries implements companySubindustries operation.
+	//
+	// The subindustry vocabulary with company counts, most common first.
+	//
+	// GET /companies/subindustries
+	CompanySubindustries(ctx context.Context) (*CompanySubindustriesOK, error)
 	// CompleteOnboarding implements completeOnboarding operation.
 	//
 	// POST /me/onboarding/complete
 	CompleteOnboarding(ctx context.Context) (*CompleteOnboardingOK, error)
+	// ConfirmEmployerClaim implements confirmEmployerClaim operation.
+	//
+	// Activates at once when the work email matches the company's website, else stays pending.
+	//
+	// POST /employer/claim/confirm
+	ConfirmEmployerClaim(ctx context.Context, req *EmployerConfirm) (*ConfirmEmployerClaimOK, error)
+	// CountThreads implements countThreads operation.
+	//
+	// A subject's open-thread count.
+	//
+	// GET /threads/count
+	CountThreads(ctx context.Context, params CountThreadsParams) (*CountThreadsOK, error)
+	// CreateCV implements createCV operation.
+	//
+	// POST /me/cvs
+	CreateCV(ctx context.Context, req *CvCreate) (*CreateCVCreated, error)
+	// CreateEmployerVacancy implements createEmployerVacancy operation.
+	//
+	// Publishes, or idempotently updates the caller's own vacancy at the same URL.
+	//
+	// POST /employer/jobs
+	CreateEmployerVacancy(ctx context.Context, req *EmployerVacancyCreate) (*CreateEmployerVacancyCreated, error)
 	// CreateGhostReport implements createGhostReport operation.
 	//
 	// Reports that the job went silent after the caller applied. 403 until the caller's address is
@@ -31,38 +265,360 @@ type Handler interface {
 	//
 	// POST /jobs/{slug}/ghost-report
 	CreateGhostReport(ctx context.Context, req *GhostReportRequest, params CreateGhostReportParams) (*CreateGhostReportCreated, error)
+	// CreateJob implements createJob operation.
+	//
+	// Moderators only. Creates a hand-curated vacancy.
+	//
+	// POST /jobs
+	CreateJob(ctx context.Context, req *JobCreate) (*CreateJobCreated, error)
+	// CreateJobReport implements createJobReport operation.
+	//
+	// 404 for an unknown job, 409 for a second open report by the same person.
+	//
+	// POST /jobs/{slug}/reports
+	CreateJobReport(ctx context.Context, req *JobReportRequest, params CreateJobReportParams) (*CreateJobReportCreated, error)
+	// CreateReferralRequest implements createReferralRequest operation.
+	//
+	// 422 for a bad request, 409 for a duplicate or a company with no referral available.
+	//
+	// POST /me/referrals/requests
+	CreateReferralRequest(ctx context.Context, req *ReferralRequestCreate) (*CreateReferralRequestCreated, error)
+	// CreateReply implements createReply operation.
+	//
+	// Posts a reply to an open thread.
+	//
+	// POST /threads/{id}/replies
+	CreateReply(ctx context.Context, req *CreateReplyRequest, params CreateReplyParams) (*CreateReplyCreated, error)
+	// CreateSavedSearch implements createSavedSearch operation.
+	//
+	// 400 for a bad name, 409 for a duplicate name or the per-user cap.
+	//
+	// POST /me/searches
+	CreateSavedSearch(ctx context.Context, req *SavedSearchCreate) (*CreateSavedSearchCreated, error)
+	// CreateSubmission implements createSubmission operation.
+	//
+	// 409 for a duplicate pending URL or a vacancy already in the catalogue, 403 for a blocked domain.
+	//
+	// POST /submissions
+	CreateSubmission(ctx context.Context, req *SubmissionRequest) (*CreateSubmissionCreated, error)
+	// CreateSubscription implements createSubscription operation.
+	//
+	// A non-owned saved search is a 404, a duplicate a 409.
+	//
+	// POST /me/subscriptions
+	CreateSubscription(ctx context.Context, req *SubscriptionCreate) (*CreateSubscriptionCreated, error)
+	// CreateThread implements createThread operation.
+	//
+	// Opens a thread on a company or job.
+	//
+	// POST /threads
+	CreateThread(ctx context.Context, req *CreateThreadRequest) (*CreateThreadCreated, error)
+	// DecideMentorProfile implements decideMentorProfile operation.
+	//
+	// POST /mentorship/profiles/{id}/decide
+	DecideMentorProfile(ctx context.Context, req *MentorshipDecideBody, params DecideMentorProfileParams) (*DecideMentorProfileOK, error)
+	// DecideReferralOffer implements decideReferralOffer operation.
+	//
+	// Moderators only.
+	//
+	// POST /referrals/offers/{id}/decide
+	DecideReferralOffer(ctx context.Context, req *ReferralDecision, params DecideReferralOfferParams) (*DecideReferralOfferOK, error)
+	// DeclineConversation implements declineConversation operation.
+	//
+	// Refuses a pending conversation.
+	//
+	// POST /me/conversations/{id}/decline
+	DeclineConversation(ctx context.Context, params DeclineConversationParams) (*DeclineConversationOK, error)
+	// DeleteAtom implements deleteAtom operation.
+	//
+	// DELETE /me/experience/atoms/{id}
+	DeleteAtom(ctx context.Context, params DeleteAtomParams) error
+	// DeleteAvailabilityRule implements deleteAvailabilityRule operation.
+	//
+	// DELETE /me/mentorship/availability/{id}
+	DeleteAvailabilityRule(ctx context.Context, params DeleteAvailabilityRuleParams) error
+	// DeleteBankedAnswer implements deleteBankedAnswer operation.
+	//
+	// 400 for an id that is not a number, 404 for one the caller does not own.
+	//
+	// DELETE /me/answer-bank/{id}
+	DeleteBankedAnswer(ctx context.Context, params DeleteBankedAnswerParams) (*DeleteBankedAnswerOK, error)
+	// DeleteCV implements deleteCV operation.
+	//
+	// DELETE /me/cvs/{id}
+	DeleteCV(ctx context.Context, params DeleteCVParams) error
+	// DeleteCompanyFeedback implements deleteCompanyFeedback operation.
+	//
+	// Removes the caller's review in one category; a no-op when there is none.
+	//
+	// DELETE /companies/{slug}/feedback
+	DeleteCompanyFeedback(ctx context.Context, params DeleteCompanyFeedbackParams) (*DeleteCompanyFeedbackOK, error)
+	// DeleteEmployment implements deleteEmployment operation.
+	//
+	// 409 for a keyed caller while the place still holds achievements.
+	//
+	// DELETE /me/experience/employments/{id}
+	DeleteEmployment(ctx context.Context, params DeleteEmploymentParams) error
+	// DeleteProfile implements deleteProfile operation.
+	//
+	// Clears the profile. Idempotent: deleting when none exists is still a 204.
+	//
+	// DELETE /me/profile
+	DeleteProfile(ctx context.Context) error
+	// DeleteResume implements deleteResume operation.
+	//
+	// Removes the stored CV. 501 when storage is off.
+	//
+	// DELETE /me/resume
+	DeleteResume(ctx context.Context) error
+	// DeleteSavedSearch implements deleteSavedSearch operation.
+	//
+	// DELETE /me/searches/{id}
+	DeleteSavedSearch(ctx context.Context, params DeleteSavedSearchParams) error
+	// DeleteSubscription implements deleteSubscription operation.
+	//
+	// DELETE /me/subscriptions/{id}
+	DeleteSubscription(ctx context.Context, params DeleteSubscriptionParams) error
+	// DismissJob implements dismissJob operation.
+	//
+	// POST /jobs/{slug}/dismiss
+	DismissJob(ctx context.Context, params DismissJobParams) (*DismissJobOK, error)
+	// DismissJobReport implements dismissJobReport operation.
+	//
+	// Moderators only. The body is optional.
+	//
+	// POST /reports/{id}/dismiss
+	DismissJobReport(ctx context.Context, req OptDismissJobReportRequest, params DismissJobReportParams) (*DismissJobReportOK, error)
+	// DraftCVCoverLetter implements draftCVCoverLetter operation.
+	//
+	// Drafts the letter (the paid gate runs before this); 402 when the allowance is spent.
+	//
+	// POST /me/cvs/{id}/cover-letter
+	DraftCVCoverLetter(ctx context.Context, params DraftCVCoverLetterParams) (DraftCVCoverLetterRes, error)
+	// DuplicateCV implements duplicateCV operation.
+	//
+	// Copies a base CV as " (copy)"; 409 for a tailored one.
+	//
+	// POST /me/cvs/{id}/duplicate
+	DuplicateCV(ctx context.Context, params DuplicateCVParams) (*DuplicateCVCreated, error)
+	// EngagementStats implements engagementStats operation.
+	//
+	// GET /stats/engagement
+	EngagementStats(ctx context.Context) (*EngagementStatsOK, error)
+	// FileProcessReport implements fileProcessReport operation.
+	//
+	// 409 when the caller already reported this kind.
+	//
+	// POST /companies/{slug}/process-reports
+	FileProcessReport(ctx context.Context, req *ProcessReportRequest, params FileProcessReportParams) (*FileProcessReportCreated, error)
+	// FindJob implements findJob operation.
+	//
+	// Resolves the URL of a posting in the wild to a catalogue slug.
+	//
+	// GET /jobs/find
+	FindJob(ctx context.Context, params FindJobParams) (*JobFindResult, error)
+	// FindModeratedUser implements findModeratedUser operation.
+	//
+	// GET /moderation/users
+	FindModeratedUser(ctx context.Context, params FindModeratedUserParams) (*FindModeratedUserOK, error)
 	// GetAgentPermissions implements getAgentPermissions operation.
 	//
 	// Readable with a session or an API key.
 	//
 	// GET /me/agent-permissions
 	GetAgentPermissions(ctx context.Context) (*GetAgentPermissionsOK, error)
+	// GetAtsReport implements getAtsReport operation.
+	//
+	// The ATS-readiness report of the caller's stored CV, with any cached model review folded in. `has_cv`
+	// is false, and `report` null, when no CV is stored.
+	//
+	// GET /me/profile/ats-report
+	GetAtsReport(ctx context.Context) (*GetAtsReportOK, error)
+	// GetBillingCheckout implements getBillingCheckout operation.
+	//
+	// 404 when checkout is unconfigured or the price is not offered. Cookie session only.
+	//
+	// GET /billing/checkout
+	GetBillingCheckout(ctx context.Context, params GetBillingCheckoutParams) (*GetBillingCheckoutOK, error)
+	// GetBillingManage implements getBillingManage operation.
+	//
+	// 404 when there is no subscription to manage. Cookie session only.
+	//
+	// GET /billing/manage
+	GetBillingManage(ctx context.Context) (*GetBillingManageOK, error)
+	// GetBillingSubscription implements getBillingSubscription operation.
+	//
+	// 404 when the account has no subscription. Cookie session only.
+	//
+	// GET /billing/subscription
+	GetBillingSubscription(ctx context.Context) (*GetBillingSubscriptionOK, error)
+	// GetCV implements getCV operation.
+	//
+	// The document without its contact block to an API key.
+	//
+	// GET /me/cvs/{id}
+	GetCV(ctx context.Context, params GetCVParams) (*GetCVOK, error)
+	// GetCVATSDelta implements getCVATSDelta operation.
+	//
+	// GET /me/cvs/{id}/ats-delta
+	GetCVATSDelta(ctx context.Context, params GetCVATSDeltaParams) (*GetCVATSDeltaOK, error)
+	// GetCVAppearanceDefaults implements getCVAppearanceDefaults operation.
+	//
+	// GET /me/cv-appearance-defaults
+	GetCVAppearanceDefaults(ctx context.Context) (*GetCVAppearanceDefaultsOK, error)
+	// GetCVCoverLetter implements getCVCoverLetter operation.
+	//
+	// Never calls a model. With a session or an API key.
+	//
+	// GET /me/cvs/{id}/cover-letter
+	GetCVCoverLetter(ctx context.Context, params GetCVCoverLetterParams) (*GetCVCoverLetterOK, error)
+	// GetCVJobMatch implements getCVJobMatch operation.
+	//
+	// GET /me/cvs/{id}/job-match
+	GetCVJobMatch(ctx context.Context, params GetCVJobMatchParams) (*GetCVJobMatchOK, error)
+	// GetCVTailorContext implements getCVTailorContext operation.
+	//
+	// The cached fit analysis of a tailored CV, projected for the tailoring agent.
+	//
+	// GET /me/cvs/{id}/tailor-context
+	GetCVTailorContext(ctx context.Context, params GetCVTailorContextParams) (*GetCVTailorContextOK, error)
+	// GetDirectApplyForm implements getDirectApplyForm operation.
+	//
+	// The vacancy's questions and, for a signed-in candidate, their prefill. 501 when the deployment
+	// cannot deliver applications.
+	//
+	// GET /jobs/{slug}/direct-apply
+	GetDirectApplyForm(ctx context.Context, params GetDirectApplyFormParams) (*GetDirectApplyFormOK, error)
 	// GetEmailPrefs implements getEmailPrefs operation.
 	//
 	// GET /email-prefs
 	GetEmailPrefs(ctx context.Context, params GetEmailPrefsParams) (*GetEmailPrefsOK, error)
+	// GetEmployerCompany implements getEmployerCompany operation.
+	//
+	// The caller's own account in any status, with the company profile.
+	//
+	// GET /employer/company
+	GetEmployerCompany(ctx context.Context) (*GetEmployerCompanyOK, error)
+	// GetInterviews implements getInterviews operation.
+	//
+	// The caller's arranged meetings whose start falls in the range.
+	//
+	// GET /me/interviews
+	GetInterviews(ctx context.Context, params GetInterviewsParams) (*GetInterviewsOK, error)
+	// GetInvite implements getInvite operation.
+	//
+	// The caller's invite link and what it has earned. Session cookie only.
+	//
+	// GET /me/invite
+	GetInvite(ctx context.Context) (*GetInviteOK, error)
+	// GetJob implements getJob operation.
+	//
+	// One job by public slug. A signed-in caller also gets their own vote and auto-apply status. A slug
+	// that no longer exists still answers with its posting when its shortcode names exactly one.
+	//
+	// GET /jobs/{slug}
+	GetJob(ctx context.Context, params GetJobParams) (*GetJobOK, error)
+	// GetMarketPulse implements getMarketPulse operation.
+	//
+	// Demand for the caller's profile skills, week by week. Session cookie only.
+	//
+	// GET /me/market-pulse
+	GetMarketPulse(ctx context.Context) (*GetMarketPulseOK, error)
+	// GetMentor implements getMentor operation.
+	//
+	// GET /mentors/{slug}
+	GetMentor(ctx context.Context, params GetMentorParams) (*GetMentorOK, error)
+	// GetMentorProfileSuggestions implements getMentorProfileSuggestions operation.
+	//
+	// GET /me/mentorship/profile/suggestions
+	GetMentorProfileSuggestions(ctx context.Context) (*GetMentorProfileSuggestionsOK, error)
+	// GetMentorSlots implements getMentorSlots operation.
+	//
+	// The bookable hours in a window, in the viewer's zone.
+	//
+	// GET /mentors/{slug}/slots
+	GetMentorSlots(ctx context.Context, params GetMentorSlotsParams) (*MentorshipSlotsPage, error)
+	// GetMyAvailability implements getMyAvailability operation.
+	//
+	// The mentor's whole schedule, weekly rows and dated overrides together.
+	//
+	// GET /me/mentorship/availability
+	GetMyAvailability(ctx context.Context) (*MentorshipRulesPage, error)
+	// GetMyCalendar implements getMyCalendar operation.
+	//
+	// The owner's resolved calendar for one month (`month=YYYY-MM`, default the current one).
+	//
+	// GET /me/mentorship/availability/calendar
+	GetMyCalendar(ctx context.Context, params GetMyCalendarParams) (*MentorshipCalendarPage, error)
 	// GetMyEmailGroups implements getMyEmailGroups operation.
 	//
 	// GET /me/email-groups
 	GetMyEmailGroups(ctx context.Context) (*GetMyEmailGroupsOK, error)
+	// GetMyMentorProfile implements getMyMentorProfile operation.
+	//
+	// The owner's own profile whatever its status; null when there is none.
+	//
+	// GET /me/mentorship/profile
+	GetMyMentorProfile(ctx context.Context) (*GetMyMentorProfileOK, error)
+	// GetMyPlan implements getMyPlan operation.
+	//
+	// The caller's plan and today's usage, without consuming anything.
+	//
+	// GET /me/plan
+	GetMyPlan(ctx context.Context) (*GetMyPlanOK, error)
+	// GetMyPlanHistory implements getMyPlanHistory operation.
+	//
+	// Recent usage entries, newest first.
+	//
+	// GET /me/plan/history
+	GetMyPlanHistory(ctx context.Context) (*GetMyPlanHistoryOK, error)
 	// GetMyUsage implements getMyUsage operation.
 	//
 	// With a session or an API key. Zeroes when the gateway cannot be read.
 	//
 	// GET /me/usage
 	GetMyUsage(ctx context.Context) (*GetMyUsageOK, error)
+	// GetNotificationSettings implements getNotificationSettings operation.
+	//
+	// Session cookie only.
+	//
+	// GET /me/notification-settings
+	GetNotificationSettings(ctx context.Context) (*GetNotificationSettingsOK, error)
 	// GetPlans implements getPlans operation.
 	//
 	// What each plan allows and what it costs, read from the configuration metering uses.
 	//
 	// GET /plans
 	GetPlans(ctx context.Context) (*GetPlansOK, error)
+	// GetProfile implements getProfile operation.
+	//
+	// `data` is null before the first save.
+	//
+	// GET /me/profile
+	GetProfile(ctx context.Context) (*GetProfileOK, error)
+	// GetResume implements getResume operation.
+	//
+	// Whether storage is on, a CV is stored, when, and its structured view. Always 200.
+	//
+	// GET /me/resume
+	GetResume(ctx context.Context) (*GetResumeOK, error)
+	// GetResumeVerdict implements getResumeVerdict operation.
+	//
+	// The market-coverage verdict for the caller's profile, scored against the role the query's facet
+	// params select. Cookie only; 404 without a profile; 503 when search is off.
+	//
+	// GET /me/profile/verdict
+	GetResumeVerdict(ctx context.Context) (*GetResumeVerdictOK, error)
 	// GetScreeningAnswers implements getScreeningAnswers operation.
 	//
 	// `data` is null before the first save.
 	//
 	// GET /me/screening-answers
 	GetScreeningAnswers(ctx context.Context) (*GetScreeningAnswersOK, error)
+	// GetSession implements getSession operation.
+	//
+	// GET /me/mentorship/sessions/{id}
+	GetSession(ctx context.Context, params GetSessionParams) (*GetSessionOK, error)
 	// GetSurvey implements getSurvey operation.
 	//
 	// GET /me/survey
@@ -89,44 +645,536 @@ type Handler interface {
 	//
 	// GET /talent/{handle}/photo
 	GetTalentPhoto(ctx context.Context, params GetTalentPhotoParams) (*GetTalentPhotoOKHeaders, error)
+	// GetThread implements getThread operation.
+	//
+	// A thread with its first page of replies. The id is declared a string and parsed in Go, which keeps
+	// the 400 text.
+	//
+	// GET /threads/{id}
+	GetThread(ctx context.Context, params GetThreadParams) (*ThreadDetailPage, error)
+	// GetTimeline implements getTimeline operation.
+	//
+	// The caller's events between `from` and `to` inclusive, oldest first.
+	//
+	// GET /me/timeline
+	GetTimeline(ctx context.Context, params GetTimelineParams) (*GetTimelineOK, error)
 	// GetWatching implements getWatching operation.
 	//
 	// GET /me/watchlist/{slug}
 	GetWatching(ctx context.Context, params GetWatchingParams) (*GetWatchingOKHeaders, error)
+	// HideCompanyFeedback implements hideCompanyFeedback operation.
+	//
+	// Moderators only: hides a review. Idempotent.
+	//
+	// POST /company-feedback/{id}/hide
+	HideCompanyFeedback(ctx context.Context, params HideCompanyFeedbackParams) error
 	// ImportWatchlist implements importWatchlist operation.
 	//
 	// Adds the companies the names identify and reports what it could not resolve.
 	//
 	// POST /me/watchlist/import
 	ImportWatchlist(ctx context.Context, req *WatchlistImport) (*ImportWatchlistOK, error)
+	// IngestStatus implements ingestStatus operation.
+	//
+	// The site's own live status plus a sanitized per-provider rollup of the ingest fleet.
+	//
+	// GET /status
+	IngestStatus(ctx context.Context) (*IngestStatusOK, error)
+	// InsightsCompanies implements insightsCompanies operation.
+	//
+	// GET /insights/companies
+	InsightsCompanies(ctx context.Context, params InsightsCompaniesParams) (*CompaniesAnswer, error)
+	// InsightsRoleCountries implements insightsRoleCountries operation.
+	//
+	// GET /insights/role-countries
+	InsightsRoleCountries(ctx context.Context, params InsightsRoleCountriesParams) (*RoleCountriesAnswer, error)
+	// InsightsRolePulse implements insightsRolePulse operation.
+	//
+	// The category is required.
+	//
+	// GET /insights/role-pulse
+	InsightsRolePulse(ctx context.Context, params InsightsRolePulseParams) (*RolePulseAnswer, error)
+	// InsightsRoles implements insightsRoles operation.
+	//
+	// Roles ranked by open count or growth. Naming both category and seniority adds the role's skill
+	// distribution and, for a signed-in caller, their coverage; that answer is then private.
+	//
+	// GET /insights/roles
+	InsightsRoles(ctx context.Context, params InsightsRolesParams) (*RolesAnswerHeaders, error)
+	// InsightsSalary implements insightsSalary operation.
+	//
+	// GET /insights/salary
+	InsightsSalary(ctx context.Context, params InsightsSalaryParams) (*SalaryAnswer, error)
+	// InsightsSalaryHistory implements insightsSalaryHistory operation.
+	//
+	// The category is required.
+	//
+	// GET /insights/salary/history
+	InsightsSalaryHistory(ctx context.Context, params InsightsSalaryHistoryParams) (*SalaryHistoryAnswer, error)
+	// InsightsSkills implements insightsSkills operation.
+	//
+	// GET /insights/skills
+	InsightsSkills(ctx context.Context, params InsightsSkillsParams) (*SkillsAnswer, error)
+	// InsightsVelocity implements insightsVelocity operation.
+	//
+	// GET /insights/velocity
+	InsightsVelocity(ctx context.Context, params InsightsVelocityParams) (*VelocityAnswer, error)
+	// JobApplyForm implements jobApplyForm operation.
+	//
+	// The application form captured for the job. 404 when none was captured.
+	//
+	// GET /jobs/{slug}/apply-form
+	JobApplyForm(ctx context.Context, params JobApplyFormParams) (*JobApplyFormOK, error)
+	// JobCopies implements jobCopies operation.
+	//
+	// The open postings a collapsed job stands for, one per city.
+	//
+	// GET /jobs/{slug}/copies
+	JobCopies(ctx context.Context, params JobCopiesParams) (*JobCopiesPage, error)
+	// JobFacets implements jobFacets operation.
+	//
+	// The count of postings per facet value under the same filters, keyed by public facet param.
+	//
+	// GET /jobs/facets
+	JobFacets(ctx context.Context, params JobFacetsParams) (*JobFacetsOK, error)
+	// JobsActivity implements jobsActivity operation.
+	//
+	// Added and removed vacancies per period. A bad granularity or date, or a range over 4000 days, is a
+	// 400.
+	//
+	// GET /stats/jobs-activity
+	JobsActivity(ctx context.Context, params JobsActivityParams) (*JobsActivity, error)
+	// ListAppliedCompanySlugs implements listAppliedCompanySlugs operation.
+	//
+	// The employers the caller has applied to.
+	//
+	// GET /me/tracking/applied-companies
+	ListAppliedCompanySlugs(ctx context.Context) (*ListAppliedCompanySlugsOK, error)
+	// ListBankedAnswers implements listBankedAnswers operation.
+	//
+	// GET /me/answer-bank
+	ListBankedAnswers(ctx context.Context) (*ListBankedAnswersOK, error)
+	// ListBaseCVs implements listBaseCVs operation.
+	//
+	// The base CVs, oldest first, with the default flagged. With a session or an API key.
+	//
+	// GET /me/cvs/bases
+	ListBaseCVs(ctx context.Context) (*ListBaseCVsOK, error)
+	// ListCVFonts implements listCVFonts operation.
+	//
+	// The registered typefaces a CV may choose.
+	//
+	// GET /cv-fonts
+	ListCVFonts(ctx context.Context) (*ListCVFontsOK, error)
+	// ListCVRevisions implements listCVRevisions operation.
+	//
+	// What changed the CV, newest first.
+	//
+	// GET /me/cvs/{id}/revisions
+	ListCVRevisions(ctx context.Context, params ListCVRevisionsParams) (*ListCVRevisionsOK, error)
+	// ListCVTemplates implements listCVTemplates operation.
+	//
+	// The registered CV templates and their display metadata.
+	//
+	// GET /cv-templates
+	ListCVTemplates(ctx context.Context) (*ListCVTemplatesOK, error)
+	// ListCVTracerLinks implements listCVTracerLinks operation.
+	//
+	// GET /me/cvs/{id}/tracer-links
+	ListCVTracerLinks(ctx context.Context, params ListCVTracerLinksParams) (*ListCVTracerLinksOK, error)
+	// ListCVs implements listCVs operation.
+	//
+	// The caller's TAILORED CVs, newest edit first. With a session or an API key.
+	//
+	// GET /me/cvs
+	ListCVs(ctx context.Context) (*ListCVsOK, error)
+	// ListCompanies implements listCompanies operation.
+	//
+	// Ranked companies. `q` and the facet params (collections, regions, countries, domains, industries,
+	// company_type, company_size, remote_regions, yc_batch, yc_status, yc_stage, yc_flags, maturity,
+	// subindustries) are read from the raw query, comma-joined or repeated; a param the listing does not
+	// read is reported in `meta.ignored_params`.
+	//
+	// GET /companies
+	ListCompanies(ctx context.Context, params ListCompaniesParams) (*ListCompaniesOK, error)
+	// ListCompanyFeedback implements listCompanyFeedback operation.
+	//
+	// Newest first. A page param that does not read falls back to its default.
+	//
+	// GET /companies/{slug}/feedback
+	ListCompanyFeedback(ctx context.Context, params ListCompanyFeedbackParams) (*CompanyFeedbackPage, error)
+	// ListConversationMessages implements listConversationMessages operation.
+	//
+	// The messages after the given id, oldest first. Params that do not read fall back to their defaults.
+	//
+	// GET /me/conversations/{id}/messages
+	ListConversationMessages(ctx context.Context, params ListConversationMessagesParams) (*ListConversationMessagesOK, error)
+	// ListConversationReports implements listConversationReports operation.
+	//
+	// Moderators only: the reported conversations. Page params that do not read fall back to their
+	// defaults.
+	//
+	// GET /moderation/conversation-reports
+	ListConversationReports(ctx context.Context, params ListConversationReportsParams) (*ConversationReportsPage, error)
+	// ListConversations implements listConversations operation.
+	//
+	// The caller's conversations of every kind, newest message first.
+	//
+	// GET /me/conversations
+	ListConversations(ctx context.Context) (*ListConversationsOK, error)
+	// ListDismissedSlugs implements listDismissedSlugs operation.
+	//
+	// GET /me/tracking/dismissed
+	ListDismissedSlugs(ctx context.Context) (*ListDismissedSlugsOK, error)
+	// ListEmployerPendingClaims implements listEmployerPendingClaims operation.
+	//
+	// Moderators only: the claims that could not auto-activate.
+	//
+	// GET /employer/claims
+	ListEmployerPendingClaims(ctx context.Context) (*ListEmployerPendingClaimsOK, error)
+	// ListEmployerVacancies implements listEmployerVacancies operation.
+	//
+	// Every vacancy the caller published, newest first.
+	//
+	// GET /employer/jobs
+	ListEmployerVacancies(ctx context.Context) (*ListEmployerVacanciesOK, error)
+	// ListExperience implements listExperience operation.
+	//
+	// GET /me/experience
+	ListExperience(ctx context.Context) (*ListExperienceOK, error)
+	// ListIncomingReferralRequests implements listIncomingReferralRequests operation.
+	//
+	// The open requests for every company the caller is an approved referrer of.
+	//
+	// GET /me/referrals/incoming
+	ListIncomingReferralRequests(ctx context.Context) (*ListIncomingReferralRequestsOK, error)
+	// ListJobs implements listJobs operation.
+	//
+	// The newest open jobs. It reads no filter: a param other than the page ones is reported in
+	// `meta.ignored_params`.
+	//
+	// GET /jobs
+	ListJobs(ctx context.Context, params ListJobsParams) (*ListJobsOK, error)
+	// ListMentorBookings implements listMentorBookings operation.
+	//
+	// Who is coming: the mentor's own sessions, each with the seeker's address.
+	//
+	// GET /me/mentorship/bookings
+	ListMentorBookings(ctx context.Context, params ListMentorBookingsParams) (*MentorshipSessionsPage, error)
+	// ListMentors implements listMentors operation.
+	//
+	// The public directory.
+	//
+	// GET /mentors
+	ListMentors(ctx context.Context, params ListMentorsParams) (*MentorshipDirectoryPage, error)
+	// ListMyContributions implements listMyContributions operation.
+	//
+	// GET /me/contributions
+	ListMyContributions(ctx context.Context) (*ListMyContributionsOK, error)
+	// ListMyReferralOffers implements listMyReferralOffers operation.
+	//
+	// GET /me/referrals/offers
+	ListMyReferralOffers(ctx context.Context) (*ListMyReferralOffersOK, error)
+	// ListMyReferralRequests implements listMyReferralRequests operation.
+	//
+	// GET /me/referrals/requests
+	ListMyReferralRequests(ctx context.Context) (*ListMyReferralRequestsOK, error)
+	// ListMySessions implements listMySessions operation.
+	//
+	// GET /me/mentorship/sessions
+	ListMySessions(ctx context.Context, params ListMySessionsParams) (*MentorshipSessionsPage, error)
+	// ListMySubmissions implements listMySubmissions operation.
+	//
+	// GET /me/submissions
+	ListMySubmissions(ctx context.Context) (*ListMySubmissionsOK, error)
+	// ListPendingCompanyRelations implements listPendingCompanyRelations operation.
+	//
+	// Moderators only, oldest first.
+	//
+	// GET /company-relations
+	ListPendingCompanyRelations(ctx context.Context) (*ListPendingCompanyRelationsOK, error)
+	// ListPendingJobReports implements listPendingJobReports operation.
+	//
+	// Moderators only.
+	//
+	// GET /reports
+	ListPendingJobReports(ctx context.Context) (*ListPendingJobReportsOK, error)
+	// ListPendingMentorProfiles implements listPendingMentorProfiles operation.
+	//
+	// The moderation queue. Moderators only.
+	//
+	// GET /mentorship/profiles
+	ListPendingMentorProfiles(ctx context.Context) (*ListPendingMentorProfilesOK, error)
+	// ListPendingReferralOffers implements listPendingReferralOffers operation.
+	//
+	// Moderators only: the offers awaiting a decision.
+	//
+	// GET /referrals/offers
+	ListPendingReferralOffers(ctx context.Context) (*ListPendingReferralOffersOK, error)
+	// ListPendingSubmissions implements listPendingSubmissions operation.
+	//
+	// Moderators only.
+	//
+	// GET /submissions
+	ListPendingSubmissions(ctx context.Context) (*ListPendingSubmissionsOK, error)
+	// ListRecentThreads implements listRecentThreads operation.
+	//
+	// Open threads across every subject, newest first, keyset-paged: the discussions feed.
+	//
+	// GET /threads/recent
+	ListRecentThreads(ctx context.Context, params ListRecentThreadsParams) (*RecentThreadPage, error)
+	// ListReferralCVOptions implements listReferralCVOptions operation.
+	//
+	// The CVs tailored for the vacancy (or any at the company), and whether a CV file is stored.
+	//
+	// GET /me/referrals/cv-options
+	ListReferralCVOptions(ctx context.Context, params ListReferralCVOptionsParams) (*ListReferralCVOptionsOK, error)
+	// ListReportedCompanyFeedback implements listReportedCompanyFeedback operation.
+	//
+	// Moderators only: every review with a report, most reported first.
+	//
+	// GET /company-feedback/reported
+	ListReportedCompanyFeedback(ctx context.Context) (*ListReportedCompanyFeedbackOK, error)
+	// ListSavedSearches implements listSavedSearches operation.
+	//
+	// GET /me/searches
+	ListSavedSearches(ctx context.Context) (*SavedSearchList, error)
+	// ListSavedSlugs implements listSavedSlugs operation.
+	//
+	// GET /me/tracking/saved
+	ListSavedSlugs(ctx context.Context) (*ListSavedSlugsOK, error)
+	// ListSources implements listSources operation.
+	//
+	// Every source the catalogue is built from, with what it holds and how its crawl is doing.
+	//
+	// GET /sources
+	ListSources(ctx context.Context) (*ListSourcesOK, error)
+	// ListSubscriptions implements listSubscriptions operation.
+	//
+	// GET /me/subscriptions
+	ListSubscriptions(ctx context.Context) (*SubscriptionList, error)
 	// ListTalent implements listTalent operation.
 	//
 	// GET /talent
 	ListTalent(ctx context.Context, params ListTalentParams) (*ListTalentOK, error)
+	// ListThreads implements listThreads operation.
+	//
+	// A subject's open threads, newest first, keyset-paged.
+	//
+	// GET /threads
+	ListThreads(ctx context.Context, params ListThreadsParams) (*ThreadPage, error)
+	// ListTrackedJobs implements listTrackedJobs operation.
+	//
+	// The caller's interactions joined with their jobs, most recently touched first. `filter` is all,
+	// viewed, saved, applied or board (400 otherwise); `compact` drops each card's blurb, skills and ghost
+	// signal. A page param that does not read falls back to its default.
+	//
+	// GET /me/tracking
+	ListTrackedJobs(ctx context.Context, params ListTrackedJobsParams) (*TrackedJobPage, error)
+	// ListViewedSlugs implements listViewedSlugs operation.
+	//
+	// Every posting the caller has interacted with.
+	//
+	// GET /me/tracking/viewed
+	ListViewedSlugs(ctx context.Context) (*ListViewedSlugsOK, error)
 	// ListWatchlist implements listWatchlist operation.
 	//
 	// One page, newest first. A page param that does not read falls back to its default.
 	//
 	// GET /me/watchlist
 	ListWatchlist(ctx context.Context, params ListWatchlistParams) (*WatchlistPageHeaders, error)
+	// MarkApplied implements markApplied operation.
+	//
+	// The body is optional: without a date the application is stamped now. 400 for a date out of range.
+	//
+	// POST /jobs/{slug}/apply
+	MarkApplied(ctx context.Context, req OptApplyJob, params MarkAppliedParams) (*MarkAppliedOK, error)
+	// MarkConversationRead implements markConversationRead operation.
+	//
+	// Records that the caller has read up to a message.
+	//
+	// POST /me/conversations/{id}/read
+	MarkConversationRead(ctx context.Context, req *ConversationReadRequest, params MarkConversationReadParams) error
+	// MarketCoverage implements marketCoverage operation.
+	//
+	// Scores a skill list against the market the query's facet params select. The `skills` facet params
+	// are not read here and are reported in `meta.ignored_params`.
+	//
+	// POST /market/coverage
+	MarketCoverage(ctx context.Context, req *ResumeCoverageRequest) (*MarketCoverageOK, error)
+	// MergeAtoms implements mergeAtoms operation.
+	//
+	// Folds two owned achievements into one. 409 when they conflict.
+	//
+	// POST /me/experience/atoms/merge
+	MergeAtoms(ctx context.Context, req *MergeAtoms) (*MergeAtomsOK, error)
+	// MyCompanyFeedback implements myCompanyFeedback operation.
+	//
+	// All of the caller's own reviews of the company, one per category; empty when none.
+	//
+	// GET /companies/{slug}/feedback/mine
+	MyCompanyFeedback(ctx context.Context, params MyCompanyFeedbackParams) (*MyCompanyFeedbackOK, error)
+	// MyProcessReports implements myProcessReports operation.
+	//
+	// The kinds the caller has reported for the company.
+	//
+	// GET /companies/{slug}/process-reports/mine
+	MyProcessReports(ctx context.Context, params MyProcessReportsParams) (*MyProcessReportsOK, error)
 	// OneClickUnsubscribe implements oneClickUnsubscribe operation.
 	//
 	// RFC 8058 one-click unsubscribe: turns off only the group the token names.
 	//
 	// POST /email-prefs/one-click
 	OneClickUnsubscribe(ctx context.Context, params OneClickUnsubscribeParams) (*OneClickUnsubscribeOK, error)
+	// PatchCV implements patchCV operation.
+	//
+	// Applies a batch of path operations (`{"ops": [...], "note": ""}`), decoded strictly in Go: an
+	// unknown field or bad addressing is a 422. With a session or an API key.
+	//
+	// PATCH /me/cvs/{id}
+	PatchCV(ctx context.Context, req jx.Raw, params PatchCVParams) (*PatchCVOK, error)
+	// PauseMentorProfile implements pauseMentorProfile operation.
+	//
+	// POST /me/mentorship/profile/pause
+	PauseMentorProfile(ctx context.Context, req *MentorshipPauseBody) (*PauseMentorProfileOK, error)
+	// PostAtsReport implements postAtsReport operation.
+	//
+	// Runs the model review (paid) over the stored CV, caches it and returns the report.
+	//
+	// POST /me/profile/ats-report
+	PostAtsReport(ctx context.Context) (*PostAtsReportOK, error)
+	// PrefillSubmission implements prefillSubmission operation.
+	//
+	// Writes nothing. An unrecognised URL answers 200 with every field empty.
+	//
+	// POST /submissions/prefill
+	PrefillSubmission(ctx context.Context, req *PrefillRequest) (*PrefillSubmissionOK, error)
+	// PreviewPromoCode implements previewPromoCode operation.
+	//
+	// What a code would take off, without using it. 404 for a code that cannot be used.
+	//
+	// POST /me/promo/preview
+	PreviewPromoCode(ctx context.Context, req *PromoCode) (*PreviewPromoCodeOK, error)
+	// ProposeCompanyRelation implements proposeCompanyRelation operation.
+	//
+	// Session cookie only. The path's slug is the company that retires, or the subsidiary.
+	//
+	// POST /companies/{slug}/relations
+	ProposeCompanyRelation(ctx context.Context, req *CompanyRelationRequest, params ProposeCompanyRelationParams) (*ProposeCompanyRelationCreated, error)
+	// PutProfile implements putProfile operation.
+	//
+	// Creates or replaces the profile.
+	//
+	// PUT /me/profile
+	PutProfile(ctx context.Context, req *ProfileUpdate) (*PutProfileOK, error)
+	// PutResumeContacts implements putResumeContacts operation.
+	//
+	// Replaces the owned overrides (contacts, headline, summary, languages, certifications).
+	//
+	// PUT /me/resume/contacts
+	PutResumeContacts(ctx context.Context, req jx.Raw) (*PutResumeContactsOK, error)
+	// ReactivateMentorProfile implements reactivateMentorProfile operation.
+	//
+	// POST /me/mentorship/profile/reactivate
+	ReactivateMentorProfile(ctx context.Context) (*ReactivateMentorProfileOK, error)
 	// RecordDictionaryGap implements recordDictionaryGap operation.
 	//
 	// Asks for a term the dictionary does not resolve. 409 when it already does. Session cookie only.
 	//
 	// POST /dictionary/gaps
 	RecordDictionaryGap(ctx context.Context, req *DictionaryGap) (*RecordDictionaryGapOK, error)
+	// RecordView implements recordView operation.
+	//
+	// POST /jobs/{slug}/view
+	RecordView(ctx context.Context, params RecordViewParams) (*RecordViewOK, error)
+	// RedeemPromoCode implements redeemPromoCode operation.
+	//
+	// Uses a code. 409 when the caller already used one.
+	//
+	// POST /me/promo/redeem
+	RedeemPromoCode(ctx context.Context, req *PromoCode) (*RedeemPromoCodeOK, error)
+	// RejectCompanyRelation implements rejectCompanyRelation operation.
+	//
+	// Moderators only.
+	//
+	// POST /company-relations/{id}/reject
+	RejectCompanyRelation(ctx context.Context, params RejectCompanyRelationParams) (*RejectCompanyRelationOK, error)
+	// RejectEmployerClaim implements rejectEmployerClaim operation.
+	//
+	// Moderators only.
+	//
+	// POST /employer/claims/{user_id}/reject
+	RejectEmployerClaim(ctx context.Context, params RejectEmployerClaimParams) (*RejectEmployerClaimOK, error)
+	// RejectSubmission implements rejectSubmission operation.
+	//
+	// Moderators only. The body is optional.
+	//
+	// POST /submissions/{id}/reject
+	RejectSubmission(ctx context.Context, req OptRejectSubmissionRequest, params RejectSubmissionParams) (*RejectSubmissionOK, error)
 	// RemoveFromWatchlist implements removeFromWatchlist operation.
 	//
 	// A company that was not on the list is not an error.
 	//
 	// DELETE /me/watchlist/{slug}
 	RemoveFromWatchlist(ctx context.Context, params RemoveFromWatchlistParams) error
+	// ReopenEmployerVacancy implements reopenEmployerVacancy operation.
+	//
+	// POST /employer/jobs/{slug}/reopen
+	ReopenEmployerVacancy(ctx context.Context, params ReopenEmployerVacancyParams) (*ReopenEmployerVacancyOK, error)
+	// ReplaceResumeContactsFromCv implements replaceResumeContactsFromCv operation.
+	//
+	// Overwrites every owned override from the current structured CV. 409 without one.
+	//
+	// POST /me/resume/contacts/replace-from-cv
+	ReplaceResumeContactsFromCv(ctx context.Context) (*ReplaceResumeContactsFromCvOK, error)
+	// ReplaceWeeklyAvailability implements replaceWeeklyAvailability operation.
+	//
+	// PUT /me/mentorship/availability/weekly
+	ReplaceWeeklyAvailability(ctx context.Context, req *BuddyMockWeekly) error
+	// ReportCompanyFeedback implements reportCompanyFeedback operation.
+	//
+	// The id is declared a string and parsed in Go, which keeps the 400 text. A second report by the same
+	// person is a silent no-op.
+	//
+	// POST /company-feedback/{id}/report
+	ReportCompanyFeedback(ctx context.Context, req *CompanyFeedbackReportRequest, params ReportCompanyFeedbackParams) error
+	// ReportConversation implements reportConversation operation.
+	//
+	// Files a complaint about a conversation the caller takes part in.
+	//
+	// POST /me/conversations/{id}/report
+	ReportConversation(ctx context.Context, req *ConversationReportRequest, params ReportConversationParams) error
+	// ReseedBaseCV implements reseedBaseCV operation.
+	//
+	// Rebuilds the default base CV from the current seed.
+	//
+	// POST /me/cvs/base/reseed
+	ReseedBaseCV(ctx context.Context) (*ReseedBaseCVOK, error)
+	// ReseedCV implements reseedCV operation.
+	//
+	// Rebuilds one CV from the current seed; destructive.
+	//
+	// POST /me/cvs/{id}/reseed
+	ReseedCV(ctx context.Context, params ReseedCVParams) (*ReseedCVOK, error)
+	// ResendEmployerClaimCode implements resendEmployerClaimCode operation.
+	//
+	// 409 without a pending claim or when the email is confirmed; 429 inside the cooldown.
+	//
+	// POST /employer/claim/resend
+	ResendEmployerClaimCode(ctx context.Context) (*ResendEmployerClaimCodeOK, error)
+	// ResolveConversationReport implements resolveConversationReport operation.
+	//
+	// Moderators only: marks a report handled. Idempotent; 404 for an unknown id.
+	//
+	// POST /moderation/conversation-reports/{id}/resolve
+	ResolveConversationReport(ctx context.Context, params ResolveConversationReportParams) error
+	// ResolveJob implements resolveJob operation.
+	//
+	// Finds the catalogue job behind a page, or imports it. 200 when it was already there, 201 when this
+	// request created it, 202 when it is queued for later. With a session or an API key.
+	//
+	// POST /jobs/resolve
+	ResolveJob(ctx context.Context, req *ResolveJobRequest) (ResolveJobRes, error)
 	// ResolveJobDescription implements resolveJobDescription operation.
 	//
 	// Turns a catalogue job, a vacancy URL or pasted text into a job the tailoring workspace can open. 404
@@ -134,44 +1182,265 @@ type Handler interface {
 	//
 	// POST /me/jd/resolve
 	ResolveJobDescription(ctx context.Context, req *JobDescriptionSource) (*ResolveJobDescriptionOK, error)
+	// ResolveJobReport implements resolveJobReport operation.
+	//
+	// Moderators only. The body is optional. 404 for an unknown id, 409 for one already decided.
+	//
+	// POST /reports/{id}/resolve
+	ResolveJobReport(ctx context.Context, req OptResolveJobReportRequest, params ResolveJobReportParams) (*ResolveJobReportOK, error)
+	// ResolveReferralRequest implements resolveReferralRequest operation.
+	//
+	// POST /me/referrals/incoming/{id}/resolve
+	ResolveReferralRequest(ctx context.Context, req *ReferralResolve, params ResolveReferralRequestParams) (*ResolveReferralRequestOK, error)
 	// RetractGhostReport implements retractGhostReport operation.
 	//
 	// Withdraws the caller's report. 404 when there is none.
 	//
 	// DELETE /jobs/{slug}/ghost-report
 	RetractGhostReport(ctx context.Context, params RetractGhostReportParams) error
+	// RetractProcessReport implements retractProcessReport operation.
+	//
+	// DELETE /companies/{slug}/process-reports
+	RetractProcessReport(ctx context.Context, params RetractProcessReportParams) (*RetractProcessReportOK, error)
+	// RetryResumeExtract implements retryResumeExtract operation.
+	//
+	// Re-runs the structured extraction over the stored upload. 409 when none is stored.
+	//
+	// POST /me/resume/retry-extract
+	RetryResumeExtract(ctx context.Context) error
+	// ReviewSession implements reviewSession operation.
+	//
+	// PUT /me/mentorship/sessions/{id}/review
+	ReviewSession(ctx context.Context, req *MentorshipReviewBody, params ReviewSessionParams) (*ReviewSessionOK, error)
+	// RevokeEmployerAccount implements revokeEmployerAccount operation.
+	//
+	// Admins only: deactivates the account but keeps the company reservation.
+	//
+	// POST /employer/claims/{user_id}/revoke
+	RevokeEmployerAccount(ctx context.Context, params RevokeEmployerAccountParams) (*RevokeEmployerAccountOK, error)
+	// SaveBankedAnswer implements saveBankedAnswer operation.
+	//
+	// Saves under the question's topic, replacing the answer already there.
+	//
+	// PUT /me/answer-bank
+	SaveBankedAnswer(ctx context.Context, req *SaveBankedAnswer) (*SaveBankedAnswerOK, error)
+	// SaveJob implements saveJob operation.
+	//
+	// POST /jobs/{slug}/save
+	SaveJob(ctx context.Context, params SaveJobParams) (*SaveJobOK, error)
 	// SearchCities implements searchCities operation.
 	//
 	// Up to 20 cities whose name matches, optionally within one country.
 	//
 	// GET /geo/cities
 	SearchCities(ctx context.Context, params SearchCitiesParams) (*SearchCitiesOK, error)
+	// SearchJobs implements searchJobs operation.
+	//
+	// Full-text and faceted search over open postings. Public; a signed-in caller can also use
+	// `hide_seen`, `hide_applied_companies`, `former_employers`, `watchlist`, `min_skill_match` and
+	// `sort=match`, which make the answer private. A filter the endpoint does not read is named in
+	// `meta.ignored_params`, a value outside a closed vocabulary in `meta.ignored_values`.
+	//
+	// GET /jobs/search
+	SearchJobs(ctx context.Context, params SearchJobsParams) (*JobSearchPageHeaders, error)
+	// SendConversationMessage implements sendConversationMessage operation.
+	//
+	// Posts a message into an open conversation.
+	//
+	// POST /me/conversations/{id}/messages
+	SendConversationMessage(ctx context.Context, req *ConversationSendRequest, params SendConversationMessageParams) (*SendConversationMessageCreated, error)
+	// SendDirectApply implements sendDirectApply operation.
+	//
+	// Sends the caller's application. Cookie session only.
+	//
+	// POST /jobs/{slug}/direct-apply
+	SendDirectApply(ctx context.Context, req *DirectApplyRequest, params SendDirectApplyParams) (*SendDirectApplyCreated, error)
 	// SetAgentPermissions implements setAgentPermissions operation.
 	//
 	// Session cookie only: an agent must not grant itself the right to apply.
 	//
 	// PUT /me/agent-permissions
 	SetAgentPermissions(ctx context.Context, req *AgentPermissions) (*SetAgentPermissionsOK, error)
+	// SetCVAppearanceDefaults implements setCVAppearanceDefaults operation.
+	//
+	// PUT /me/cv-appearance-defaults
+	SetCVAppearanceDefaults(ctx context.Context, req *CvAppearanceDefaults) (*SetCVAppearanceDefaultsOK, error)
+	// SetCVSession implements setCVSession operation.
+	//
+	// PUT /me/cvs/{id}/session
+	SetCVSession(ctx context.Context, req *CvSessionBinding, params SetCVSessionParams) error
+	// SetCVTemplate implements setCVTemplate operation.
+	//
+	// PUT /me/cvs/{id}/template
+	SetCVTemplate(ctx context.Context, req *CvTemplateChoice, params SetCVTemplateParams) error
+	// SetCVTracerLinks implements setCVTracerLinks operation.
+	//
+	// 409 when enabling on a deployment with no visitor salt.
+	//
+	// PUT /me/cvs/{id}/tracer-links
+	SetCVTracerLinks(ctx context.Context, req *CvTracerLinksSetting, params SetCVTracerLinksParams) (*SetCVTracerLinksOK, error)
+	// SetSubscriptionActive implements setSubscriptionActive operation.
+	//
+	// Pauses or resumes.
+	//
+	// PATCH /me/subscriptions/{id}
+	SetSubscriptionActive(ctx context.Context, req *SubscriptionActive, params SetSubscriptionActiveParams) (*SetSubscriptionActiveOK, error)
 	// SetTalentNetworkVisibility implements setTalentNetworkVisibility operation.
 	//
 	// Joins or leaves the catalogue. Session cookie only.
 	//
 	// PUT /me/talent-network
 	SetTalentNetworkVisibility(ctx context.Context, req *TalentNetworkVisibilityUpdate) (*SetTalentNetworkVisibilityOK, error)
+	// SimilarJobs implements similarJobs operation.
+	//
+	// Open postings in the same specialization and place as the job.
+	//
+	// GET /jobs/{slug}/similar
+	SimilarJobs(ctx context.Context, params SimilarJobsParams) (*SimilarJobsOK, error)
+	// SkillNeighbours implements skillNeighbours operation.
+	//
+	// Skills most often listed beside one skill. An unknown skill is an empty list.
+	//
+	// GET /stats/skills/{slug}/neighbours
+	SkillNeighbours(ctx context.Context, params SkillNeighboursParams) (*SkillNeighbours, error)
+	// StartBaseSession implements startBaseSession operation.
+	//
+	// The assistant conversation for a base CV; not behind the paid gate.
+	//
+	// POST /me/cvs/{id}/base-session
+	StartBaseSession(ctx context.Context, params StartBaseSessionParams) (*StartBaseSessionOK, error)
+	// StartTailorSession implements startTailorSession operation.
+	//
+	// POST /me/cvs/{id}/tailor-session
+	StartTailorSession(ctx context.Context, params StartTailorSessionParams) (*StartTailorSessionCreated, error)
+	// StatsFacets implements statsFacets operation.
+	//
+	// The value-to-count distribution of each covered facet, from the daily snapshot.
+	//
+	// GET /stats/facets
+	StatsFacets(ctx context.Context) (*StatsFacetsOK, error)
+	// SubmitMentorProfile implements submitMentorProfile operation.
+	//
+	// POST /me/mentorship/profile
+	SubmitMentorProfile(ctx context.Context, req *MentorshipProfileBody) (*SubmitMentorProfileCreated, error)
 	// Suggest implements suggest operation.
 	//
 	// Search-box suggestions. 503 when search is not configured.
 	//
 	// GET /suggest
 	Suggest(ctx context.Context, params SuggestParams) (*SuggestOK, error)
+	// SyncBillingStore implements syncBillingStore operation.
+	//
+	// 503 when the store provider cannot be reached. Cookie session only.
+	//
+	// POST /billing/revenuecat/sync
+	SyncBillingStore(ctx context.Context) (*SyncBillingStoreOK, error)
+	// TailorCV implements tailorCV operation.
+	//
+	// Starts the tailoring session for a vacancy (the paid gate runs before this). 201 with the ids and
+	// the cached analysis; 402 when the allowance is spent and the vacancy is new. With a session or an
+	// API key.
+	//
+	// POST /me/cvs/tailor
+	TailorCV(ctx context.Context, req *CvTailorRequest) (TailorCVRes, error)
+	// TrackApplication implements trackApplication operation.
+	//
+	// PATCH /me/applications/{id}
+	TrackApplication(ctx context.Context, req *TrackJob, params TrackApplicationParams) (*TrackApplicationOK, error)
+	// TrackJob implements trackJob operation.
+	//
+	// 400 for an unknown stage or an empty body.
+	//
+	// PATCH /jobs/{slug}/track
+	TrackJob(ctx context.Context, req *TrackJob, params TrackJobParams) (*TrackJobOK, error)
+	// TrackingPipeline implements trackingPipeline operation.
+	//
+	// GET /me/tracking/pipeline
+	TrackingPipeline(ctx context.Context) (*TrackingPipelineOK, error)
+	// UnbanUser implements unbanUser operation.
+	//
+	// POST /moderation/users/{id}/unban
+	UnbanUser(ctx context.Context, params UnbanUserParams) (*UnbanUserOK, error)
+	// UndismissJob implements undismissJob operation.
+	//
+	// DELETE /jobs/{slug}/dismiss
+	UndismissJob(ctx context.Context, params UndismissJobParams) (*UndismissJobOK, error)
+	// UndoCVRevision implements undoCVRevision operation.
+	//
+	// POST /me/cvs/{id}/revisions/{rid}/undo
+	UndoCVRevision(ctx context.Context, params UndoCVRevisionParams) (*UndoCVRevisionOK, error)
+	// UndoCVRevisionBatch implements undoCVRevisionBatch operation.
+	//
+	// POST /me/cvs/{id}/revisions/batch/{bid}/undo
+	UndoCVRevisionBatch(ctx context.Context, params UndoCVRevisionBatchParams) (*UndoCVRevisionBatchOK, error)
+	// UnsaveJob implements unsaveJob operation.
+	//
+	// Unsaving a job that was never saved answers with the empty interaction.
+	//
+	// DELETE /jobs/{slug}/save
+	UnsaveJob(ctx context.Context, params UnsaveJobParams) (*UnsaveJobOK, error)
+	// Untrack implements untrack operation.
+	//
+	// Takes the job off the board; the view history stays.
+	//
+	// DELETE /jobs/{slug}/track
+	Untrack(ctx context.Context, params UntrackParams) (*UntrackOK, error)
+	// UntrackApplication implements untrackApplication operation.
+	//
+	// DELETE /me/applications/{id}
+	UntrackApplication(ctx context.Context, params UntrackApplicationParams) (*UntrackApplicationOK, error)
+	// UpdateAtom implements updateAtom operation.
+	//
+	// A keyed edit leaves the provenance alone.
+	//
+	// PUT /me/experience/atoms/{id}
+	UpdateAtom(ctx context.Context, req jx.Raw, params UpdateAtomParams) (*UpdateAtomOK, error)
+	// UpdateCV implements updateCV operation.
+	//
+	// PUT /me/cvs/{id}
+	UpdateCV(ctx context.Context, req *CvUpdate, params UpdateCVParams) (*UpdateCVOK, error)
 	// UpdateEmailPrefs implements updateEmailPrefs operation.
 	//
 	// PATCH /email-prefs
 	UpdateEmailPrefs(ctx context.Context, req *EmailPrefsTokenUpdate) (*UpdateEmailPrefsOK, error)
+	// UpdateEmployerCompany implements updateEmployerCompany operation.
+	//
+	// PATCH /employer/company
+	UpdateEmployerCompany(ctx context.Context, req *EmployerCompanyPatch) (*UpdateEmployerCompanyOK, error)
+	// UpdateEmployerVacancy implements updateEmployerVacancy operation.
+	//
+	// PATCH /employer/jobs/{slug}
+	UpdateEmployerVacancy(ctx context.Context, req *EmployerVacancyPatch, params UpdateEmployerVacancyParams) (*UpdateEmployerVacancyOK, error)
+	// UpdateEmployment implements updateEmployment operation.
+	//
+	// The body is a place; blanks are kept. 404 for an id the caller does not own.
+	//
+	// PUT /me/experience/employments/{id}
+	UpdateEmployment(ctx context.Context, req jx.Raw, params UpdateEmploymentParams) (*UpdateEmploymentOK, error)
+	// UpdateJob implements updateJob operation.
+	//
+	// Moderators only. Edits a manual vacancy by public slug.
+	//
+	// PATCH /jobs/{slug}
+	UpdateJob(ctx context.Context, req *JobUpdate, params UpdateJobParams) (*UpdateJobOK, error)
+	// UpdateMentorProfile implements updateMentorProfile operation.
+	//
+	// PUT /me/mentorship/profile
+	UpdateMentorProfile(ctx context.Context, req *MentorshipProfileBody) (*UpdateMentorProfileOK, error)
 	// UpdateMyEmailGroups implements updateMyEmailGroups operation.
 	//
 	// PATCH /me/email-groups
 	UpdateMyEmailGroups(ctx context.Context, req *EmailPrefsUpdate) (*UpdateMyEmailGroupsOK, error)
+	// UpdateNotificationSettings implements updateNotificationSettings operation.
+	//
+	// An enabled rule needs a valid channel. Session cookie only.
+	//
+	// PUT /me/notification-settings
+	UpdateNotificationSettings(ctx context.Context, req *NotificationSettingsUpdate) (*UpdateNotificationSettingsOK, error)
+	// UpdateSavedSearch implements updateSavedSearch operation.
+	//
+	// PATCH /me/searches/{id}
+	UpdateSavedSearch(ctx context.Context, req *SavedSearchUpdate, params UpdateSavedSearchParams) (*UpdateSavedSearchOK, error)
 	// UpdateScreeningAnswers implements updateScreeningAnswers operation.
 	//
 	// PUT /me/screening-answers
@@ -180,6 +1449,18 @@ type Handler interface {
 	//
 	// PUT /me/survey
 	UpdateSurvey(ctx context.Context, req *SurveyResponses) (*UpdateSurveyOK, error)
+	// UpsertCompanyFeedback implements upsertCompanyFeedback operation.
+	//
+	// Creates or overwrites the caller's review in one category.
+	//
+	// POST /companies/{slug}/feedback
+	UpsertCompanyFeedback(ctx context.Context, req *CompanyFeedbackRequest, params UpsertCompanyFeedbackParams) (*UpsertCompanyFeedbackCreated, error)
+	// UserGrowth implements userGrowth operation.
+	//
+	// Cumulative registrations per UTC day.
+	//
+	// GET /stats/user-growth
+	UserGrowth(ctx context.Context) (*UserGrowthOK, error)
 	// VoteCompany implements voteCompany operation.
 	//
 	// POST /companies/{slug}/vote
@@ -188,6 +1469,16 @@ type Handler interface {
 	//
 	// POST /jobs/{slug}/vote
 	VoteJob(ctx context.Context, req *VoteRequest, params VoteJobParams) (*VoteJobOK, error)
+	// WithdrawMentorProfile implements withdrawMentorProfile operation.
+	//
+	// DELETE /me/mentorship/profile
+	WithdrawMentorProfile(ctx context.Context) error
+	// WithdrawReferralOffer implements withdrawReferralOffer operation.
+	//
+	// 404 when the offer is absent or not the caller's.
+	//
+	// DELETE /me/referrals/offers/{id}
+	WithdrawReferralOffer(ctx context.Context, params WithdrawReferralOfferParams) error
 	// NewError creates *ProblemStatusCode from error returned by handler.
 	//
 	// Used for common default response.

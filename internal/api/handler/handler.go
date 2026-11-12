@@ -221,6 +221,15 @@ func contractPageBounded(ctx context.Context, fallback, ceiling int) (limit, off
 	return clampPage(queryIntOr(query, "limit", fallback), queryIntOr(query, "offset", 0), ceiling)
 }
 
+// contractPageWindowed is pageParamsWithin at the shared window for a contract operation.
+func contractPageWindowed(ctx context.Context, fallback, ceiling int) (limit, offset int, err error) {
+	limit, offset = contractPageBounded(ctx, fallback, ceiling)
+	if offset+limit > maxPageWindow {
+		return 0, 0, fiber.NewError(fiber.StatusBadRequest, "pagination too deep")
+	}
+	return limit, offset, nil
+}
+
 func clampPage(limit, offset, ceiling int) (int, int) {
 	return min(max(limit, 1), ceiling), min(max(offset, 0), math.MaxInt32)
 }
@@ -282,24 +291,9 @@ func pageParams(c *fiber.Ctx) (limit, offset int, err error) {
 	return pageParamsWindowed(c, defaultLimit, maxLimit)
 }
 
-// listResponse writes the shared paginated-list envelope: the data slice plus a
-// meta block carrying the filtered total and the limit/offset echoed back. It is
-// the single source of the list wire shape, so the jobs/companies/search list
-// endpoints cannot drift from one another.
-func listResponse(c *fiber.Ctx, data any, total int64, limit, offset int) error {
-	return c.JSON(fiber.Map{
-		"data": data,
-		"meta": fiber.Map{
-			"total":  total,
-			"limit":  limit,
-			"offset": offset,
-		},
-	})
-}
-
-// listResponseWithHidden is listResponse plus the count a default filter suppressed.
+// listResponseWithHidden is the shared list envelope plus the count a default filter suppressed.
 //
-// Separate from listResponse rather than a widened one: every other listing hides nothing,
+// Separate from the plain envelope rather than a widened one: every other listing hides nothing,
 // and a `hidden: 0` on all of them would be a field readers have to learn to ignore.
 func listResponseWithHidden(c *fiber.Ctx, data any, total, hidden int64, limit, offset int) error {
 	return c.JSON(fiber.Map{
@@ -313,7 +307,7 @@ func listResponseWithHidden(c *fiber.Ctx, data any, total, hidden int64, limit, 
 	})
 }
 
-// listResponseWithIgnored is listResponse plus the query params the filter did
+// listResponseWithIgnored is the shared list envelope plus the query params the filter did
 // not read and the facet values outside their closed vocabulary (values: see
 // search.IgnoredValues; nil for an endpoint that builds no job filter), each
 // omitted entirely when there are none.
@@ -364,8 +358,8 @@ func addIgnored(meta fiber.Map, ignored []search.UnknownParam, values map[string
 
 // ignoredJobValues is search.IgnoredValues over this request's query, for the
 // endpoints that build a job filter from it.
-func ignoredJobValues(c *fiber.Ctx) map[string][]string {
-	return search.IgnoredValues(queryValues(c))
+func ignoredJobValues(vals url.Values) map[string][]string {
+	return search.IgnoredValues(vals)
 }
 
 // Config is the dependency bundle Register wires onto the app: the DB pool, the
@@ -1087,17 +1081,60 @@ func Register(app *fiber.App, cfg Config) {
 	// already identified.
 	emailPrefsH := newEmailPrefsHandlers(mailPrefs)
 	agentPermissionsH := &agentPermissionHandlers{queries: queries}
-	contract := newContract(contractHandlers{emailPrefsHandlers: emailPrefsH, talentCatalogHandlers: talentCatalogH,
-		companyWatchHandlers: companyWatchH,
-		geoHandlers:          geoH, suggestHandlers: suggestH, agentPermissionHandlers: agentPermissionsH,
-		usageHandlers: usageH, plansHandlers: plansH, dictionaryHandlers: dictionaryH,
-		jdResolveHandlers: jdResolveH, screeningAnswersHandlers: screeningAnswersH, surveyHandlers: surveyH,
-		voteHandlers: votesH, ghostReportHandlers: ghostReportsH, talentNetworkHandlers: talentNetworkH})
+	userModerationH := newUserModerationHandlers(queries)
+	companyRelationH := &companyRelationHandlers{relations: companyrelation.New(cfg.Pool)}
+	contract := newContract(contractHandlers{conversationHandlers: conversationH,
+		resumeHandlers:               resumeH,
+		communityHandlers:            communityH,
+		companyFeedbackHandlers:      companyFeedbackH,
+		companyRelationHandlers:      companyRelationH,
+		reportHandlers:               reportsH,
+		emailPrefsHandlers:           emailPrefsH,
+		talentCatalogHandlers:        talentCatalogH,
+		buddyHandlers:                buddyH,
+		companyWatchHandlers:         companyWatchH,
+		geoHandlers:                  geoH,
+		suggestHandlers:              suggestH,
+		agentPermissionHandlers:      agentPermissionsH,
+		usageHandlers:                usageH,
+		plansHandlers:                plansH,
+		dictionaryHandlers:           dictionaryH,
+		jdResolveHandlers:            jdResolveH,
+		screeningAnswersHandlers:     screeningAnswersH,
+		surveyHandlers:               surveyH,
+		voteHandlers:                 votesH,
+		ghostReportHandlers:          ghostReportsH,
+		talentNetworkHandlers:        talentNetworkH,
+		answerBankHandlers:           answerBankH,
+		userModerationHandlers:       userModerationH,
+		companyProcessReportHandlers: companyProcessReportH,
+		contributionHandlers:         contributionsH,
+		marketPulseHandlers:          marketPulseH,
+		promoHandlers:                promoH,
+		mentorSuggestionsHandlers:    mentorSuggestionsH,
+		mentorshipHandlers:           mentorshipH,
+		savedSearchHandlers:          savedSearchH,
+		subscriptionHandlers:         subscriptionH,
+		timelineHandlers:             timelineH,
+		profileHandlers:              profileH,
+		statsHandlers:                statsH,
+		submissionHandlers:           submissionsH,
+		trackingHandlers:             trackingH,
+		experienceHandlers:           experienceH,
+		employerHandlers:             employerH,
+		referralHandlers:             referralsH,
+		billingHandlers:              billingH,
+		planHandlers:                 planH,
+		directApplyHandlers:          directApplyH,
+		jobsHandlers:                 jobsH,
+		searchHandlers:               searchH,
+		companiesHandlers:            companiesH,
+		cvHandlers:                   cvH})
 	emailPrefsH.register(api, mw, contract)
 
 	// Job search surfaces first: their literal /jobs/* routes must precede the
 	// /jobs/:slug param route so they are not read as slugs (see searchHandlers).
-	searchH.register(api, mw)
+	searchH.register(api, mw, contract)
 	suggestH.register(api, contract)
 	dictionaryH.register(api, mw, contract)
 	// Beside the search it builds a filter for, though it shares none of its
@@ -1118,19 +1155,17 @@ func Register(app *fiber.App, cfg Config) {
 		assistantH,
 		mcpappH,
 	)
-	jobsH.register(api, mw)
-	companiesH.register(api, mw)
-	(&companyRelationHandlers{
-		relations: companyrelation.New(cfg.Pool),
-	}).register(api, mw)
+	jobsH.register(api, mw, contract)
+	companiesH.register(api, mw, contract)
+	companyRelationH.register(api, mw, contract)
 	geoH.register(api, contract)
 
 	// Saved searches + the public shared-board read (see savedSearchHandlers).
-	savedSearchH.register(api, mw)
+	savedSearchH.register(api, mw, contract)
 
 	// Public catalogue-activity, member-growth, engagement, facet-snapshot, and
 	// ingest-status reads (see statsHandlers).
-	statsH.register(api, optionalAuth)
+	statsH.register(api, optionalAuth, contract)
 	// The homepage's live "recently added jobs" SSE feed (see recentFeedHandlers).
 	recentFeedH.register(api)
 	// The public /embeddings page's coverage figures and their live stream.
@@ -1142,23 +1177,23 @@ func Register(app *fiber.App, cfg Config) {
 	// Per-user job interactions, tracking reads, and reminder controls
 	// (see trackingHandlers). The interaction writes precede the vote routes,
 	// mirroring the previous registration order.
-	trackingH.register(api, mw)
+	trackingH.register(api, mw, contract)
 	// The ledger's dated read, behind the tracking calendar. Its own namespace, not a
 	// segment under /me/tracking — see the comment on its register.
-	timelineH.register(api, mw)
+	timelineH.register(api, mw, contract)
 	votesH.register(api, mw, contract)
 	companyWatchH.register(api, mw, contract)
-	companyFeedbackH.register(api, mw)
+	companyFeedbackH.register(api, mw, contract)
 	// The manual account ban (see userModerationHandlers).
-	newUserModerationHandlers(queries).register(api, mw)
-	companyProcessReportH.register(api, mw)
+	userModerationH.register(api, mw, contract)
+	companyProcessReportH.register(api, mw, contract)
 	// Per-job skill match + the on-demand LLM fit analysis (see matchHandlers).
 	matchH.register(api, mw)
 	// The contact block the extension writes into forms, plain and agent-driven (see
 	// autofillHandlers).
 	autofillH.register(api, mw)
 	// The bank's own management surface: list, save, delete (see me_answer_bank.go).
-	answerBankH.register(api, mw)
+	answerBankH.register(api, mw, contract)
 	agentPermissionsH.register(api, mw, contract)
 	// The browser-tool wire: a harness on one end, the caller's browser extension
 	// on the other, exchanging raw tool frames. Both ends authenticate with the
@@ -1168,43 +1203,43 @@ func Register(app *fiber.App, cfg Config) {
 	api.Get("/tools/ws", auth.RequireAuthWS(a.issuer, a.queries, apiKeys{a.queries}), a.BrowserToolsWS())
 
 	// Public job submissions + review queue (see submissionHandlers).
-	submissionsH.register(api, mw)
+	submissionsH.register(api, mw, contract)
 
 	// Verified-employer accounts: claim, curated profile, own vacancies, and the
 	// moderator/admin review surface (see employerHandlers).
-	employerH.register(api, mw)
-	directApplyH.register(api, mw)
+	employerH.register(api, mw, contract)
+	directApplyH.register(api, mw, contract)
 
 	// Link contributions (see contributionHandlers).
-	contributionsH.register(api, mw)
+	contributionsH.register(api, mw, contract)
 	jdResolveH.register(api, mw, contract)
 
 	// Employee referrals (see referralHandlers).
-	referralsH.register(api, mw)
+	referralsH.register(api, mw, contract)
 
 	// Interview buddies (see buddyHandlers).
-	buddyH.register(api, mw)
+	buddyH.register(api, mw, contract)
 
 	// Conversations of every kind (see conversationHandlers).
-	conversationH.register(api, mw)
+	conversationH.register(api, mw, contract)
 
 	// The mentorship marketplace (see mentorshipHandlers).
-	mentorshipH.register(api, mw)
-	mentorSuggestionsH.register(api, mw)
+	mentorshipH.register(api, mw, contract)
+	mentorSuggestionsH.register(api, mw, contract)
 
 	// Job reports + review queue (see reportHandlers).
-	reportsH.register(api, mw)
+	reportsH.register(api, mw, contract)
 	ghostReportsH.register(api, mw, contract)
 
 	// Community discussion threads (see communityHandlers).
-	communityH.register(api, mw)
+	communityH.register(api, mw, contract)
 
-	planH.register(api, mw)
+	planH.register(api, mw, contract)
 	// Mounts nothing when billing is unconfigured — see billingHandlers.register.
-	billingH.register(api, mw)
+	billingH.register(api, mw, contract)
 	// Mounted whatever billing is doing: sharing an invite link and counting who came is
 	// not a purchase, and a deployment that sells nothing can still have a referral page.
-	promoH.register(api, mw)
+	promoH.register(api, mw, contract)
 	plansH.register(api, contract)
 	usageH.register(api, mw, contract)
 
@@ -1213,17 +1248,17 @@ func Register(app *fiber.App, cfg Config) {
 	authH.registerV2(app.Group("/api/v2"), mw)
 
 	// The per-user profile singleton (see profileHandlers).
-	profileH.register(api, mw)
+	profileH.register(api, mw, contract)
 	// The candidate's own screening answers (see screeningAnswersHandlers).
 	screeningAnswersH.register(api, mw, contract)
 	surveyH.register(api, mw, contract)
-	marketPulseH.register(api, mw)
-	experienceH.register(api, mw)
+	marketPulseH.register(api, mw, contract)
+	experienceH.register(api, mw, contract)
 	talentNetworkH.register(api, mw, contract)
 	talentCatalogH.register(api, contract)
 
 	// CV builder + AI tailoring (see cvHandlers).
-	cvH.register(api, mw)
+	cvH.register(api, mw, contract)
 	referralMessageH.register(api, mw)
 
 	// Mail inbox (Gmail connect + hosted mailbox) and email ↔ application linking
@@ -1232,7 +1267,7 @@ func Register(app *fiber.App, cfg Config) {
 	inboxH.register(api, mw)
 	// Résumé/CV surfaces: verdict, ATS report, extraction, storage (see
 	// resumeHandlers).
-	resumeH.register(api, mw)
+	resumeH.register(api, mw, contract)
 	// The headshot the photo-bearing CV templates print (see photoHandlers).
 	photoH.register(api, mw)
 	// Dictation for the assistant composer.
@@ -1240,7 +1275,7 @@ func Register(app *fiber.App, cfg Config) {
 	assistantH.register(api, mw)
 
 	// Filter subscriptions (see subscriptionHandlers).
-	subscriptionH.register(api, mw)
+	subscriptionH.register(api, mw, contract)
 	webhookH.register(api, mw)
 
 	// Telegram linking + the inbound bot webhook (see telegramHandlers).

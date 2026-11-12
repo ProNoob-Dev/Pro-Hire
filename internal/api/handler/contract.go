@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -8,7 +9,9 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 
+	"github.com/go-faster/jx"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/ogen-go/ogen/ogenerrors"
@@ -42,6 +45,38 @@ type contractHandlers struct {
 	*voteHandlers
 	*ghostReportHandlers
 	*talentNetworkHandlers
+	*companyFeedbackHandlers
+	*companyRelationHandlers
+	*reportHandlers
+	*answerBankHandlers
+	*userModerationHandlers
+	*companyProcessReportHandlers
+	*contributionHandlers
+	*marketPulseHandlers
+	*promoHandlers
+	*mentorSuggestionsHandlers
+	*mentorshipHandlers
+	*savedSearchHandlers
+	*subscriptionHandlers
+	*timelineHandlers
+	*profileHandlers
+	*conversationHandlers
+	*communityHandlers
+	*buddyHandlers
+	*statsHandlers
+	*submissionHandlers
+	*trackingHandlers
+	*experienceHandlers
+	*employerHandlers
+	*referralHandlers
+	*billingHandlers
+	*planHandlers
+	*directApplyHandlers
+	*jobsHandlers
+	*searchHandlers
+	*companiesHandlers
+	*resumeHandlers
+	*cvHandlers
 }
 
 var _ apigen.Handler = contractHandlers{}
@@ -72,6 +107,9 @@ func newContract(h contractHandlers) fiber.Handler {
 		if target, ok := r.Context().Value(localsContractTarget).(*url.URL); ok {
 			r.URL.Path, r.URL.RawPath, r.URL.RawQuery = target.Path, target.RawPath, target.RawQuery
 		}
+		if user, ok := r.Context().Value(localsContractUserContext).(context.Context); ok {
+			r = r.WithContext(withUserContext{Context: r.Context(), user: user})
+		}
 		srv.ServeHTTP(w, r)
 	}))
 	return func(c *fiber.Ctx) error {
@@ -83,8 +121,14 @@ func newContract(h contractHandlers) fiber.Handler {
 			return fiber.NewError(fiber.StatusNotFound, "not found")
 		}
 		query := queryValues(c)
+		// Postgres refuses a NUL byte in any text value, so one that reaches a query is a 500.
+		// No route has a use for it; refuse it here, as the decoder refuses a malformed param.
+		if hasNUL(c.Request().URI().Path()) || hasNULIn(query) {
+			return fiber.NewError(fiber.StatusBadRequest, "invalid params")
+		}
 		c.Locals(localsContractQuery, query)
 		c.Locals(localsContractTarget, fiberTarget(c, query))
+		c.Locals(localsContractUserContext, c.UserContext())
 		// Fiber routes HEAD to every Get, but the generated router knows only the
 		// methods the contract names. Serve it as GET and put HEAD back, so fasthttp,
 		// which decides after the handler, still drops the body.
@@ -144,6 +188,26 @@ func recordContractFault(ctx context.Context, err error) {
 	if fault, ok := ctx.Value(localsContractFault).(*contractFault); ok {
 		fault.err = err
 	}
+}
+
+// localsContractUserContext carries Fiber's user context to the generated server. Middleware
+// marks it (plan.WithPaidAI / WithFreeAI on the paid gate, the trace span), and the request
+// context the adaptor builds holds only Fiber Locals, so without it a paid route's model
+// call is refused for want of the mark and its faults lose their trace.
+const localsContractUserContext = "contract.user_context"
+
+// withUserContext is the request context (cancellation, deadline, Fiber Locals) that also
+// answers the values the user context holds.
+type withUserContext struct {
+	context.Context
+	user context.Context
+}
+
+func (c withUserContext) Value(key any) any {
+	if v := c.user.Value(key); v != nil {
+		return v
+	}
+	return c.Context.Value(key)
 }
 
 // localsContractTarget is the URL the generated router is given instead of the one sent.
@@ -256,4 +320,47 @@ func optNilInt(p *int, setTo func(int64)) {
 	if p != nil {
 		setTo(int64(*p))
 	}
+}
+
+// nilString is an always-present nullable string set from a domain pointer: null for nil.
+func nilString(p *string) apigen.NilString {
+	if p == nil {
+		return apigen.NilString{Null: true}
+	}
+	return apigen.NewNilString(*p)
+}
+
+// nilDateTime is an always-present nullable timestamp set from a domain pointer: null for nil.
+func nilDateTime(t *time.Time) apigen.NilDateTime {
+	if t == nil {
+		return apigen.NilDateTime{Null: true}
+	}
+	return apigen.NewNilDateTime(*t)
+}
+
+// contractIgnoredValues is search's value-level report as the raw object encoding/json wrote
+// (keys sorted; a generated map would encode them in random order). Nil when empty, so the
+// optional field is left out.
+func contractIgnoredValues(values map[string][]string) jx.Raw {
+	if len(values) == 0 {
+		return nil
+	}
+	raw, _ := json.Marshal(values) // a map of string slices always marshals
+	return raw
+}
+
+func hasNUL(b []byte) bool { return bytes.IndexByte(b, 0) >= 0 }
+
+func hasNULIn(query url.Values) bool {
+	for k, vals := range query {
+		if strings.IndexByte(k, 0) >= 0 {
+			return true
+		}
+		for _, v := range vals {
+			if strings.IndexByte(v, 0) >= 0 {
+				return true
+			}
+		}
+	}
+	return false
 }

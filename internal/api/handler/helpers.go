@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/url"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -43,6 +44,16 @@ func queryValues(c *fiber.Ctx) url.Values {
 // value. It centralizes the parse + the int64 conversion the handlers repeat.
 func pathID(c *fiber.Ctx) (int64, error) {
 	id, err := c.ParamsInt("id")
+	if err != nil {
+		return 0, fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+	return int64(id), nil
+}
+
+// contractPathID is pathID for a contract operation, whose id param is declared a string so
+// a value that is not a number keeps the "invalid id" answer.
+func contractPathID(s string) (int64, error) {
+	id, err := strconv.Atoi(s)
 	if err != nil {
 		return 0, fiber.NewError(fiber.StatusBadRequest, "invalid id")
 	}

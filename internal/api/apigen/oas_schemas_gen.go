@@ -8,10 +8,147 @@ import (
 	"time"
 
 	"github.com/go-faster/errors"
+	"github.com/go-faster/jx"
 )
 
 func (s *ProblemStatusCode) Error() string {
 	return fmt.Sprintf("code %d: %+v", s.StatusCode, s.Response)
+}
+
+// A single item: `{"data": ...}`.
+type AcceptConversationOK struct {
+	Data Conversation `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *AcceptConversationOK) GetData() Conversation {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *AcceptConversationOK) SetData(val Conversation) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/ActivityMeta
+type ActivityMeta struct {
+	Granularity string `json:"granularity"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+}
+
+// GetGranularity returns the value of Granularity.
+func (s *ActivityMeta) GetGranularity() string {
+	return s.Granularity
+}
+
+// GetFrom returns the value of From.
+func (s *ActivityMeta) GetFrom() string {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *ActivityMeta) GetTo() string {
+	return s.To
+}
+
+// SetGranularity sets the value of Granularity.
+func (s *ActivityMeta) SetGranularity(val string) {
+	s.Granularity = val
+}
+
+// SetFrom sets the value of From.
+func (s *ActivityMeta) SetFrom(val string) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *ActivityMeta) SetTo(val string) {
+	s.To = val
+}
+
+// Vacancies added and removed in one period.
+// Ref: #/components/schemas/ActivityPoint
+type ActivityPoint struct {
+	// YYYY-MM-DD.
+	Period  string `json:"period"`
+	Added   int64  `json:"added"`
+	Removed int64  `json:"removed"`
+}
+
+// GetPeriod returns the value of Period.
+func (s *ActivityPoint) GetPeriod() string {
+	return s.Period
+}
+
+// GetAdded returns the value of Added.
+func (s *ActivityPoint) GetAdded() int64 {
+	return s.Added
+}
+
+// GetRemoved returns the value of Removed.
+func (s *ActivityPoint) GetRemoved() int64 {
+	return s.Removed
+}
+
+// SetPeriod sets the value of Period.
+func (s *ActivityPoint) SetPeriod(val string) {
+	s.Period = val
+}
+
+// SetAdded sets the value of Added.
+func (s *ActivityPoint) SetAdded(val int64) {
+	s.Added = val
+}
+
+// SetRemoved sets the value of Removed.
+func (s *ActivityPoint) SetRemoved(val int64) {
+	s.Removed = val
+}
+
+// A single item: `{"data": ...}`.
+type AddAtomCreated struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *AddAtomCreated) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *AddAtomCreated) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type AddAvailabilityOverrideCreated struct {
+	Data BuddyMockRuleOut `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *AddAvailabilityOverrideCreated) GetData() BuddyMockRuleOut {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *AddAvailabilityOverrideCreated) SetData(val BuddyMockRuleOut) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type AddEmploymentCreated struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *AddEmploymentCreated) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *AddEmploymentCreated) SetData(val jx.Raw) {
+	s.Data = val
 }
 
 // A single item: `{"data": ...}`.
@@ -29,6 +166,142 @@ func (s *AddToWatchlistOK) SetData(val WatchedCompany) {
 	s.Data = val
 }
 
+// Ref: #/components/schemas/AgentJobSearchMeta
+type AgentJobSearchMeta struct {
+	Total  int64 `json:"total"`
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+	// Absent when every param was read.
+	IgnoredParams []IgnoredParam `json:"ignored_params"`
+	IgnoredValues jx.Raw         `json:"ignored_values"`
+	// True when `total` counts only what was read, not the whole match.
+	TotalIsLowerBound OptBool `json:"total_is_lower_bound"`
+	// "unavailable" when `semantic=true` was asked and the request was answered by keywords.
+	Semantic OptString `json:"semantic"`
+}
+
+// GetTotal returns the value of Total.
+func (s *AgentJobSearchMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// GetLimit returns the value of Limit.
+func (s *AgentJobSearchMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *AgentJobSearchMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// GetIgnoredParams returns the value of IgnoredParams.
+func (s *AgentJobSearchMeta) GetIgnoredParams() []IgnoredParam {
+	return s.IgnoredParams
+}
+
+// GetIgnoredValues returns the value of IgnoredValues.
+func (s *AgentJobSearchMeta) GetIgnoredValues() jx.Raw {
+	return s.IgnoredValues
+}
+
+// GetTotalIsLowerBound returns the value of TotalIsLowerBound.
+func (s *AgentJobSearchMeta) GetTotalIsLowerBound() OptBool {
+	return s.TotalIsLowerBound
+}
+
+// GetSemantic returns the value of Semantic.
+func (s *AgentJobSearchMeta) GetSemantic() OptString {
+	return s.Semantic
+}
+
+// SetTotal sets the value of Total.
+func (s *AgentJobSearchMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *AgentJobSearchMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *AgentJobSearchMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// SetIgnoredParams sets the value of IgnoredParams.
+func (s *AgentJobSearchMeta) SetIgnoredParams(val []IgnoredParam) {
+	s.IgnoredParams = val
+}
+
+// SetIgnoredValues sets the value of IgnoredValues.
+func (s *AgentJobSearchMeta) SetIgnoredValues(val jx.Raw) {
+	s.IgnoredValues = val
+}
+
+// SetTotalIsLowerBound sets the value of TotalIsLowerBound.
+func (s *AgentJobSearchMeta) SetTotalIsLowerBound(val OptBool) {
+	s.TotalIsLowerBound = val
+}
+
+// SetSemantic sets the value of Semantic.
+func (s *AgentJobSearchMeta) SetSemantic(val OptString) {
+	s.Semantic = val
+}
+
+// Ref: #/components/schemas/AgentJobSearchPage
+type AgentJobSearchPage struct {
+	Data []jx.Raw           `json:"data"`
+	Meta AgentJobSearchMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *AgentJobSearchPage) GetData() []jx.Raw {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *AgentJobSearchPage) GetMeta() AgentJobSearchMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *AgentJobSearchPage) SetData(val []jx.Raw) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *AgentJobSearchPage) SetMeta(val AgentJobSearchMeta) {
+	s.Meta = val
+}
+
+// AgentJobSearchPageHeaders wraps AgentJobSearchPage with response headers.
+type AgentJobSearchPageHeaders struct {
+	CacheControl OptString
+	Response     AgentJobSearchPage
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *AgentJobSearchPageHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetResponse returns the value of Response.
+func (s *AgentJobSearchPageHeaders) GetResponse() AgentJobSearchPage {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *AgentJobSearchPageHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetResponse sets the value of Response.
+func (s *AgentJobSearchPageHeaders) SetResponse(val AgentJobSearchPage) {
+	s.Response = val
+}
+
 // Ref: #/components/schemas/AgentPermissions
 type AgentPermissions struct {
 	// Whether an agent acting for the account may submit applications. Absent reads as false.
@@ -43,6 +316,2427 @@ func (s *AgentPermissions) GetAgentsMayApply() OptBool {
 // SetAgentsMayApply sets the value of AgentsMayApply.
 func (s *AgentPermissions) SetAgentsMayApply(val OptBool) {
 	s.AgentsMayApply = val
+}
+
+// Ref: #/components/schemas/AlertListMeta
+type AlertListMeta struct {
+	Total int64 `json:"total"`
+}
+
+// GetTotal returns the value of Total.
+func (s *AlertListMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// SetTotal sets the value of Total.
+func (s *AlertListMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// Ref: #/components/schemas/ApplyJob
+type ApplyJob struct {
+	// The day the application was sent, `2026-07-29`. Absent, null or empty means now.
+	AppliedOn OptNilString `json:"applied_on"`
+}
+
+// GetAppliedOn returns the value of AppliedOn.
+func (s *ApplyJob) GetAppliedOn() OptNilString {
+	return s.AppliedOn
+}
+
+// SetAppliedOn sets the value of AppliedOn.
+func (s *ApplyJob) SetAppliedOn(val OptNilString) {
+	s.AppliedOn = val
+}
+
+// A single item: `{"data": ...}`.
+type ApproveCompanyRelationOK struct {
+	Data CompanyRelationApproval `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ApproveCompanyRelationOK) GetData() CompanyRelationApproval {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ApproveCompanyRelationOK) SetData(val CompanyRelationApproval) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ApproveEmployerClaimOK struct {
+	Data EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ApproveEmployerClaimOK) GetData() EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ApproveEmployerClaimOK) SetData(val EmployerAccount) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ApproveSubmissionOK struct {
+	Data Submission `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ApproveSubmissionOK) GetData() Submission {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ApproveSubmissionOK) SetData(val Submission) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BanRequest
+type BanRequest struct {
+	// 1 to 500 characters.
+	Reason OptString `json:"reason"`
+}
+
+// GetReason returns the value of Reason.
+func (s *BanRequest) GetReason() OptString {
+	return s.Reason
+}
+
+// SetReason sets the value of Reason.
+func (s *BanRequest) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// A single item: `{"data": ...}`.
+type BanUserOK struct {
+	Data ModeratedUser `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BanUserOK) GetData() ModeratedUser {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BanUserOK) SetData(val ModeratedUser) {
+	s.Data = val
+}
+
+// An answer to a free-text screening question, saved for the next form that asks it.
+// Ref: #/components/schemas/BankedAnswer
+type BankedAnswer struct {
+	ID       int64  `json:"id"`
+	Topic    string `json:"topic"`
+	Question string `json:"question"`
+	Answer   string `json:"answer"`
+	// Who wrote it: the candidate, or an agent on their behalf.
+	Provenance string    `json:"provenance"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// GetID returns the value of ID.
+func (s *BankedAnswer) GetID() int64 {
+	return s.ID
+}
+
+// GetTopic returns the value of Topic.
+func (s *BankedAnswer) GetTopic() string {
+	return s.Topic
+}
+
+// GetQuestion returns the value of Question.
+func (s *BankedAnswer) GetQuestion() string {
+	return s.Question
+}
+
+// GetAnswer returns the value of Answer.
+func (s *BankedAnswer) GetAnswer() string {
+	return s.Answer
+}
+
+// GetProvenance returns the value of Provenance.
+func (s *BankedAnswer) GetProvenance() string {
+	return s.Provenance
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *BankedAnswer) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *BankedAnswer) SetID(val int64) {
+	s.ID = val
+}
+
+// SetTopic sets the value of Topic.
+func (s *BankedAnswer) SetTopic(val string) {
+	s.Topic = val
+}
+
+// SetQuestion sets the value of Question.
+func (s *BankedAnswer) SetQuestion(val string) {
+	s.Question = val
+}
+
+// SetAnswer sets the value of Answer.
+func (s *BankedAnswer) SetAnswer(val string) {
+	s.Answer = val
+}
+
+// SetProvenance sets the value of Provenance.
+func (s *BankedAnswer) SetProvenance(val string) {
+	s.Provenance = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *BankedAnswer) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// The checkout link and which offer was applied to it.
+// Ref: #/components/schemas/BillingCheckout
+type BillingCheckout struct {
+	URL string `json:"url"`
+	// The discount actually applied, 0 when none.
+	DiscountPercent int64 `json:"discount_percent"`
+	// The label of the applied discount, empty when none.
+	DiscountSource string `json:"discount_source"`
+}
+
+// GetURL returns the value of URL.
+func (s *BillingCheckout) GetURL() string {
+	return s.URL
+}
+
+// GetDiscountPercent returns the value of DiscountPercent.
+func (s *BillingCheckout) GetDiscountPercent() int64 {
+	return s.DiscountPercent
+}
+
+// GetDiscountSource returns the value of DiscountSource.
+func (s *BillingCheckout) GetDiscountSource() string {
+	return s.DiscountSource
+}
+
+// SetURL sets the value of URL.
+func (s *BillingCheckout) SetURL(val string) {
+	s.URL = val
+}
+
+// SetDiscountPercent sets the value of DiscountPercent.
+func (s *BillingCheckout) SetDiscountPercent(val int64) {
+	s.DiscountPercent = val
+}
+
+// SetDiscountSource sets the value of DiscountSource.
+func (s *BillingCheckout) SetDiscountSource(val string) {
+	s.DiscountSource = val
+}
+
+// Ref: #/components/schemas/BillingInvoice
+type BillingInvoice struct {
+	ID   string    `json:"id"`
+	Date time.Time `json:"date"`
+	// The smallest currency unit, as the payment provider stores it.
+	AmountCents int64  `json:"amount_cents"`
+	Currency    string `json:"currency"`
+	Status      string `json:"status"`
+	// The provider's hosted invoice, absent for a draft.
+	ReceiptURL OptString `json:"receipt_url"`
+}
+
+// GetID returns the value of ID.
+func (s *BillingInvoice) GetID() string {
+	return s.ID
+}
+
+// GetDate returns the value of Date.
+func (s *BillingInvoice) GetDate() time.Time {
+	return s.Date
+}
+
+// GetAmountCents returns the value of AmountCents.
+func (s *BillingInvoice) GetAmountCents() int64 {
+	return s.AmountCents
+}
+
+// GetCurrency returns the value of Currency.
+func (s *BillingInvoice) GetCurrency() string {
+	return s.Currency
+}
+
+// GetStatus returns the value of Status.
+func (s *BillingInvoice) GetStatus() string {
+	return s.Status
+}
+
+// GetReceiptURL returns the value of ReceiptURL.
+func (s *BillingInvoice) GetReceiptURL() OptString {
+	return s.ReceiptURL
+}
+
+// SetID sets the value of ID.
+func (s *BillingInvoice) SetID(val string) {
+	s.ID = val
+}
+
+// SetDate sets the value of Date.
+func (s *BillingInvoice) SetDate(val time.Time) {
+	s.Date = val
+}
+
+// SetAmountCents sets the value of AmountCents.
+func (s *BillingInvoice) SetAmountCents(val int64) {
+	s.AmountCents = val
+}
+
+// SetCurrency sets the value of Currency.
+func (s *BillingInvoice) SetCurrency(val string) {
+	s.Currency = val
+}
+
+// SetStatus sets the value of Status.
+func (s *BillingInvoice) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetReceiptURL sets the value of ReceiptURL.
+func (s *BillingInvoice) SetReceiptURL(val OptString) {
+	s.ReceiptURL = val
+}
+
+// What the account is paying and what has been charged, read from the provider.
+// Ref: #/components/schemas/BillingOverview
+type BillingOverview struct {
+	Status      string `json:"status"`
+	AmountCents int64  `json:"amount_cents"`
+	Currency    string `json:"currency"`
+	Interval    string `json:"interval"`
+	// Absent when the subscription is ending.
+	RenewsAt OptDateTime `json:"renews_at"`
+	// Set when the subscriber has cancelled.
+	EndsAt                OptDateTime      `json:"ends_at"`
+	Invoices              []BillingInvoice `json:"invoices"`
+	MultipleSubscriptions OptBool          `json:"multiple_subscriptions"`
+}
+
+// GetStatus returns the value of Status.
+func (s *BillingOverview) GetStatus() string {
+	return s.Status
+}
+
+// GetAmountCents returns the value of AmountCents.
+func (s *BillingOverview) GetAmountCents() int64 {
+	return s.AmountCents
+}
+
+// GetCurrency returns the value of Currency.
+func (s *BillingOverview) GetCurrency() string {
+	return s.Currency
+}
+
+// GetInterval returns the value of Interval.
+func (s *BillingOverview) GetInterval() string {
+	return s.Interval
+}
+
+// GetRenewsAt returns the value of RenewsAt.
+func (s *BillingOverview) GetRenewsAt() OptDateTime {
+	return s.RenewsAt
+}
+
+// GetEndsAt returns the value of EndsAt.
+func (s *BillingOverview) GetEndsAt() OptDateTime {
+	return s.EndsAt
+}
+
+// GetInvoices returns the value of Invoices.
+func (s *BillingOverview) GetInvoices() []BillingInvoice {
+	return s.Invoices
+}
+
+// GetMultipleSubscriptions returns the value of MultipleSubscriptions.
+func (s *BillingOverview) GetMultipleSubscriptions() OptBool {
+	return s.MultipleSubscriptions
+}
+
+// SetStatus sets the value of Status.
+func (s *BillingOverview) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetAmountCents sets the value of AmountCents.
+func (s *BillingOverview) SetAmountCents(val int64) {
+	s.AmountCents = val
+}
+
+// SetCurrency sets the value of Currency.
+func (s *BillingOverview) SetCurrency(val string) {
+	s.Currency = val
+}
+
+// SetInterval sets the value of Interval.
+func (s *BillingOverview) SetInterval(val string) {
+	s.Interval = val
+}
+
+// SetRenewsAt sets the value of RenewsAt.
+func (s *BillingOverview) SetRenewsAt(val OptDateTime) {
+	s.RenewsAt = val
+}
+
+// SetEndsAt sets the value of EndsAt.
+func (s *BillingOverview) SetEndsAt(val OptDateTime) {
+	s.EndsAt = val
+}
+
+// SetInvoices sets the value of Invoices.
+func (s *BillingOverview) SetInvoices(val []BillingInvoice) {
+	s.Invoices = val
+}
+
+// SetMultipleSubscriptions sets the value of MultipleSubscriptions.
+func (s *BillingOverview) SetMultipleSubscriptions(val OptBool) {
+	s.MultipleSubscriptions = val
+}
+
+// Ref: #/components/schemas/BillingStoreSync
+type BillingStoreSync struct {
+	// `synced` or `no_subscription`.
+	Status string `json:"status"`
+}
+
+// GetStatus returns the value of Status.
+func (s *BillingStoreSync) GetStatus() string {
+	return s.Status
+}
+
+// SetStatus sets the value of Status.
+func (s *BillingStoreSync) SetStatus(val string) {
+	s.Status = val
+}
+
+// Ref: #/components/schemas/BillingUrl
+type BillingUrl struct {
+	URL string `json:"url"`
+}
+
+// GetURL returns the value of URL.
+func (s *BillingUrl) GetURL() string {
+	return s.URL
+}
+
+// SetURL sets the value of URL.
+func (s *BillingUrl) SetURL(val string) {
+	s.URL = val
+}
+
+// BlockConversationNoContent is response for BlockConversation operation.
+type BlockConversationNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type BookSessionCreated struct {
+	Data MentorshipBooking `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BookSessionCreated) GetData() MentorshipBooking {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BookSessionCreated) SetData(val MentorshipBooking) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyActivity
+type BuddyActivity struct {
+	Days []BuddyActivityDay `json:"days"`
+}
+
+// GetDays returns the value of Days.
+func (s *BuddyActivity) GetDays() []BuddyActivityDay {
+	return s.Days
+}
+
+// SetDays sets the value of Days.
+func (s *BuddyActivity) SetDays(val []BuddyActivityDay) {
+	s.Days = val
+}
+
+// Ref: #/components/schemas/BuddyActivityDay
+type BuddyActivityDay struct {
+	Day       string `json:"day"`
+	Count     int64  `json:"count"`
+	Applied   int64  `json:"applied"`
+	Interview int64  `json:"interview"`
+	Offer     int64  `json:"offer"`
+}
+
+// GetDay returns the value of Day.
+func (s *BuddyActivityDay) GetDay() string {
+	return s.Day
+}
+
+// GetCount returns the value of Count.
+func (s *BuddyActivityDay) GetCount() int64 {
+	return s.Count
+}
+
+// GetApplied returns the value of Applied.
+func (s *BuddyActivityDay) GetApplied() int64 {
+	return s.Applied
+}
+
+// GetInterview returns the value of Interview.
+func (s *BuddyActivityDay) GetInterview() int64 {
+	return s.Interview
+}
+
+// GetOffer returns the value of Offer.
+func (s *BuddyActivityDay) GetOffer() int64 {
+	return s.Offer
+}
+
+// SetDay sets the value of Day.
+func (s *BuddyActivityDay) SetDay(val string) {
+	s.Day = val
+}
+
+// SetCount sets the value of Count.
+func (s *BuddyActivityDay) SetCount(val int64) {
+	s.Count = val
+}
+
+// SetApplied sets the value of Applied.
+func (s *BuddyActivityDay) SetApplied(val int64) {
+	s.Applied = val
+}
+
+// SetInterview sets the value of Interview.
+func (s *BuddyActivityDay) SetInterview(val int64) {
+	s.Interview = val
+}
+
+// SetOffer sets the value of Offer.
+func (s *BuddyActivityDay) SetOffer(val int64) {
+	s.Offer = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyActivityOK struct {
+	Data BuddyActivity `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyActivityOK) GetData() BuddyActivity {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyActivityOK) SetData(val BuddyActivity) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyCardSummary
+type BuddyCardSummary struct {
+	Category  string `json:"category"`
+	Seniority string `json:"seniority"`
+	Country   string `json:"country"`
+}
+
+// GetCategory returns the value of Category.
+func (s *BuddyCardSummary) GetCategory() string {
+	return s.Category
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *BuddyCardSummary) GetSeniority() string {
+	return s.Seniority
+}
+
+// GetCountry returns the value of Country.
+func (s *BuddyCardSummary) GetCountry() string {
+	return s.Country
+}
+
+// SetCategory sets the value of Category.
+func (s *BuddyCardSummary) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *BuddyCardSummary) SetSeniority(val string) {
+	s.Seniority = val
+}
+
+// SetCountry sets the value of Country.
+func (s *BuddyCardSummary) SetCountry(val string) {
+	s.Country = val
+}
+
+// Ref: #/components/schemas/BuddyCompany
+type BuddyCompany struct {
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *BuddyCompany) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *BuddyCompany) GetName() string {
+	return s.Name
+}
+
+// SetSlug sets the value of Slug.
+func (s *BuddyCompany) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *BuddyCompany) SetName(val string) {
+	s.Name = val
+}
+
+// Ref: #/components/schemas/BuddyConversation
+type BuddyConversation struct {
+	ID            int64                        `json:"id"`
+	Kind          string                       `json:"kind"`
+	StatusForMe   string                       `json:"status_for_me"`
+	Counterpart   BuddyConversationCounterpart `json:"counterpart"`
+	Unread        int64                        `json:"unread"`
+	LastMessageAt NilDateTime                  `json:"last_message_at"`
+	CreatedAt     time.Time                    `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *BuddyConversation) GetID() int64 {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *BuddyConversation) GetKind() string {
+	return s.Kind
+}
+
+// GetStatusForMe returns the value of StatusForMe.
+func (s *BuddyConversation) GetStatusForMe() string {
+	return s.StatusForMe
+}
+
+// GetCounterpart returns the value of Counterpart.
+func (s *BuddyConversation) GetCounterpart() BuddyConversationCounterpart {
+	return s.Counterpart
+}
+
+// GetUnread returns the value of Unread.
+func (s *BuddyConversation) GetUnread() int64 {
+	return s.Unread
+}
+
+// GetLastMessageAt returns the value of LastMessageAt.
+func (s *BuddyConversation) GetLastMessageAt() NilDateTime {
+	return s.LastMessageAt
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *BuddyConversation) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *BuddyConversation) SetID(val int64) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *BuddyConversation) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetStatusForMe sets the value of StatusForMe.
+func (s *BuddyConversation) SetStatusForMe(val string) {
+	s.StatusForMe = val
+}
+
+// SetCounterpart sets the value of Counterpart.
+func (s *BuddyConversation) SetCounterpart(val BuddyConversationCounterpart) {
+	s.Counterpart = val
+}
+
+// SetUnread sets the value of Unread.
+func (s *BuddyConversation) SetUnread(val int64) {
+	s.Unread = val
+}
+
+// SetLastMessageAt sets the value of LastMessageAt.
+func (s *BuddyConversation) SetLastMessageAt(val NilDateTime) {
+	s.LastMessageAt = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *BuddyConversation) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/BuddyConversationCounterpart
+type BuddyConversationCounterpart struct {
+	Persona   string                    `json:"persona"`
+	Reachable bool                      `json:"reachable"`
+	Detail    NilBuddyCounterpartDetail `json:"detail"`
+}
+
+// GetPersona returns the value of Persona.
+func (s *BuddyConversationCounterpart) GetPersona() string {
+	return s.Persona
+}
+
+// GetReachable returns the value of Reachable.
+func (s *BuddyConversationCounterpart) GetReachable() bool {
+	return s.Reachable
+}
+
+// GetDetail returns the value of Detail.
+func (s *BuddyConversationCounterpart) GetDetail() NilBuddyCounterpartDetail {
+	return s.Detail
+}
+
+// SetPersona sets the value of Persona.
+func (s *BuddyConversationCounterpart) SetPersona(val string) {
+	s.Persona = val
+}
+
+// SetReachable sets the value of Reachable.
+func (s *BuddyConversationCounterpart) SetReachable(val bool) {
+	s.Reachable = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *BuddyConversationCounterpart) SetDetail(val NilBuddyCounterpartDetail) {
+	s.Detail = val
+}
+
+// The buddy persona's own shape. Nothing here names the account behind it.
+// Ref: #/components/schemas/BuddyCounterpart
+type BuddyCounterpart struct {
+	Handle      string                  `json:"handle"`
+	CardSummary ConversationCardSummary `json:"card_summary"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyCounterpart) GetHandle() string {
+	return s.Handle
+}
+
+// GetCardSummary returns the value of CardSummary.
+func (s *BuddyCounterpart) GetCardSummary() ConversationCardSummary {
+	return s.CardSummary
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyCounterpart) SetHandle(val string) {
+	s.Handle = val
+}
+
+// SetCardSummary sets the value of CardSummary.
+func (s *BuddyCounterpart) SetCardSummary(val ConversationCardSummary) {
+	s.CardSummary = val
+}
+
+// The persona's own detail; null when the other side is not reachable.
+// Ref: #/components/schemas/BuddyCounterpartDetail
+type BuddyCounterpartDetail struct {
+	Handle      string           `json:"handle"`
+	CardSummary BuddyCardSummary `json:"card_summary"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyCounterpartDetail) GetHandle() string {
+	return s.Handle
+}
+
+// GetCardSummary returns the value of CardSummary.
+func (s *BuddyCounterpartDetail) GetCardSummary() BuddyCardSummary {
+	return s.CardSummary
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyCounterpartDetail) SetHandle(val string) {
+	s.Handle = val
+}
+
+// SetCardSummary sets the value of CardSummary.
+func (s *BuddyCounterpartDetail) SetCardSummary(val BuddyCardSummary) {
+	s.CardSummary = val
+}
+
+// Ref: #/components/schemas/BuddyFeedEntry
+type BuddyFeedEntry struct {
+	ID          int64            `json:"id"`
+	Handle      string           `json:"handle"`
+	CardSummary BuddyCardSummary `json:"card_summary"`
+	Company     BuddyCompany     `json:"company"`
+	JobTitle    NilString        `json:"job_title"`
+	JobSlug     NilString        `json:"job_slug"`
+	JobLocation NilString        `json:"job_location"`
+	Reactions   BuddyReactions   `json:"reactions"`
+	Type        string           `json:"type"`
+	Day         string           `json:"day"`
+}
+
+// GetID returns the value of ID.
+func (s *BuddyFeedEntry) GetID() int64 {
+	return s.ID
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyFeedEntry) GetHandle() string {
+	return s.Handle
+}
+
+// GetCardSummary returns the value of CardSummary.
+func (s *BuddyFeedEntry) GetCardSummary() BuddyCardSummary {
+	return s.CardSummary
+}
+
+// GetCompany returns the value of Company.
+func (s *BuddyFeedEntry) GetCompany() BuddyCompany {
+	return s.Company
+}
+
+// GetJobTitle returns the value of JobTitle.
+func (s *BuddyFeedEntry) GetJobTitle() NilString {
+	return s.JobTitle
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *BuddyFeedEntry) GetJobSlug() NilString {
+	return s.JobSlug
+}
+
+// GetJobLocation returns the value of JobLocation.
+func (s *BuddyFeedEntry) GetJobLocation() NilString {
+	return s.JobLocation
+}
+
+// GetReactions returns the value of Reactions.
+func (s *BuddyFeedEntry) GetReactions() BuddyReactions {
+	return s.Reactions
+}
+
+// GetType returns the value of Type.
+func (s *BuddyFeedEntry) GetType() string {
+	return s.Type
+}
+
+// GetDay returns the value of Day.
+func (s *BuddyFeedEntry) GetDay() string {
+	return s.Day
+}
+
+// SetID sets the value of ID.
+func (s *BuddyFeedEntry) SetID(val int64) {
+	s.ID = val
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyFeedEntry) SetHandle(val string) {
+	s.Handle = val
+}
+
+// SetCardSummary sets the value of CardSummary.
+func (s *BuddyFeedEntry) SetCardSummary(val BuddyCardSummary) {
+	s.CardSummary = val
+}
+
+// SetCompany sets the value of Company.
+func (s *BuddyFeedEntry) SetCompany(val BuddyCompany) {
+	s.Company = val
+}
+
+// SetJobTitle sets the value of JobTitle.
+func (s *BuddyFeedEntry) SetJobTitle(val NilString) {
+	s.JobTitle = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *BuddyFeedEntry) SetJobSlug(val NilString) {
+	s.JobSlug = val
+}
+
+// SetJobLocation sets the value of JobLocation.
+func (s *BuddyFeedEntry) SetJobLocation(val NilString) {
+	s.JobLocation = val
+}
+
+// SetReactions sets the value of Reactions.
+func (s *BuddyFeedEntry) SetReactions(val BuddyReactions) {
+	s.Reactions = val
+}
+
+// SetType sets the value of Type.
+func (s *BuddyFeedEntry) SetType(val string) {
+	s.Type = val
+}
+
+// SetDay sets the value of Day.
+func (s *BuddyFeedEntry) SetDay(val string) {
+	s.Day = val
+}
+
+// Ref: #/components/schemas/BuddyFeedMeta
+type BuddyFeedMeta struct {
+	NextCursor NilString `json:"next_cursor"`
+}
+
+// GetNextCursor returns the value of NextCursor.
+func (s *BuddyFeedMeta) GetNextCursor() NilString {
+	return s.NextCursor
+}
+
+// SetNextCursor sets the value of NextCursor.
+func (s *BuddyFeedMeta) SetNextCursor(val NilString) {
+	s.NextCursor = val
+}
+
+// Ref: #/components/schemas/BuddyFeedPage
+type BuddyFeedPage struct {
+	Data []BuddyFeedEntry `json:"data"`
+	Meta BuddyFeedMeta    `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyFeedPage) GetData() []BuddyFeedEntry {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *BuddyFeedPage) GetMeta() BuddyFeedMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *BuddyFeedPage) SetData(val []BuddyFeedEntry) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *BuddyFeedPage) SetMeta(val BuddyFeedMeta) {
+	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyHiddenApplicationsOK struct {
+	Data []int64 `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyHiddenApplicationsOK) GetData() []int64 {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyHiddenApplicationsOK) SetData(val []int64) {
+	s.Data = val
+}
+
+// BuddyHideApplicationNoContent is response for BuddyHideApplication operation.
+type BuddyHideApplicationNoContent struct{}
+
+// Ref: #/components/schemas/BuddyInviteBody
+type BuddyInviteBody struct {
+	Handle OptString `json:"handle"`
+	Body   OptString `json:"body"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyInviteBody) GetHandle() OptString {
+	return s.Handle
+}
+
+// GetBody returns the value of Body.
+func (s *BuddyInviteBody) GetBody() OptString {
+	return s.Body
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyInviteBody) SetHandle(val OptString) {
+	s.Handle = val
+}
+
+// SetBody sets the value of Body.
+func (s *BuddyInviteBody) SetBody(val OptString) {
+	s.Body = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyInviteCreated struct {
+	Data BuddyConversation `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyInviteCreated) GetData() BuddyConversation {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyInviteCreated) SetData(val BuddyConversation) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyJoinOK struct {
+	Data BuddyStatus `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyJoinOK) GetData() BuddyStatus {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyJoinOK) SetData(val BuddyStatus) {
+	s.Data = val
+}
+
+// BuddyLeaveNoContent is response for BuddyLeave operation.
+type BuddyLeaveNoContent struct{}
+
+// Ref: #/components/schemas/BuddyMock
+type BuddyMock struct {
+	ID          string             `json:"id"`
+	Role        string             `json:"role"`
+	Counterpart NilString          `json:"counterpart"`
+	StartsAt    time.Time          `json:"starts_at"`
+	EndsAt      time.Time          `json:"ends_at"`
+	Topic       string             `json:"topic"`
+	Status      string             `json:"status"`
+	MeetingURL  NilString          `json:"meeting_url"`
+	CanCancel   bool               `json:"can_cancel"`
+	CanReview   bool               `json:"can_review"`
+	MyReview    NilBuddyMockReview `json:"my_review"`
+	TheirReview NilBuddyMockReview `json:"their_review"`
+}
+
+// GetID returns the value of ID.
+func (s *BuddyMock) GetID() string {
+	return s.ID
+}
+
+// GetRole returns the value of Role.
+func (s *BuddyMock) GetRole() string {
+	return s.Role
+}
+
+// GetCounterpart returns the value of Counterpart.
+func (s *BuddyMock) GetCounterpart() NilString {
+	return s.Counterpart
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *BuddyMock) GetStartsAt() time.Time {
+	return s.StartsAt
+}
+
+// GetEndsAt returns the value of EndsAt.
+func (s *BuddyMock) GetEndsAt() time.Time {
+	return s.EndsAt
+}
+
+// GetTopic returns the value of Topic.
+func (s *BuddyMock) GetTopic() string {
+	return s.Topic
+}
+
+// GetStatus returns the value of Status.
+func (s *BuddyMock) GetStatus() string {
+	return s.Status
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *BuddyMock) GetMeetingURL() NilString {
+	return s.MeetingURL
+}
+
+// GetCanCancel returns the value of CanCancel.
+func (s *BuddyMock) GetCanCancel() bool {
+	return s.CanCancel
+}
+
+// GetCanReview returns the value of CanReview.
+func (s *BuddyMock) GetCanReview() bool {
+	return s.CanReview
+}
+
+// GetMyReview returns the value of MyReview.
+func (s *BuddyMock) GetMyReview() NilBuddyMockReview {
+	return s.MyReview
+}
+
+// GetTheirReview returns the value of TheirReview.
+func (s *BuddyMock) GetTheirReview() NilBuddyMockReview {
+	return s.TheirReview
+}
+
+// SetID sets the value of ID.
+func (s *BuddyMock) SetID(val string) {
+	s.ID = val
+}
+
+// SetRole sets the value of Role.
+func (s *BuddyMock) SetRole(val string) {
+	s.Role = val
+}
+
+// SetCounterpart sets the value of Counterpart.
+func (s *BuddyMock) SetCounterpart(val NilString) {
+	s.Counterpart = val
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *BuddyMock) SetStartsAt(val time.Time) {
+	s.StartsAt = val
+}
+
+// SetEndsAt sets the value of EndsAt.
+func (s *BuddyMock) SetEndsAt(val time.Time) {
+	s.EndsAt = val
+}
+
+// SetTopic sets the value of Topic.
+func (s *BuddyMock) SetTopic(val string) {
+	s.Topic = val
+}
+
+// SetStatus sets the value of Status.
+func (s *BuddyMock) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *BuddyMock) SetMeetingURL(val NilString) {
+	s.MeetingURL = val
+}
+
+// SetCanCancel sets the value of CanCancel.
+func (s *BuddyMock) SetCanCancel(val bool) {
+	s.CanCancel = val
+}
+
+// SetCanReview sets the value of CanReview.
+func (s *BuddyMock) SetCanReview(val bool) {
+	s.CanReview = val
+}
+
+// SetMyReview sets the value of MyReview.
+func (s *BuddyMock) SetMyReview(val NilBuddyMockReview) {
+	s.MyReview = val
+}
+
+// SetTheirReview sets the value of TheirReview.
+func (s *BuddyMock) SetTheirReview(val NilBuddyMockReview) {
+	s.TheirReview = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyMockAvailabilityGetOK struct {
+	Data []BuddyMockRuleOut `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockAvailabilityGetOK) GetData() []BuddyMockRuleOut {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockAvailabilityGetOK) SetData(val []BuddyMockRuleOut) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyMockBook
+type BuddyMockBook struct {
+	StartsAt OptDateTime `json:"starts_at"`
+	Topic    OptString   `json:"topic"`
+	Timezone OptString   `json:"timezone"`
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *BuddyMockBook) GetStartsAt() OptDateTime {
+	return s.StartsAt
+}
+
+// GetTopic returns the value of Topic.
+func (s *BuddyMockBook) GetTopic() OptString {
+	return s.Topic
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *BuddyMockBook) GetTimezone() OptString {
+	return s.Timezone
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *BuddyMockBook) SetStartsAt(val OptDateTime) {
+	s.StartsAt = val
+}
+
+// SetTopic sets the value of Topic.
+func (s *BuddyMockBook) SetTopic(val OptString) {
+	s.Topic = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *BuddyMockBook) SetTimezone(val OptString) {
+	s.Timezone = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyMockBookCreated struct {
+	Data BuddyMock `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockBookCreated) GetData() BuddyMock {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockBookCreated) SetData(val BuddyMock) {
+	s.Data = val
+}
+
+// BuddyMockCancelNoContent is response for BuddyMockCancel operation.
+type BuddyMockCancelNoContent struct{}
+
+// Ref: #/components/schemas/BuddyMockHost
+type BuddyMockHost struct {
+	Handle      string            `json:"handle"`
+	CardSummary BuddyCardSummary  `json:"card_summary"`
+	Topics      []string          `json:"topics"`
+	NextSlot    BuddyMockNextSlot `json:"next_slot"`
+	RatingAvg   float64           `json:"rating_avg"`
+	RatingCount int64             `json:"rating_count"`
+	Completed   int64             `json:"completed"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyMockHost) GetHandle() string {
+	return s.Handle
+}
+
+// GetCardSummary returns the value of CardSummary.
+func (s *BuddyMockHost) GetCardSummary() BuddyCardSummary {
+	return s.CardSummary
+}
+
+// GetTopics returns the value of Topics.
+func (s *BuddyMockHost) GetTopics() []string {
+	return s.Topics
+}
+
+// GetNextSlot returns the value of NextSlot.
+func (s *BuddyMockHost) GetNextSlot() BuddyMockNextSlot {
+	return s.NextSlot
+}
+
+// GetRatingAvg returns the value of RatingAvg.
+func (s *BuddyMockHost) GetRatingAvg() float64 {
+	return s.RatingAvg
+}
+
+// GetRatingCount returns the value of RatingCount.
+func (s *BuddyMockHost) GetRatingCount() int64 {
+	return s.RatingCount
+}
+
+// GetCompleted returns the value of Completed.
+func (s *BuddyMockHost) GetCompleted() int64 {
+	return s.Completed
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyMockHost) SetHandle(val string) {
+	s.Handle = val
+}
+
+// SetCardSummary sets the value of CardSummary.
+func (s *BuddyMockHost) SetCardSummary(val BuddyCardSummary) {
+	s.CardSummary = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *BuddyMockHost) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetNextSlot sets the value of NextSlot.
+func (s *BuddyMockHost) SetNextSlot(val BuddyMockNextSlot) {
+	s.NextSlot = val
+}
+
+// SetRatingAvg sets the value of RatingAvg.
+func (s *BuddyMockHost) SetRatingAvg(val float64) {
+	s.RatingAvg = val
+}
+
+// SetRatingCount sets the value of RatingCount.
+func (s *BuddyMockHost) SetRatingCount(val int64) {
+	s.RatingCount = val
+}
+
+// SetCompleted sets the value of Completed.
+func (s *BuddyMockHost) SetCompleted(val int64) {
+	s.Completed = val
+}
+
+// Ref: #/components/schemas/BuddyMockHostsMeta
+type BuddyMockHostsMeta struct {
+	Timezone string `json:"timezone"`
+	Count    int64  `json:"count"`
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *BuddyMockHostsMeta) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetCount returns the value of Count.
+func (s *BuddyMockHostsMeta) GetCount() int64 {
+	return s.Count
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *BuddyMockHostsMeta) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetCount sets the value of Count.
+func (s *BuddyMockHostsMeta) SetCount(val int64) {
+	s.Count = val
+}
+
+// Ref: #/components/schemas/BuddyMockHostsPage
+type BuddyMockHostsPage struct {
+	Data []BuddyMockHost    `json:"data"`
+	Meta BuddyMockHostsMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockHostsPage) GetData() []BuddyMockHost {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *BuddyMockHostsPage) GetMeta() BuddyMockHostsMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockHostsPage) SetData(val []BuddyMockHost) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *BuddyMockHostsPage) SetMeta(val BuddyMockHostsMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/BuddyMockList
+type BuddyMockList struct {
+	Upcoming []BuddyMock `json:"upcoming"`
+	Past     []BuddyMock `json:"past"`
+}
+
+// GetUpcoming returns the value of Upcoming.
+func (s *BuddyMockList) GetUpcoming() []BuddyMock {
+	return s.Upcoming
+}
+
+// GetPast returns the value of Past.
+func (s *BuddyMockList) GetPast() []BuddyMock {
+	return s.Past
+}
+
+// SetUpcoming sets the value of Upcoming.
+func (s *BuddyMockList) SetUpcoming(val []BuddyMock) {
+	s.Upcoming = val
+}
+
+// SetPast sets the value of Past.
+func (s *BuddyMockList) SetPast(val []BuddyMock) {
+	s.Past = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyMockListOK struct {
+	Data BuddyMockList `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockListOK) GetData() BuddyMockList {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockListOK) SetData(val BuddyMockList) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyMockNextSlot
+type BuddyMockNextSlot struct {
+	StartsAt   time.Time `json:"starts_at"`
+	LocalStart string    `json:"local_start"`
+	UtcOffset  string    `json:"utc_offset"`
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *BuddyMockNextSlot) GetStartsAt() time.Time {
+	return s.StartsAt
+}
+
+// GetLocalStart returns the value of LocalStart.
+func (s *BuddyMockNextSlot) GetLocalStart() string {
+	return s.LocalStart
+}
+
+// GetUtcOffset returns the value of UtcOffset.
+func (s *BuddyMockNextSlot) GetUtcOffset() string {
+	return s.UtcOffset
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *BuddyMockNextSlot) SetStartsAt(val time.Time) {
+	s.StartsAt = val
+}
+
+// SetLocalStart sets the value of LocalStart.
+func (s *BuddyMockNextSlot) SetLocalStart(val string) {
+	s.LocalStart = val
+}
+
+// SetUtcOffset sets the value of UtcOffset.
+func (s *BuddyMockNextSlot) SetUtcOffset(val string) {
+	s.UtcOffset = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyMockOverrideAddCreated struct {
+	Data BuddyMockRuleOut `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockOverrideAddCreated) GetData() BuddyMockRuleOut {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockOverrideAddCreated) SetData(val BuddyMockRuleOut) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyMockReview
+type BuddyMockReview struct {
+	Rating  int64  `json:"rating"`
+	Comment string `json:"comment"`
+}
+
+// GetRating returns the value of Rating.
+func (s *BuddyMockReview) GetRating() int64 {
+	return s.Rating
+}
+
+// GetComment returns the value of Comment.
+func (s *BuddyMockReview) GetComment() string {
+	return s.Comment
+}
+
+// SetRating sets the value of Rating.
+func (s *BuddyMockReview) SetRating(val int64) {
+	s.Rating = val
+}
+
+// SetComment sets the value of Comment.
+func (s *BuddyMockReview) SetComment(val string) {
+	s.Comment = val
+}
+
+// Ref: #/components/schemas/BuddyMockReviewBody
+type BuddyMockReviewBody struct {
+	Rating  OptInt64  `json:"rating"`
+	Comment OptString `json:"comment"`
+}
+
+// GetRating returns the value of Rating.
+func (s *BuddyMockReviewBody) GetRating() OptInt64 {
+	return s.Rating
+}
+
+// GetComment returns the value of Comment.
+func (s *BuddyMockReviewBody) GetComment() OptString {
+	return s.Comment
+}
+
+// SetRating sets the value of Rating.
+func (s *BuddyMockReviewBody) SetRating(val OptInt64) {
+	s.Rating = val
+}
+
+// SetComment sets the value of Comment.
+func (s *BuddyMockReviewBody) SetComment(val OptString) {
+	s.Comment = val
+}
+
+// BuddyMockReviewNoContent is response for BuddyMockReview operation.
+type BuddyMockReviewNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type BuddyMockReviewsOK struct {
+	Data BuddyMockSummary `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockReviewsOK) GetData() BuddyMockSummary {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockReviewsOK) SetData(val BuddyMockSummary) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyMockRule
+type BuddyMockRule struct {
+	// 0 (Sunday) through 6; null for a dated override.
+	Weekday OptNilInt64 `json:"weekday"`
+	// YYYY-MM-DD; null for a weekly rule.
+	Date OptNilString `json:"date"`
+	// HH:MM.
+	Start OptString `json:"start"`
+	// HH:MM; 24:00 means until midnight.
+	End OptString `json:"end"`
+}
+
+// GetWeekday returns the value of Weekday.
+func (s *BuddyMockRule) GetWeekday() OptNilInt64 {
+	return s.Weekday
+}
+
+// GetDate returns the value of Date.
+func (s *BuddyMockRule) GetDate() OptNilString {
+	return s.Date
+}
+
+// GetStart returns the value of Start.
+func (s *BuddyMockRule) GetStart() OptString {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *BuddyMockRule) GetEnd() OptString {
+	return s.End
+}
+
+// SetWeekday sets the value of Weekday.
+func (s *BuddyMockRule) SetWeekday(val OptNilInt64) {
+	s.Weekday = val
+}
+
+// SetDate sets the value of Date.
+func (s *BuddyMockRule) SetDate(val OptNilString) {
+	s.Date = val
+}
+
+// SetStart sets the value of Start.
+func (s *BuddyMockRule) SetStart(val OptString) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *BuddyMockRule) SetEnd(val OptString) {
+	s.End = val
+}
+
+// BuddyMockRuleDeleteNoContent is response for BuddyMockRuleDelete operation.
+type BuddyMockRuleDeleteNoContent struct{}
+
+// Ref: #/components/schemas/BuddyMockRuleOut
+type BuddyMockRuleOut struct {
+	ID      int64     `json:"id"`
+	Weekday NilInt64  `json:"weekday"`
+	Date    NilString `json:"date"`
+	Start   string    `json:"start"`
+	End     string    `json:"end"`
+	Closure bool      `json:"closure"`
+}
+
+// GetID returns the value of ID.
+func (s *BuddyMockRuleOut) GetID() int64 {
+	return s.ID
+}
+
+// GetWeekday returns the value of Weekday.
+func (s *BuddyMockRuleOut) GetWeekday() NilInt64 {
+	return s.Weekday
+}
+
+// GetDate returns the value of Date.
+func (s *BuddyMockRuleOut) GetDate() NilString {
+	return s.Date
+}
+
+// GetStart returns the value of Start.
+func (s *BuddyMockRuleOut) GetStart() string {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *BuddyMockRuleOut) GetEnd() string {
+	return s.End
+}
+
+// GetClosure returns the value of Closure.
+func (s *BuddyMockRuleOut) GetClosure() bool {
+	return s.Closure
+}
+
+// SetID sets the value of ID.
+func (s *BuddyMockRuleOut) SetID(val int64) {
+	s.ID = val
+}
+
+// SetWeekday sets the value of Weekday.
+func (s *BuddyMockRuleOut) SetWeekday(val NilInt64) {
+	s.Weekday = val
+}
+
+// SetDate sets the value of Date.
+func (s *BuddyMockRuleOut) SetDate(val NilString) {
+	s.Date = val
+}
+
+// SetStart sets the value of Start.
+func (s *BuddyMockRuleOut) SetStart(val string) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *BuddyMockRuleOut) SetEnd(val string) {
+	s.End = val
+}
+
+// SetClosure sets the value of Closure.
+func (s *BuddyMockRuleOut) SetClosure(val bool) {
+	s.Closure = val
+}
+
+// Ref: #/components/schemas/BuddyMockSettings
+type BuddyMockSettings struct {
+	Timezone   OptString         `json:"timezone"`
+	MeetingURL OptString         `json:"meeting_url"`
+	Topics     OptNilStringArray `json:"topics"`
+	Paused     OptBool           `json:"paused"`
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *BuddyMockSettings) GetTimezone() OptString {
+	return s.Timezone
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *BuddyMockSettings) GetMeetingURL() OptString {
+	return s.MeetingURL
+}
+
+// GetTopics returns the value of Topics.
+func (s *BuddyMockSettings) GetTopics() OptNilStringArray {
+	return s.Topics
+}
+
+// GetPaused returns the value of Paused.
+func (s *BuddyMockSettings) GetPaused() OptBool {
+	return s.Paused
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *BuddyMockSettings) SetTimezone(val OptString) {
+	s.Timezone = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *BuddyMockSettings) SetMeetingURL(val OptString) {
+	s.MeetingURL = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *BuddyMockSettings) SetTopics(val OptNilStringArray) {
+	s.Topics = val
+}
+
+// SetPaused sets the value of Paused.
+func (s *BuddyMockSettings) SetPaused(val OptBool) {
+	s.Paused = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyMockSettingsGetOK struct {
+	Data NilBuddyMockSettingsOut `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockSettingsGetOK) GetData() NilBuddyMockSettingsOut {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockSettingsGetOK) SetData(val NilBuddyMockSettingsOut) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyMockSettingsOut
+type BuddyMockSettingsOut struct {
+	Timezone   string   `json:"timezone"`
+	MeetingURL string   `json:"meeting_url"`
+	Topics     []string `json:"topics"`
+	Paused     bool     `json:"paused"`
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *BuddyMockSettingsOut) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *BuddyMockSettingsOut) GetMeetingURL() string {
+	return s.MeetingURL
+}
+
+// GetTopics returns the value of Topics.
+func (s *BuddyMockSettingsOut) GetTopics() []string {
+	return s.Topics
+}
+
+// GetPaused returns the value of Paused.
+func (s *BuddyMockSettingsOut) GetPaused() bool {
+	return s.Paused
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *BuddyMockSettingsOut) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *BuddyMockSettingsOut) SetMeetingURL(val string) {
+	s.MeetingURL = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *BuddyMockSettingsOut) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetPaused sets the value of Paused.
+func (s *BuddyMockSettingsOut) SetPaused(val bool) {
+	s.Paused = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyMockSettingsSaveOK struct {
+	Data BuddyMockSettingsOut `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockSettingsSaveOK) GetData() BuddyMockSettingsOut {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockSettingsSaveOK) SetData(val BuddyMockSettingsOut) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyMockSlot
+type BuddyMockSlot struct {
+	StartsAt   time.Time `json:"starts_at"`
+	EndsAt     time.Time `json:"ends_at"`
+	LocalStart string    `json:"local_start"`
+	LocalEnd   string    `json:"local_end"`
+	UtcOffset  string    `json:"utc_offset"`
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *BuddyMockSlot) GetStartsAt() time.Time {
+	return s.StartsAt
+}
+
+// GetEndsAt returns the value of EndsAt.
+func (s *BuddyMockSlot) GetEndsAt() time.Time {
+	return s.EndsAt
+}
+
+// GetLocalStart returns the value of LocalStart.
+func (s *BuddyMockSlot) GetLocalStart() string {
+	return s.LocalStart
+}
+
+// GetLocalEnd returns the value of LocalEnd.
+func (s *BuddyMockSlot) GetLocalEnd() string {
+	return s.LocalEnd
+}
+
+// GetUtcOffset returns the value of UtcOffset.
+func (s *BuddyMockSlot) GetUtcOffset() string {
+	return s.UtcOffset
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *BuddyMockSlot) SetStartsAt(val time.Time) {
+	s.StartsAt = val
+}
+
+// SetEndsAt sets the value of EndsAt.
+func (s *BuddyMockSlot) SetEndsAt(val time.Time) {
+	s.EndsAt = val
+}
+
+// SetLocalStart sets the value of LocalStart.
+func (s *BuddyMockSlot) SetLocalStart(val string) {
+	s.LocalStart = val
+}
+
+// SetLocalEnd sets the value of LocalEnd.
+func (s *BuddyMockSlot) SetLocalEnd(val string) {
+	s.LocalEnd = val
+}
+
+// SetUtcOffset sets the value of UtcOffset.
+func (s *BuddyMockSlot) SetUtcOffset(val string) {
+	s.UtcOffset = val
+}
+
+// Ref: #/components/schemas/BuddyMockSlotsMeta
+type BuddyMockSlotsMeta struct {
+	Timezone string   `json:"timezone"`
+	Count    int64    `json:"count"`
+	Topics   []string `json:"topics"`
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *BuddyMockSlotsMeta) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetCount returns the value of Count.
+func (s *BuddyMockSlotsMeta) GetCount() int64 {
+	return s.Count
+}
+
+// GetTopics returns the value of Topics.
+func (s *BuddyMockSlotsMeta) GetTopics() []string {
+	return s.Topics
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *BuddyMockSlotsMeta) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetCount sets the value of Count.
+func (s *BuddyMockSlotsMeta) SetCount(val int64) {
+	s.Count = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *BuddyMockSlotsMeta) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// Ref: #/components/schemas/BuddyMockSlotsPage
+type BuddyMockSlotsPage struct {
+	Data []BuddyMockSlot    `json:"data"`
+	Meta BuddyMockSlotsMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyMockSlotsPage) GetData() []BuddyMockSlot {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *BuddyMockSlotsPage) GetMeta() BuddyMockSlotsMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *BuddyMockSlotsPage) SetData(val []BuddyMockSlot) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *BuddyMockSlotsPage) SetMeta(val BuddyMockSlotsMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/BuddyMockSummary
+type BuddyMockSummary struct {
+	Completed   int64                 `json:"completed"`
+	RatingCount int64                 `json:"rating_count"`
+	RatingAvg   float64               `json:"rating_avg"`
+	Recent      []BuddyRevealedReview `json:"recent"`
+}
+
+// GetCompleted returns the value of Completed.
+func (s *BuddyMockSummary) GetCompleted() int64 {
+	return s.Completed
+}
+
+// GetRatingCount returns the value of RatingCount.
+func (s *BuddyMockSummary) GetRatingCount() int64 {
+	return s.RatingCount
+}
+
+// GetRatingAvg returns the value of RatingAvg.
+func (s *BuddyMockSummary) GetRatingAvg() float64 {
+	return s.RatingAvg
+}
+
+// GetRecent returns the value of Recent.
+func (s *BuddyMockSummary) GetRecent() []BuddyRevealedReview {
+	return s.Recent
+}
+
+// SetCompleted sets the value of Completed.
+func (s *BuddyMockSummary) SetCompleted(val int64) {
+	s.Completed = val
+}
+
+// SetRatingCount sets the value of RatingCount.
+func (s *BuddyMockSummary) SetRatingCount(val int64) {
+	s.RatingCount = val
+}
+
+// SetRatingAvg sets the value of RatingAvg.
+func (s *BuddyMockSummary) SetRatingAvg(val float64) {
+	s.RatingAvg = val
+}
+
+// SetRecent sets the value of Recent.
+func (s *BuddyMockSummary) SetRecent(val []BuddyRevealedReview) {
+	s.Recent = val
+}
+
+// Ref: #/components/schemas/BuddyMockWeekly
+type BuddyMockWeekly struct {
+	Rules []BuddyMockRule `json:"rules"`
+}
+
+// GetRules returns the value of Rules.
+func (s *BuddyMockWeekly) GetRules() []BuddyMockRule {
+	return s.Rules
+}
+
+// SetRules sets the value of Rules.
+func (s *BuddyMockWeekly) SetRules(val []BuddyMockRule) {
+	s.Rules = val
+}
+
+// BuddyMockWeeklyReplaceNoContent is response for BuddyMockWeeklyReplace operation.
+type BuddyMockWeeklyReplaceNoContent struct{}
+
+// Ref: #/components/schemas/BuddyProfile
+type BuddyProfile struct {
+	Handle      string           `json:"handle"`
+	CardSummary BuddyCardSummary `json:"card_summary"`
+	Card        TalentCard       `json:"card"`
+	CardEmpty   bool             `json:"card_empty"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyProfile) GetHandle() string {
+	return s.Handle
+}
+
+// GetCardSummary returns the value of CardSummary.
+func (s *BuddyProfile) GetCardSummary() BuddyCardSummary {
+	return s.CardSummary
+}
+
+// GetCard returns the value of Card.
+func (s *BuddyProfile) GetCard() TalentCard {
+	return s.Card
+}
+
+// GetCardEmpty returns the value of CardEmpty.
+func (s *BuddyProfile) GetCardEmpty() bool {
+	return s.CardEmpty
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyProfile) SetHandle(val string) {
+	s.Handle = val
+}
+
+// SetCardSummary sets the value of CardSummary.
+func (s *BuddyProfile) SetCardSummary(val BuddyCardSummary) {
+	s.CardSummary = val
+}
+
+// SetCard sets the value of Card.
+func (s *BuddyProfile) SetCard(val TalentCard) {
+	s.Card = val
+}
+
+// SetCardEmpty sets the value of CardEmpty.
+func (s *BuddyProfile) SetCardEmpty(val bool) {
+	s.CardEmpty = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyProfileOK struct {
+	Data BuddyProfile `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyProfileOK) GetData() BuddyProfile {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyProfileOK) SetData(val BuddyProfile) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/BuddyReactBody
+type BuddyReactBody struct {
+	Kind OptString `json:"kind"`
+}
+
+// GetKind returns the value of Kind.
+func (s *BuddyReactBody) GetKind() OptString {
+	return s.Kind
+}
+
+// SetKind sets the value of Kind.
+func (s *BuddyReactBody) SetKind(val OptString) {
+	s.Kind = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyReactOK struct {
+	Data BuddyReactions `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyReactOK) GetData() BuddyReactions {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyReactOK) SetData(val BuddyReactions) {
+	s.Data = val
+}
+
+// Count per kind (no key for a kind nobody chose) and the viewer's own choice, "" for none.
+// Ref: #/components/schemas/BuddyReactions
+type BuddyReactions struct {
+	Counts BuddyReactionsCounts `json:"counts"`
+	Mine   string               `json:"mine"`
+}
+
+// GetCounts returns the value of Counts.
+func (s *BuddyReactions) GetCounts() BuddyReactionsCounts {
+	return s.Counts
+}
+
+// GetMine returns the value of Mine.
+func (s *BuddyReactions) GetMine() string {
+	return s.Mine
+}
+
+// SetCounts sets the value of Counts.
+func (s *BuddyReactions) SetCounts(val BuddyReactionsCounts) {
+	s.Counts = val
+}
+
+// SetMine sets the value of Mine.
+func (s *BuddyReactions) SetMine(val string) {
+	s.Mine = val
+}
+
+type BuddyReactionsCounts map[string]int64
+
+func (s *BuddyReactionsCounts) init() BuddyReactionsCounts {
+	m := *s
+	if m == nil {
+		m = map[string]int64{}
+		*s = m
+	}
+	return m
+}
+
+// Ref: #/components/schemas/BuddyRevealedReview
+type BuddyRevealedReview struct {
+	Rating  int64  `json:"rating"`
+	Comment string `json:"comment"`
+	Topic   string `json:"topic"`
+	Day     string `json:"day"`
+}
+
+// GetRating returns the value of Rating.
+func (s *BuddyRevealedReview) GetRating() int64 {
+	return s.Rating
+}
+
+// GetComment returns the value of Comment.
+func (s *BuddyRevealedReview) GetComment() string {
+	return s.Comment
+}
+
+// GetTopic returns the value of Topic.
+func (s *BuddyRevealedReview) GetTopic() string {
+	return s.Topic
+}
+
+// GetDay returns the value of Day.
+func (s *BuddyRevealedReview) GetDay() string {
+	return s.Day
+}
+
+// SetRating sets the value of Rating.
+func (s *BuddyRevealedReview) SetRating(val int64) {
+	s.Rating = val
+}
+
+// SetComment sets the value of Comment.
+func (s *BuddyRevealedReview) SetComment(val string) {
+	s.Comment = val
+}
+
+// SetTopic sets the value of Topic.
+func (s *BuddyRevealedReview) SetTopic(val string) {
+	s.Topic = val
+}
+
+// SetDay sets the value of Day.
+func (s *BuddyRevealedReview) SetDay(val string) {
+	s.Day = val
+}
+
+// BuddyShowApplicationNoContent is response for BuddyShowApplication operation.
+type BuddyShowApplicationNoContent struct{}
+
+// Ref: #/components/schemas/BuddySimilar
+type BuddySimilar struct {
+	Handle          string           `json:"handle"`
+	CardSummary     BuddyCardSummary `json:"card_summary"`
+	Score           int64            `json:"score"`
+	SharedCompanies []BuddyCompany   `json:"shared_companies"`
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddySimilar) GetHandle() string {
+	return s.Handle
+}
+
+// GetCardSummary returns the value of CardSummary.
+func (s *BuddySimilar) GetCardSummary() BuddyCardSummary {
+	return s.CardSummary
+}
+
+// GetScore returns the value of Score.
+func (s *BuddySimilar) GetScore() int64 {
+	return s.Score
+}
+
+// GetSharedCompanies returns the value of SharedCompanies.
+func (s *BuddySimilar) GetSharedCompanies() []BuddyCompany {
+	return s.SharedCompanies
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddySimilar) SetHandle(val string) {
+	s.Handle = val
+}
+
+// SetCardSummary sets the value of CardSummary.
+func (s *BuddySimilar) SetCardSummary(val BuddyCardSummary) {
+	s.CardSummary = val
+}
+
+// SetScore sets the value of Score.
+func (s *BuddySimilar) SetScore(val int64) {
+	s.Score = val
+}
+
+// SetSharedCompanies sets the value of SharedCompanies.
+func (s *BuddySimilar) SetSharedCompanies(val []BuddyCompany) {
+	s.SharedCompanies = val
+}
+
+// Ref: #/components/schemas/BuddySimilarMeta
+type BuddySimilarMeta struct {
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+}
+
+// GetLimit returns the value of Limit.
+func (s *BuddySimilarMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *BuddySimilarMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// SetLimit sets the value of Limit.
+func (s *BuddySimilarMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *BuddySimilarMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// Ref: #/components/schemas/BuddySimilarPage
+type BuddySimilarPage struct {
+	Data []BuddySimilar   `json:"data"`
+	Meta BuddySimilarMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddySimilarPage) GetData() []BuddySimilar {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *BuddySimilarPage) GetMeta() BuddySimilarMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *BuddySimilarPage) SetData(val []BuddySimilar) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *BuddySimilarPage) SetMeta(val BuddySimilarMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/BuddyStatus
+type BuddyStatus struct {
+	Member    bool      `json:"member"`
+	Handle    OptString `json:"handle"`
+	CardEmpty bool      `json:"card_empty"`
+}
+
+// GetMember returns the value of Member.
+func (s *BuddyStatus) GetMember() bool {
+	return s.Member
+}
+
+// GetHandle returns the value of Handle.
+func (s *BuddyStatus) GetHandle() OptString {
+	return s.Handle
+}
+
+// GetCardEmpty returns the value of CardEmpty.
+func (s *BuddyStatus) GetCardEmpty() bool {
+	return s.CardEmpty
+}
+
+// SetMember sets the value of Member.
+func (s *BuddyStatus) SetMember(val bool) {
+	s.Member = val
+}
+
+// SetHandle sets the value of Handle.
+func (s *BuddyStatus) SetHandle(val OptString) {
+	s.Handle = val
+}
+
+// SetCardEmpty sets the value of CardEmpty.
+func (s *BuddyStatus) SetCardEmpty(val bool) {
+	s.CardEmpty = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyStatusOK struct {
+	Data BuddyStatus `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyStatusOK) GetData() BuddyStatus {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyStatusOK) SetData(val BuddyStatus) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type BuddyUnreactOK struct {
+	Data BuddyReactions `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BuddyUnreactOK) GetData() BuddyReactions {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BuddyUnreactOK) SetData(val BuddyReactions) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CancelSessionOK struct {
+	Data MentorshipBooking `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CancelSessionOK) GetData() MentorshipBooking {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CancelSessionOK) SetData(val MentorshipBooking) {
+	s.Data = val
+}
+
+// The size of the catalogue, from one published snapshot.
+// Ref: #/components/schemas/CatalogScale
+type CatalogScale struct {
+	OpenJobs         int64 `json:"open_jobs"`
+	UniqueOpenJobs   int64 `json:"unique_open_jobs"`
+	Companies        int64 `json:"companies"`
+	Sources          int64 `json:"sources"`
+	AtsPlatforms     int64 `json:"ats_platforms"`
+	TelegramChannels int64 `json:"telegram_channels"`
+	// RFC 3339 with fractional seconds, as the snapshot carries it.
+	ComputedAt string `json:"computed_at"`
+	// False when the snapshot is unavailable and `open_jobs` is the approximate fallback.
+	Exact bool `json:"exact"`
+}
+
+// GetOpenJobs returns the value of OpenJobs.
+func (s *CatalogScale) GetOpenJobs() int64 {
+	return s.OpenJobs
+}
+
+// GetUniqueOpenJobs returns the value of UniqueOpenJobs.
+func (s *CatalogScale) GetUniqueOpenJobs() int64 {
+	return s.UniqueOpenJobs
+}
+
+// GetCompanies returns the value of Companies.
+func (s *CatalogScale) GetCompanies() int64 {
+	return s.Companies
+}
+
+// GetSources returns the value of Sources.
+func (s *CatalogScale) GetSources() int64 {
+	return s.Sources
+}
+
+// GetAtsPlatforms returns the value of AtsPlatforms.
+func (s *CatalogScale) GetAtsPlatforms() int64 {
+	return s.AtsPlatforms
+}
+
+// GetTelegramChannels returns the value of TelegramChannels.
+func (s *CatalogScale) GetTelegramChannels() int64 {
+	return s.TelegramChannels
+}
+
+// GetComputedAt returns the value of ComputedAt.
+func (s *CatalogScale) GetComputedAt() string {
+	return s.ComputedAt
+}
+
+// GetExact returns the value of Exact.
+func (s *CatalogScale) GetExact() bool {
+	return s.Exact
+}
+
+// SetOpenJobs sets the value of OpenJobs.
+func (s *CatalogScale) SetOpenJobs(val int64) {
+	s.OpenJobs = val
+}
+
+// SetUniqueOpenJobs sets the value of UniqueOpenJobs.
+func (s *CatalogScale) SetUniqueOpenJobs(val int64) {
+	s.UniqueOpenJobs = val
+}
+
+// SetCompanies sets the value of Companies.
+func (s *CatalogScale) SetCompanies(val int64) {
+	s.Companies = val
+}
+
+// SetSources sets the value of Sources.
+func (s *CatalogScale) SetSources(val int64) {
+	s.Sources = val
+}
+
+// SetAtsPlatforms sets the value of AtsPlatforms.
+func (s *CatalogScale) SetAtsPlatforms(val int64) {
+	s.AtsPlatforms = val
+}
+
+// SetTelegramChannels sets the value of TelegramChannels.
+func (s *CatalogScale) SetTelegramChannels(val int64) {
+	s.TelegramChannels = val
+}
+
+// SetComputedAt sets the value of ComputedAt.
+func (s *CatalogScale) SetComputedAt(val string) {
+	s.ComputedAt = val
+}
+
+// SetExact sets the value of Exact.
+func (s *CatalogScale) SetExact(val bool) {
+	s.Exact = val
+}
+
+// A single item: `{"data": ...}`.
+type CatalogScaleOK struct {
+	Data CatalogScale `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CatalogScaleOK) GetData() CatalogScale {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CatalogScaleOK) SetData(val CatalogScale) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/CategoryMeta
+type CategoryMeta struct {
+	Category string `json:"category"`
+}
+
+// GetCategory returns the value of Category.
+func (s *CategoryMeta) GetCategory() string {
+	return s.Category
+}
+
+// SetCategory sets the value of Category.
+func (s *CategoryMeta) SetCategory(val string) {
+	s.Category = val
 }
 
 // Ref: #/components/schemas/CityMatch
@@ -71,6 +2765,36 @@ func (s *CityMatch) SetValue(val string) {
 // SetCountry sets the value of Country.
 func (s *CityMatch) SetCountry(val string) {
 	s.Country = val
+}
+
+// A single item: `{"data": ...}`.
+type ClaimEmployerCompanyCreated struct {
+	Data EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ClaimEmployerCompanyCreated) GetData() EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ClaimEmployerCompanyCreated) SetData(val EmployerAccount) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ClearApplicationStageOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ClearApplicationStageOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ClearApplicationStageOK) SetData(val Interaction) {
+	s.Data = val
 }
 
 // A single item: `{"data": ...}`.
@@ -104,6 +2828,577 @@ func (s *ClearJobVoteOK) SetData(val VoteResult) {
 }
 
 // A single item: `{"data": ...}`.
+type ClearStageOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ClearStageOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ClearStageOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CloseEmployerVacancyOK struct {
+	Data EmployerClosed `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CloseEmployerVacancyOK) GetData() EmployerClosed {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CloseEmployerVacancyOK) SetData(val EmployerClosed) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CloseThreadOK struct {
+	Data ThreadClosed `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CloseThreadOK) GetData() ThreadClosed {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CloseThreadOK) SetData(val ThreadClosed) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/CompaniesAnswer
+type CompaniesAnswer struct {
+	Data []CompanyInsight `json:"data"`
+	Meta CompaniesMeta    `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *CompaniesAnswer) GetData() []CompanyInsight {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *CompaniesAnswer) GetMeta() CompaniesMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *CompaniesAnswer) SetData(val []CompanyInsight) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *CompaniesAnswer) SetMeta(val CompaniesMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/CompaniesMeta
+type CompaniesMeta struct {
+	Sort    string `json:"sort"`
+	MinOpen int64  `json:"min_open"`
+	Limit   int64  `json:"limit"`
+}
+
+// GetSort returns the value of Sort.
+func (s *CompaniesMeta) GetSort() string {
+	return s.Sort
+}
+
+// GetMinOpen returns the value of MinOpen.
+func (s *CompaniesMeta) GetMinOpen() int64 {
+	return s.MinOpen
+}
+
+// GetLimit returns the value of Limit.
+func (s *CompaniesMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// SetSort sets the value of Sort.
+func (s *CompaniesMeta) SetSort(val string) {
+	s.Sort = val
+}
+
+// SetMinOpen sets the value of MinOpen.
+func (s *CompaniesMeta) SetMinOpen(val int64) {
+	s.MinOpen = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *CompaniesMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// One review. The persona handle is the only author identity ever sent.
+// Ref: #/components/schemas/CompanyFeedback
+type CompanyFeedback struct {
+	ID           int64     `json:"id"`
+	Author       string    `json:"author"`
+	Rating       int64     `json:"rating"`
+	FeedbackType string    `json:"feedback_type"`
+	Body         string    `json:"body"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	// The company's fresh counters, set only on the answer to a write.
+	Company OptCompanyFeedbackSummary `json:"company"`
+}
+
+// GetID returns the value of ID.
+func (s *CompanyFeedback) GetID() int64 {
+	return s.ID
+}
+
+// GetAuthor returns the value of Author.
+func (s *CompanyFeedback) GetAuthor() string {
+	return s.Author
+}
+
+// GetRating returns the value of Rating.
+func (s *CompanyFeedback) GetRating() int64 {
+	return s.Rating
+}
+
+// GetFeedbackType returns the value of FeedbackType.
+func (s *CompanyFeedback) GetFeedbackType() string {
+	return s.FeedbackType
+}
+
+// GetBody returns the value of Body.
+func (s *CompanyFeedback) GetBody() string {
+	return s.Body
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CompanyFeedback) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *CompanyFeedback) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// GetCompany returns the value of Company.
+func (s *CompanyFeedback) GetCompany() OptCompanyFeedbackSummary {
+	return s.Company
+}
+
+// SetID sets the value of ID.
+func (s *CompanyFeedback) SetID(val int64) {
+	s.ID = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *CompanyFeedback) SetAuthor(val string) {
+	s.Author = val
+}
+
+// SetRating sets the value of Rating.
+func (s *CompanyFeedback) SetRating(val int64) {
+	s.Rating = val
+}
+
+// SetFeedbackType sets the value of FeedbackType.
+func (s *CompanyFeedback) SetFeedbackType(val string) {
+	s.FeedbackType = val
+}
+
+// SetBody sets the value of Body.
+func (s *CompanyFeedback) SetBody(val string) {
+	s.Body = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CompanyFeedback) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *CompanyFeedback) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SetCompany sets the value of Company.
+func (s *CompanyFeedback) SetCompany(val OptCompanyFeedbackSummary) {
+	s.Company = val
+}
+
+// Ref: #/components/schemas/CompanyFeedbackPage
+type CompanyFeedbackPage struct {
+	Data []CompanyFeedback `json:"data"`
+	Meta PageMeta          `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *CompanyFeedbackPage) GetData() []CompanyFeedback {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *CompanyFeedbackPage) GetMeta() PageMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *CompanyFeedbackPage) SetData(val []CompanyFeedback) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *CompanyFeedbackPage) SetMeta(val PageMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/CompanyFeedbackReportRequest
+type CompanyFeedbackReportRequest struct {
+	Reason OptString `json:"reason"`
+}
+
+// GetReason returns the value of Reason.
+func (s *CompanyFeedbackReportRequest) GetReason() OptString {
+	return s.Reason
+}
+
+// SetReason sets the value of Reason.
+func (s *CompanyFeedbackReportRequest) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// Ref: #/components/schemas/CompanyFeedbackRequest
+type CompanyFeedbackRequest struct {
+	// 1 to 5.
+	Rating       OptInt64  `json:"rating"`
+	FeedbackType OptString `json:"feedback_type"`
+	Body         OptString `json:"body"`
+}
+
+// GetRating returns the value of Rating.
+func (s *CompanyFeedbackRequest) GetRating() OptInt64 {
+	return s.Rating
+}
+
+// GetFeedbackType returns the value of FeedbackType.
+func (s *CompanyFeedbackRequest) GetFeedbackType() OptString {
+	return s.FeedbackType
+}
+
+// GetBody returns the value of Body.
+func (s *CompanyFeedbackRequest) GetBody() OptString {
+	return s.Body
+}
+
+// SetRating sets the value of Rating.
+func (s *CompanyFeedbackRequest) SetRating(val OptInt64) {
+	s.Rating = val
+}
+
+// SetFeedbackType sets the value of FeedbackType.
+func (s *CompanyFeedbackRequest) SetFeedbackType(val OptString) {
+	s.FeedbackType = val
+}
+
+// SetBody sets the value of Body.
+func (s *CompanyFeedbackRequest) SetBody(val OptString) {
+	s.Body = val
+}
+
+// A company's recomputed feedback counters.
+// Ref: #/components/schemas/CompanyFeedbackSummary
+type CompanyFeedbackSummary struct {
+	FeedbackCount int64 `json:"feedback_count"`
+	// Null until a review counts.
+	FeedbackRatingAvg NilFloat32 `json:"feedback_rating_avg"`
+}
+
+// GetFeedbackCount returns the value of FeedbackCount.
+func (s *CompanyFeedbackSummary) GetFeedbackCount() int64 {
+	return s.FeedbackCount
+}
+
+// GetFeedbackRatingAvg returns the value of FeedbackRatingAvg.
+func (s *CompanyFeedbackSummary) GetFeedbackRatingAvg() NilFloat32 {
+	return s.FeedbackRatingAvg
+}
+
+// SetFeedbackCount sets the value of FeedbackCount.
+func (s *CompanyFeedbackSummary) SetFeedbackCount(val int64) {
+	s.FeedbackCount = val
+}
+
+// SetFeedbackRatingAvg sets the value of FeedbackRatingAvg.
+func (s *CompanyFeedbackSummary) SetFeedbackRatingAvg(val NilFloat32) {
+	s.FeedbackRatingAvg = val
+}
+
+// Ref: #/components/schemas/CompanyInsight
+type CompanyInsight struct {
+	CompanySlug string `json:"company_slug"`
+	CompanyName string `json:"company_name"`
+	OpenNow     int64  `json:"open_now"`
+	OpenPrev30d int64  `json:"open_prev_30d"`
+	Growth30d   int64  `json:"growth_30d"`
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *CompanyInsight) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *CompanyInsight) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetOpenNow returns the value of OpenNow.
+func (s *CompanyInsight) GetOpenNow() int64 {
+	return s.OpenNow
+}
+
+// GetOpenPrev30d returns the value of OpenPrev30d.
+func (s *CompanyInsight) GetOpenPrev30d() int64 {
+	return s.OpenPrev30d
+}
+
+// GetGrowth30d returns the value of Growth30d.
+func (s *CompanyInsight) GetGrowth30d() int64 {
+	return s.Growth30d
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *CompanyInsight) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *CompanyInsight) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetOpenNow sets the value of OpenNow.
+func (s *CompanyInsight) SetOpenNow(val int64) {
+	s.OpenNow = val
+}
+
+// SetOpenPrev30d sets the value of OpenPrev30d.
+func (s *CompanyInsight) SetOpenPrev30d(val int64) {
+	s.OpenPrev30d = val
+}
+
+// SetGrowth30d sets the value of Growth30d.
+func (s *CompanyInsight) SetGrowth30d(val int64) {
+	s.Growth30d = val
+}
+
+// Ref: #/components/schemas/CompanyRelationApproval
+type CompanyRelationApproval struct {
+	Kind string `json:"kind"`
+	// Jobs a `same` approval re-keyed; 0 for a subsidiary.
+	MovedJobs int64 `json:"moved_jobs"`
+}
+
+// GetKind returns the value of Kind.
+func (s *CompanyRelationApproval) GetKind() string {
+	return s.Kind
+}
+
+// GetMovedJobs returns the value of MovedJobs.
+func (s *CompanyRelationApproval) GetMovedJobs() int64 {
+	return s.MovedJobs
+}
+
+// SetKind sets the value of Kind.
+func (s *CompanyRelationApproval) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetMovedJobs sets the value of MovedJobs.
+func (s *CompanyRelationApproval) SetMovedJobs(val int64) {
+	s.MovedJobs = val
+}
+
+// Ref: #/components/schemas/CompanyRelationProposal
+type CompanyRelationProposal struct {
+	ID          int64     `json:"id"`
+	Kind        string    `json:"kind"`
+	CompanySlug string    `json:"company_slug"`
+	TargetSlug  string    `json:"target_slug"`
+	Note        string    `json:"note"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *CompanyRelationProposal) GetID() int64 {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *CompanyRelationProposal) GetKind() string {
+	return s.Kind
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *CompanyRelationProposal) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetTargetSlug returns the value of TargetSlug.
+func (s *CompanyRelationProposal) GetTargetSlug() string {
+	return s.TargetSlug
+}
+
+// GetNote returns the value of Note.
+func (s *CompanyRelationProposal) GetNote() string {
+	return s.Note
+}
+
+// GetStatus returns the value of Status.
+func (s *CompanyRelationProposal) GetStatus() string {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CompanyRelationProposal) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *CompanyRelationProposal) SetID(val int64) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *CompanyRelationProposal) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *CompanyRelationProposal) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetTargetSlug sets the value of TargetSlug.
+func (s *CompanyRelationProposal) SetTargetSlug(val string) {
+	s.TargetSlug = val
+}
+
+// SetNote sets the value of Note.
+func (s *CompanyRelationProposal) SetNote(val string) {
+	s.Note = val
+}
+
+// SetStatus sets the value of Status.
+func (s *CompanyRelationProposal) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CompanyRelationProposal) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/CompanyRelationRejection
+type CompanyRelationRejection struct {
+	Rejected bool `json:"rejected"`
+}
+
+// GetRejected returns the value of Rejected.
+func (s *CompanyRelationRejection) GetRejected() bool {
+	return s.Rejected
+}
+
+// SetRejected sets the value of Rejected.
+func (s *CompanyRelationRejection) SetRejected(val bool) {
+	s.Rejected = val
+}
+
+// Ref: #/components/schemas/CompanyRelationRequest
+type CompanyRelationRequest struct {
+	// `same` or `subsidiary`.
+	Kind       OptString `json:"kind"`
+	TargetSlug OptString `json:"target_slug"`
+	Note       OptString `json:"note"`
+}
+
+// GetKind returns the value of Kind.
+func (s *CompanyRelationRequest) GetKind() OptString {
+	return s.Kind
+}
+
+// GetTargetSlug returns the value of TargetSlug.
+func (s *CompanyRelationRequest) GetTargetSlug() OptString {
+	return s.TargetSlug
+}
+
+// GetNote returns the value of Note.
+func (s *CompanyRelationRequest) GetNote() OptString {
+	return s.Note
+}
+
+// SetKind sets the value of Kind.
+func (s *CompanyRelationRequest) SetKind(val OptString) {
+	s.Kind = val
+}
+
+// SetTargetSlug sets the value of TargetSlug.
+func (s *CompanyRelationRequest) SetTargetSlug(val OptString) {
+	s.TargetSlug = val
+}
+
+// SetNote sets the value of Note.
+func (s *CompanyRelationRequest) SetNote(val OptString) {
+	s.Note = val
+}
+
+// A single item: `{"data": ...}`.
+type CompanySubindustriesOK struct {
+	Data []CompanySubindustry `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CompanySubindustriesOK) GetData() []CompanySubindustry {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CompanySubindustriesOK) SetData(val []CompanySubindustry) {
+	s.Data = val
+}
+
+// One option of the subindustry vocabulary.
+// Ref: #/components/schemas/CompanySubindustry
+type CompanySubindustry struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
+}
+
+// GetValue returns the value of Value.
+func (s *CompanySubindustry) GetValue() string {
+	return s.Value
+}
+
+// GetCount returns the value of Count.
+func (s *CompanySubindustry) GetCount() int64 {
+	return s.Count
+}
+
+// SetValue sets the value of Value.
+func (s *CompanySubindustry) SetValue(val string) {
+	s.Value = val
+}
+
+// SetCount sets the value of Count.
+func (s *CompanySubindustry) SetCount(val int64) {
+	s.Count = val
+}
+
+// A single item: `{"data": ...}`.
 type CompleteOnboardingOK struct {
 	Data OnboardingCompleted `json:"data"`
 }
@@ -115,6 +3410,615 @@ func (s *CompleteOnboardingOK) GetData() OnboardingCompleted {
 
 // SetData sets the value of Data.
 func (s *CompleteOnboardingOK) SetData(val OnboardingCompleted) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ConfirmEmployerClaimOK struct {
+	Data EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ConfirmEmployerClaimOK) GetData() EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ConfirmEmployerClaimOK) SetData(val EmployerAccount) {
+	s.Data = val
+}
+
+// A job page the caller sent in, and what became of it.
+// Ref: #/components/schemas/Contribution
+type Contribution struct {
+	ID        int64       `json:"id"`
+	URL       string      `json:"url"`
+	Source    string      `json:"source"`
+	Board     string      `json:"board"`
+	Status    string      `json:"status"`
+	Surface   string      `json:"surface"`
+	CreatedAt NilDateTime `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *Contribution) GetID() int64 {
+	return s.ID
+}
+
+// GetURL returns the value of URL.
+func (s *Contribution) GetURL() string {
+	return s.URL
+}
+
+// GetSource returns the value of Source.
+func (s *Contribution) GetSource() string {
+	return s.Source
+}
+
+// GetBoard returns the value of Board.
+func (s *Contribution) GetBoard() string {
+	return s.Board
+}
+
+// GetStatus returns the value of Status.
+func (s *Contribution) GetStatus() string {
+	return s.Status
+}
+
+// GetSurface returns the value of Surface.
+func (s *Contribution) GetSurface() string {
+	return s.Surface
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Contribution) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Contribution) SetID(val int64) {
+	s.ID = val
+}
+
+// SetURL sets the value of URL.
+func (s *Contribution) SetURL(val string) {
+	s.URL = val
+}
+
+// SetSource sets the value of Source.
+func (s *Contribution) SetSource(val string) {
+	s.Source = val
+}
+
+// SetBoard sets the value of Board.
+func (s *Contribution) SetBoard(val string) {
+	s.Board = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Contribution) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetSurface sets the value of Surface.
+func (s *Contribution) SetSurface(val string) {
+	s.Surface = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Contribution) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// `unread` and `last_message_at` mean something on the list only; elsewhere they are 0 and null.
+// Ref: #/components/schemas/Conversation
+type Conversation struct {
+	ID            int64                   `json:"id"`
+	Kind          string                  `json:"kind"`
+	StatusForMe   string                  `json:"status_for_me"`
+	Counterpart   ConversationCounterpart `json:"counterpart"`
+	Unread        int64                   `json:"unread"`
+	LastMessageAt NilDateTime             `json:"last_message_at"`
+	CreatedAt     time.Time               `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *Conversation) GetID() int64 {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *Conversation) GetKind() string {
+	return s.Kind
+}
+
+// GetStatusForMe returns the value of StatusForMe.
+func (s *Conversation) GetStatusForMe() string {
+	return s.StatusForMe
+}
+
+// GetCounterpart returns the value of Counterpart.
+func (s *Conversation) GetCounterpart() ConversationCounterpart {
+	return s.Counterpart
+}
+
+// GetUnread returns the value of Unread.
+func (s *Conversation) GetUnread() int64 {
+	return s.Unread
+}
+
+// GetLastMessageAt returns the value of LastMessageAt.
+func (s *Conversation) GetLastMessageAt() NilDateTime {
+	return s.LastMessageAt
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Conversation) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Conversation) SetID(val int64) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *Conversation) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetStatusForMe sets the value of StatusForMe.
+func (s *Conversation) SetStatusForMe(val string) {
+	s.StatusForMe = val
+}
+
+// SetCounterpart sets the value of Counterpart.
+func (s *Conversation) SetCounterpart(val ConversationCounterpart) {
+	s.Counterpart = val
+}
+
+// SetUnread sets the value of Unread.
+func (s *Conversation) SetUnread(val int64) {
+	s.Unread = val
+}
+
+// SetLastMessageAt sets the value of LastMessageAt.
+func (s *Conversation) SetLastMessageAt(val NilDateTime) {
+	s.LastMessageAt = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Conversation) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// A buddy's card, reduced to what an invitation shows.
+// Ref: #/components/schemas/ConversationCardSummary
+type ConversationCardSummary struct {
+	Category  string `json:"category"`
+	Seniority string `json:"seniority"`
+	Country   string `json:"country"`
+}
+
+// GetCategory returns the value of Category.
+func (s *ConversationCardSummary) GetCategory() string {
+	return s.Category
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *ConversationCardSummary) GetSeniority() string {
+	return s.Seniority
+}
+
+// GetCountry returns the value of Country.
+func (s *ConversationCardSummary) GetCountry() string {
+	return s.Country
+}
+
+// SetCategory sets the value of Category.
+func (s *ConversationCardSummary) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *ConversationCardSummary) SetSeniority(val string) {
+	s.Seniority = val
+}
+
+// SetCountry sets the value of Country.
+func (s *ConversationCardSummary) SetCountry(val string) {
+	s.Country = val
+}
+
+// The other side, as the persona they speak as draws them. `detail` is null when not reachable.
+// Ref: #/components/schemas/ConversationCounterpart
+type ConversationCounterpart struct {
+	Persona   string              `json:"persona"`
+	Reachable bool                `json:"reachable"`
+	Detail    NilBuddyCounterpart `json:"detail"`
+}
+
+// GetPersona returns the value of Persona.
+func (s *ConversationCounterpart) GetPersona() string {
+	return s.Persona
+}
+
+// GetReachable returns the value of Reachable.
+func (s *ConversationCounterpart) GetReachable() bool {
+	return s.Reachable
+}
+
+// GetDetail returns the value of Detail.
+func (s *ConversationCounterpart) GetDetail() NilBuddyCounterpart {
+	return s.Detail
+}
+
+// SetPersona sets the value of Persona.
+func (s *ConversationCounterpart) SetPersona(val string) {
+	s.Persona = val
+}
+
+// SetReachable sets the value of Reachable.
+func (s *ConversationCounterpart) SetReachable(val bool) {
+	s.Reachable = val
+}
+
+// SetDetail sets the value of Detail.
+func (s *ConversationCounterpart) SetDetail(val NilBuddyCounterpart) {
+	s.Detail = val
+}
+
+// Ref: #/components/schemas/ConversationMessage
+type ConversationMessage struct {
+	ID        int64     `json:"id"`
+	Mine      bool      `json:"mine"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *ConversationMessage) GetID() int64 {
+	return s.ID
+}
+
+// GetMine returns the value of Mine.
+func (s *ConversationMessage) GetMine() bool {
+	return s.Mine
+}
+
+// GetBody returns the value of Body.
+func (s *ConversationMessage) GetBody() string {
+	return s.Body
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ConversationMessage) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *ConversationMessage) SetID(val int64) {
+	s.ID = val
+}
+
+// SetMine sets the value of Mine.
+func (s *ConversationMessage) SetMine(val bool) {
+	s.Mine = val
+}
+
+// SetBody sets the value of Body.
+func (s *ConversationMessage) SetBody(val string) {
+	s.Body = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ConversationMessage) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/ConversationReadRequest
+type ConversationReadRequest struct {
+	UpTo OptInt64 `json:"up_to"`
+}
+
+// GetUpTo returns the value of UpTo.
+func (s *ConversationReadRequest) GetUpTo() OptInt64 {
+	return s.UpTo
+}
+
+// SetUpTo sets the value of UpTo.
+func (s *ConversationReadRequest) SetUpTo(val OptInt64) {
+	s.UpTo = val
+}
+
+// Each account is named the way the conversation's kind draws it, so a moderator reads what the
+// participants saw.
+// Ref: #/components/schemas/ConversationReport
+type ConversationReport struct {
+	ID             int64                       `json:"id"`
+	ConversationID int64                       `json:"conversation_id"`
+	Kind           string                      `json:"kind"`
+	Reason         string                      `json:"reason"`
+	Note           string                      `json:"note"`
+	CreatedAt      time.Time                   `json:"created_at"`
+	ResolvedAt     NilDateTime                 `json:"resolved_at"`
+	Reporter       string                      `json:"reporter"`
+	Reported       string                      `json:"reported"`
+	Messages       []ConversationReportMessage `json:"messages"`
+}
+
+// GetID returns the value of ID.
+func (s *ConversationReport) GetID() int64 {
+	return s.ID
+}
+
+// GetConversationID returns the value of ConversationID.
+func (s *ConversationReport) GetConversationID() int64 {
+	return s.ConversationID
+}
+
+// GetKind returns the value of Kind.
+func (s *ConversationReport) GetKind() string {
+	return s.Kind
+}
+
+// GetReason returns the value of Reason.
+func (s *ConversationReport) GetReason() string {
+	return s.Reason
+}
+
+// GetNote returns the value of Note.
+func (s *ConversationReport) GetNote() string {
+	return s.Note
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ConversationReport) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetResolvedAt returns the value of ResolvedAt.
+func (s *ConversationReport) GetResolvedAt() NilDateTime {
+	return s.ResolvedAt
+}
+
+// GetReporter returns the value of Reporter.
+func (s *ConversationReport) GetReporter() string {
+	return s.Reporter
+}
+
+// GetReported returns the value of Reported.
+func (s *ConversationReport) GetReported() string {
+	return s.Reported
+}
+
+// GetMessages returns the value of Messages.
+func (s *ConversationReport) GetMessages() []ConversationReportMessage {
+	return s.Messages
+}
+
+// SetID sets the value of ID.
+func (s *ConversationReport) SetID(val int64) {
+	s.ID = val
+}
+
+// SetConversationID sets the value of ConversationID.
+func (s *ConversationReport) SetConversationID(val int64) {
+	s.ConversationID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ConversationReport) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetReason sets the value of Reason.
+func (s *ConversationReport) SetReason(val string) {
+	s.Reason = val
+}
+
+// SetNote sets the value of Note.
+func (s *ConversationReport) SetNote(val string) {
+	s.Note = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ConversationReport) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetResolvedAt sets the value of ResolvedAt.
+func (s *ConversationReport) SetResolvedAt(val NilDateTime) {
+	s.ResolvedAt = val
+}
+
+// SetReporter sets the value of Reporter.
+func (s *ConversationReport) SetReporter(val string) {
+	s.Reporter = val
+}
+
+// SetReported sets the value of Reported.
+func (s *ConversationReport) SetReported(val string) {
+	s.Reported = val
+}
+
+// SetMessages sets the value of Messages.
+func (s *ConversationReport) SetMessages(val []ConversationReportMessage) {
+	s.Messages = val
+}
+
+// Ref: #/components/schemas/ConversationReportMessage
+type ConversationReportMessage struct {
+	Sender    string    `json:"sender"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// GetSender returns the value of Sender.
+func (s *ConversationReportMessage) GetSender() string {
+	return s.Sender
+}
+
+// GetBody returns the value of Body.
+func (s *ConversationReportMessage) GetBody() string {
+	return s.Body
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ConversationReportMessage) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetSender sets the value of Sender.
+func (s *ConversationReportMessage) SetSender(val string) {
+	s.Sender = val
+}
+
+// SetBody sets the value of Body.
+func (s *ConversationReportMessage) SetBody(val string) {
+	s.Body = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ConversationReportMessage) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/ConversationReportRequest
+type ConversationReportRequest struct {
+	Reason OptString `json:"reason"`
+	Note   OptString `json:"note"`
+}
+
+// GetReason returns the value of Reason.
+func (s *ConversationReportRequest) GetReason() OptString {
+	return s.Reason
+}
+
+// GetNote returns the value of Note.
+func (s *ConversationReportRequest) GetNote() OptString {
+	return s.Note
+}
+
+// SetReason sets the value of Reason.
+func (s *ConversationReportRequest) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetNote sets the value of Note.
+func (s *ConversationReportRequest) SetNote(val OptString) {
+	s.Note = val
+}
+
+// Ref: #/components/schemas/ConversationReportsMeta
+type ConversationReportsMeta struct {
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+}
+
+// GetLimit returns the value of Limit.
+func (s *ConversationReportsMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *ConversationReportsMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// SetLimit sets the value of Limit.
+func (s *ConversationReportsMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *ConversationReportsMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// Ref: #/components/schemas/ConversationReportsPage
+type ConversationReportsPage struct {
+	Data []ConversationReport    `json:"data"`
+	Meta ConversationReportsMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *ConversationReportsPage) GetData() []ConversationReport {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *ConversationReportsPage) GetMeta() ConversationReportsMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *ConversationReportsPage) SetData(val []ConversationReport) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *ConversationReportsPage) SetMeta(val ConversationReportsMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/ConversationSendRequest
+type ConversationSendRequest struct {
+	Body OptString `json:"body"`
+}
+
+// GetBody returns the value of Body.
+func (s *ConversationSendRequest) GetBody() OptString {
+	return s.Body
+}
+
+// SetBody sets the value of Body.
+func (s *ConversationSendRequest) SetBody(val OptString) {
+	s.Body = val
+}
+
+// A single item: `{"data": ...}`.
+type CountThreadsOK struct {
+	Data ThreadCount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CountThreadsOK) GetData() ThreadCount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CountThreadsOK) SetData(val ThreadCount) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateCVCreated struct {
+	Data CvRecord `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateCVCreated) GetData() CvRecord {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateCVCreated) SetData(val CvRecord) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateEmployerVacancyCreated struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateEmployerVacancyCreated) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateEmployerVacancyCreated) SetData(val jx.Raw) {
 	s.Data = val
 }
 
@@ -131,6 +4035,1366 @@ func (s *CreateGhostReportCreated) GetData() GhostReport {
 // SetData sets the value of Data.
 func (s *CreateGhostReportCreated) SetData(val GhostReport) {
 	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateJobCreated struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateJobCreated) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateJobCreated) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateJobReportCreated struct {
+	Data JobReport `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateJobReportCreated) GetData() JobReport {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateJobReportCreated) SetData(val JobReport) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateReferralRequestCreated struct {
+	Data ReferralSeekerRequest `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateReferralRequestCreated) GetData() ReferralSeekerRequest {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateReferralRequestCreated) SetData(val ReferralSeekerRequest) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateReplyCreated struct {
+	Data ThreadReply `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateReplyCreated) GetData() ThreadReply {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateReplyCreated) SetData(val ThreadReply) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/CreateReplyRequest
+type CreateReplyRequest struct {
+	Body OptString `json:"body"`
+	// Nests the reply under another reply; 0 or omitted is top-level.
+	ParentReplyID OptInt64 `json:"parent_reply_id"`
+}
+
+// GetBody returns the value of Body.
+func (s *CreateReplyRequest) GetBody() OptString {
+	return s.Body
+}
+
+// GetParentReplyID returns the value of ParentReplyID.
+func (s *CreateReplyRequest) GetParentReplyID() OptInt64 {
+	return s.ParentReplyID
+}
+
+// SetBody sets the value of Body.
+func (s *CreateReplyRequest) SetBody(val OptString) {
+	s.Body = val
+}
+
+// SetParentReplyID sets the value of ParentReplyID.
+func (s *CreateReplyRequest) SetParentReplyID(val OptInt64) {
+	s.ParentReplyID = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateSavedSearchCreated struct {
+	Data SavedSearch `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateSavedSearchCreated) GetData() SavedSearch {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateSavedSearchCreated) SetData(val SavedSearch) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateSubmissionCreated struct {
+	Data Submission `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateSubmissionCreated) GetData() Submission {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateSubmissionCreated) SetData(val Submission) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateSubscriptionCreated struct {
+	Data Subscription `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateSubscriptionCreated) GetData() Subscription {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateSubscriptionCreated) SetData(val Subscription) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type CreateThreadCreated struct {
+	Data Thread `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateThreadCreated) GetData() Thread {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateThreadCreated) SetData(val Thread) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/CreateThreadRequest
+type CreateThreadRequest struct {
+	SubjectType OptString `json:"subject_type"`
+	SubjectSlug OptString `json:"subject_slug"`
+	Title       OptString `json:"title"`
+	Body        OptString `json:"body"`
+}
+
+// GetSubjectType returns the value of SubjectType.
+func (s *CreateThreadRequest) GetSubjectType() OptString {
+	return s.SubjectType
+}
+
+// GetSubjectSlug returns the value of SubjectSlug.
+func (s *CreateThreadRequest) GetSubjectSlug() OptString {
+	return s.SubjectSlug
+}
+
+// GetTitle returns the value of Title.
+func (s *CreateThreadRequest) GetTitle() OptString {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *CreateThreadRequest) GetBody() OptString {
+	return s.Body
+}
+
+// SetSubjectType sets the value of SubjectType.
+func (s *CreateThreadRequest) SetSubjectType(val OptString) {
+	s.SubjectType = val
+}
+
+// SetSubjectSlug sets the value of SubjectSlug.
+func (s *CreateThreadRequest) SetSubjectSlug(val OptString) {
+	s.SubjectSlug = val
+}
+
+// SetTitle sets the value of Title.
+func (s *CreateThreadRequest) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *CreateThreadRequest) SetBody(val OptString) {
+	s.Body = val
+}
+
+// Template, typography and margins a new CV starts with; a save replaces the whole set.
+// Ref: #/components/schemas/CvAppearanceDefaults
+type CvAppearanceDefaults struct {
+	TemplateID OptString `json:"template_id"`
+	Style      jx.Raw    `json:"style"`
+	Margins    jx.Raw    `json:"margins"`
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvAppearanceDefaults) GetTemplateID() OptString {
+	return s.TemplateID
+}
+
+// GetStyle returns the value of Style.
+func (s *CvAppearanceDefaults) GetStyle() jx.Raw {
+	return s.Style
+}
+
+// GetMargins returns the value of Margins.
+func (s *CvAppearanceDefaults) GetMargins() jx.Raw {
+	return s.Margins
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvAppearanceDefaults) SetTemplateID(val OptString) {
+	s.TemplateID = val
+}
+
+// SetStyle sets the value of Style.
+func (s *CvAppearanceDefaults) SetStyle(val jx.Raw) {
+	s.Style = val
+}
+
+// SetMargins sets the value of Margins.
+func (s *CvAppearanceDefaults) SetMargins(val jx.Raw) {
+	s.Margins = val
+}
+
+// Ref: #/components/schemas/CvAppearanceDefaultsResult
+type CvAppearanceDefaultsResult struct {
+	TemplateID string `json:"template_id"`
+	Style      jx.Raw `json:"style"`
+	Margins    jx.Raw `json:"margins"`
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvAppearanceDefaultsResult) GetTemplateID() string {
+	return s.TemplateID
+}
+
+// GetStyle returns the value of Style.
+func (s *CvAppearanceDefaultsResult) GetStyle() jx.Raw {
+	return s.Style
+}
+
+// GetMargins returns the value of Margins.
+func (s *CvAppearanceDefaultsResult) GetMargins() jx.Raw {
+	return s.Margins
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvAppearanceDefaultsResult) SetTemplateID(val string) {
+	s.TemplateID = val
+}
+
+// SetStyle sets the value of Style.
+func (s *CvAppearanceDefaultsResult) SetStyle(val jx.Raw) {
+	s.Style = val
+}
+
+// SetMargins sets the value of Margins.
+func (s *CvAppearanceDefaultsResult) SetMargins(val jx.Raw) {
+	s.Margins = val
+}
+
+// Ref: #/components/schemas/CvAtsDelta
+type CvAtsDelta struct {
+	Available bool      `json:"available"`
+	Reason    OptString `json:"reason"`
+	BaseCvID  OptString `json:"base_cv_id"`
+	Delta     jx.Raw    `json:"delta"`
+}
+
+// GetAvailable returns the value of Available.
+func (s *CvAtsDelta) GetAvailable() bool {
+	return s.Available
+}
+
+// GetReason returns the value of Reason.
+func (s *CvAtsDelta) GetReason() OptString {
+	return s.Reason
+}
+
+// GetBaseCvID returns the value of BaseCvID.
+func (s *CvAtsDelta) GetBaseCvID() OptString {
+	return s.BaseCvID
+}
+
+// GetDelta returns the value of Delta.
+func (s *CvAtsDelta) GetDelta() jx.Raw {
+	return s.Delta
+}
+
+// SetAvailable sets the value of Available.
+func (s *CvAtsDelta) SetAvailable(val bool) {
+	s.Available = val
+}
+
+// SetReason sets the value of Reason.
+func (s *CvAtsDelta) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetBaseCvID sets the value of BaseCvID.
+func (s *CvAtsDelta) SetBaseCvID(val OptString) {
+	s.BaseCvID = val
+}
+
+// SetDelta sets the value of Delta.
+func (s *CvAtsDelta) SetDelta(val jx.Raw) {
+	s.Delta = val
+}
+
+// A base CV in the bases list and the tailoring picker.
+// Ref: #/components/schemas/CvBase
+type CvBase struct {
+	ID         string    `json:"id"`
+	Title      string    `json:"title"`
+	TemplateID string    `json:"template_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	// The base used wherever a single one is needed without asking.
+	IsDefault bool `json:"is_default"`
+	// The candidate changed it by hand; an upload refresh leaves it alone.
+	HandEdited bool `json:"hand_edited"`
+}
+
+// GetID returns the value of ID.
+func (s *CvBase) GetID() string {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *CvBase) GetTitle() string {
+	return s.Title
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvBase) GetTemplateID() string {
+	return s.TemplateID
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CvBase) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *CvBase) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// GetIsDefault returns the value of IsDefault.
+func (s *CvBase) GetIsDefault() bool {
+	return s.IsDefault
+}
+
+// GetHandEdited returns the value of HandEdited.
+func (s *CvBase) GetHandEdited() bool {
+	return s.HandEdited
+}
+
+// SetID sets the value of ID.
+func (s *CvBase) SetID(val string) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *CvBase) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvBase) SetTemplateID(val string) {
+	s.TemplateID = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CvBase) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *CvBase) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SetIsDefault sets the value of IsDefault.
+func (s *CvBase) SetIsDefault(val bool) {
+	s.IsDefault = val
+}
+
+// SetHandEdited sets the value of HandEdited.
+func (s *CvBase) SetHandEdited(val bool) {
+	s.HandEdited = val
+}
+
+// Ref: #/components/schemas/CvBaseSession
+type CvBaseSession struct {
+	BaseCvID  string `json:"base_cv_id"`
+	SessionID string `json:"session_id"`
+}
+
+// GetBaseCvID returns the value of BaseCvID.
+func (s *CvBaseSession) GetBaseCvID() string {
+	return s.BaseCvID
+}
+
+// GetSessionID returns the value of SessionID.
+func (s *CvBaseSession) GetSessionID() string {
+	return s.SessionID
+}
+
+// SetBaseCvID sets the value of BaseCvID.
+func (s *CvBaseSession) SetBaseCvID(val string) {
+	s.BaseCvID = val
+}
+
+// SetSessionID sets the value of SessionID.
+func (s *CvBaseSession) SetSessionID(val string) {
+	s.SessionID = val
+}
+
+// A stored cover letter; `present` is false, with no letter, when none was drafted.
+// Ref: #/components/schemas/CvCoverLetter
+type CvCoverLetter struct {
+	Present bool      `json:"present"`
+	Stale   OptBool   `json:"stale"`
+	Letter  jx.Raw    `json:"letter"`
+	Cited   jx.Raw    `json:"cited"`
+	Model   OptString `json:"model"`
+}
+
+// GetPresent returns the value of Present.
+func (s *CvCoverLetter) GetPresent() bool {
+	return s.Present
+}
+
+// GetStale returns the value of Stale.
+func (s *CvCoverLetter) GetStale() OptBool {
+	return s.Stale
+}
+
+// GetLetter returns the value of Letter.
+func (s *CvCoverLetter) GetLetter() jx.Raw {
+	return s.Letter
+}
+
+// GetCited returns the value of Cited.
+func (s *CvCoverLetter) GetCited() jx.Raw {
+	return s.Cited
+}
+
+// GetModel returns the value of Model.
+func (s *CvCoverLetter) GetModel() OptString {
+	return s.Model
+}
+
+// SetPresent sets the value of Present.
+func (s *CvCoverLetter) SetPresent(val bool) {
+	s.Present = val
+}
+
+// SetStale sets the value of Stale.
+func (s *CvCoverLetter) SetStale(val OptBool) {
+	s.Stale = val
+}
+
+// SetLetter sets the value of Letter.
+func (s *CvCoverLetter) SetLetter(val jx.Raw) {
+	s.Letter = val
+}
+
+// SetCited sets the value of Cited.
+func (s *CvCoverLetter) SetCited(val jx.Raw) {
+	s.Cited = val
+}
+
+// SetModel sets the value of Model.
+func (s *CvCoverLetter) SetModel(val OptString) {
+	s.Model = val
+}
+
+// Ref: #/components/schemas/CvCreate
+type CvCreate struct {
+	Title OptString `json:"title"`
+	// Empty falls back to the caller's saved default, then to the system one.
+	TemplateID OptString `json:"template_id"`
+	// Pre-fills the CV from the stored résumé structure.
+	Seed OptBool `json:"seed"`
+}
+
+// GetTitle returns the value of Title.
+func (s *CvCreate) GetTitle() OptString {
+	return s.Title
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvCreate) GetTemplateID() OptString {
+	return s.TemplateID
+}
+
+// GetSeed returns the value of Seed.
+func (s *CvCreate) GetSeed() OptBool {
+	return s.Seed
+}
+
+// SetTitle sets the value of Title.
+func (s *CvCreate) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvCreate) SetTemplateID(val OptString) {
+	s.TemplateID = val
+}
+
+// SetSeed sets the value of Seed.
+func (s *CvCreate) SetSeed(val OptBool) {
+	s.Seed = val
+}
+
+// Ref: #/components/schemas/CvJobMatch
+type CvJobMatch struct {
+	Available bool      `json:"available"`
+	Reason    OptString `json:"reason"`
+	Score     jx.Raw    `json:"score"`
+}
+
+// GetAvailable returns the value of Available.
+func (s *CvJobMatch) GetAvailable() bool {
+	return s.Available
+}
+
+// GetReason returns the value of Reason.
+func (s *CvJobMatch) GetReason() OptString {
+	return s.Reason
+}
+
+// GetScore returns the value of Score.
+func (s *CvJobMatch) GetScore() jx.Raw {
+	return s.Score
+}
+
+// SetAvailable sets the value of Available.
+func (s *CvJobMatch) SetAvailable(val bool) {
+	s.Available = val
+}
+
+// SetReason sets the value of Reason.
+func (s *CvJobMatch) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetScore sets the value of Score.
+func (s *CvJobMatch) SetScore(val jx.Raw) {
+	s.Score = val
+}
+
+// A CV without its document.
+// Ref: #/components/schemas/CvMeta
+type CvMeta struct {
+	ID         string    `json:"id"`
+	Title      string    `json:"title"`
+	TemplateID string    `json:"template_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// GetID returns the value of ID.
+func (s *CvMeta) GetID() string {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *CvMeta) GetTitle() string {
+	return s.Title
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvMeta) GetTemplateID() string {
+	return s.TemplateID
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CvMeta) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *CvMeta) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *CvMeta) SetID(val string) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *CvMeta) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvMeta) SetTemplateID(val string) {
+	s.TemplateID = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CvMeta) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *CvMeta) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// A plan refusal: the sentence, the allowance it does not include and the upgrade link.
+// Ref: #/components/schemas/CvPlanRefusal
+type CvPlanRefusal struct {
+	Error      string    `json:"error"`
+	Allowance  jx.Raw    `json:"allowance"`
+	UpgradeURL OptString `json:"upgrade_url"`
+}
+
+// GetError returns the value of Error.
+func (s *CvPlanRefusal) GetError() string {
+	return s.Error
+}
+
+// GetAllowance returns the value of Allowance.
+func (s *CvPlanRefusal) GetAllowance() jx.Raw {
+	return s.Allowance
+}
+
+// GetUpgradeURL returns the value of UpgradeURL.
+func (s *CvPlanRefusal) GetUpgradeURL() OptString {
+	return s.UpgradeURL
+}
+
+// SetError sets the value of Error.
+func (s *CvPlanRefusal) SetError(val string) {
+	s.Error = val
+}
+
+// SetAllowance sets the value of Allowance.
+func (s *CvPlanRefusal) SetAllowance(val jx.Raw) {
+	s.Allowance = val
+}
+
+// SetUpgradeURL sets the value of UpgradeURL.
+func (s *CvPlanRefusal) SetUpgradeURL(val OptString) {
+	s.UpgradeURL = val
+}
+
+func (*CvPlanRefusal) draftCVCoverLetterRes() {}
+func (*CvPlanRefusal) tailorCVRes()           {}
+
+// One CV: its document and the state around it.
+// Ref: #/components/schemas/CvRecord
+type CvRecord struct {
+	ID         string    `json:"id"`
+	Title      string    `json:"title"`
+	TemplateID string    `json:"template_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	// The assistant conversation bound to a tailored CV; empty when none.
+	AgentSessionID string `json:"agent_session_id"`
+	// The structured CV document.
+	Document jx.Raw `json:"document"`
+	// The last unattended run's account of itself; absent when no run has happened.
+	AutopilotReport jx.Raw `json:"autopilot_report"`
+	// The candidate's consent for this CV's links to be traced.
+	TracerLinksEnabled bool `json:"tracer_links_enabled"`
+}
+
+// GetID returns the value of ID.
+func (s *CvRecord) GetID() string {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *CvRecord) GetTitle() string {
+	return s.Title
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvRecord) GetTemplateID() string {
+	return s.TemplateID
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CvRecord) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *CvRecord) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// GetAgentSessionID returns the value of AgentSessionID.
+func (s *CvRecord) GetAgentSessionID() string {
+	return s.AgentSessionID
+}
+
+// GetDocument returns the value of Document.
+func (s *CvRecord) GetDocument() jx.Raw {
+	return s.Document
+}
+
+// GetAutopilotReport returns the value of AutopilotReport.
+func (s *CvRecord) GetAutopilotReport() jx.Raw {
+	return s.AutopilotReport
+}
+
+// GetTracerLinksEnabled returns the value of TracerLinksEnabled.
+func (s *CvRecord) GetTracerLinksEnabled() bool {
+	return s.TracerLinksEnabled
+}
+
+// SetID sets the value of ID.
+func (s *CvRecord) SetID(val string) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *CvRecord) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvRecord) SetTemplateID(val string) {
+	s.TemplateID = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CvRecord) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *CvRecord) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SetAgentSessionID sets the value of AgentSessionID.
+func (s *CvRecord) SetAgentSessionID(val string) {
+	s.AgentSessionID = val
+}
+
+// SetDocument sets the value of Document.
+func (s *CvRecord) SetDocument(val jx.Raw) {
+	s.Document = val
+}
+
+// SetAutopilotReport sets the value of AutopilotReport.
+func (s *CvRecord) SetAutopilotReport(val jx.Raw) {
+	s.AutopilotReport = val
+}
+
+// SetTracerLinksEnabled sets the value of TracerLinksEnabled.
+func (s *CvRecord) SetTracerLinksEnabled(val bool) {
+	s.TracerLinksEnabled = val
+}
+
+// Ref: #/components/schemas/CvRevisionUndo
+type CvRevisionUndo struct {
+	Cv       CvMeta `json:"cv"`
+	Revision jx.Raw `json:"revision"`
+}
+
+// GetCv returns the value of Cv.
+func (s *CvRevisionUndo) GetCv() CvMeta {
+	return s.Cv
+}
+
+// GetRevision returns the value of Revision.
+func (s *CvRevisionUndo) GetRevision() jx.Raw {
+	return s.Revision
+}
+
+// SetCv sets the value of Cv.
+func (s *CvRevisionUndo) SetCv(val CvMeta) {
+	s.Cv = val
+}
+
+// SetRevision sets the value of Revision.
+func (s *CvRevisionUndo) SetRevision(val jx.Raw) {
+	s.Revision = val
+}
+
+// Ref: #/components/schemas/CvSessionBinding
+type CvSessionBinding struct {
+	SessionID OptString `json:"session_id"`
+}
+
+// GetSessionID returns the value of SessionID.
+func (s *CvSessionBinding) GetSessionID() OptString {
+	return s.SessionID
+}
+
+// SetSessionID sets the value of SessionID.
+func (s *CvSessionBinding) SetSessionID(val OptString) {
+	s.SessionID = val
+}
+
+// Ref: #/components/schemas/CvTailorRequest
+type CvTailorRequest struct {
+	JobSlug OptString `json:"job_slug"`
+	// The base to copy; absent means the default base.
+	BaseCvID OptString `json:"base_cv_id"`
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *CvTailorRequest) GetJobSlug() OptString {
+	return s.JobSlug
+}
+
+// GetBaseCvID returns the value of BaseCvID.
+func (s *CvTailorRequest) GetBaseCvID() OptString {
+	return s.BaseCvID
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *CvTailorRequest) SetJobSlug(val OptString) {
+	s.JobSlug = val
+}
+
+// SetBaseCvID sets the value of BaseCvID.
+func (s *CvTailorRequest) SetBaseCvID(val OptString) {
+	s.BaseCvID = val
+}
+
+// Ref: #/components/schemas/CvTailorResult
+type CvTailorResult struct {
+	TailorCvID string `json:"tailor_cv_id"`
+	BaseCvID   string `json:"base_cv_id"`
+	// The cached fit analysis, or null.
+	Analysis  jx.Raw `json:"analysis"`
+	SessionID string `json:"session_id"`
+	// True exactly when this call created the tailored CV.
+	ColdStartRunning bool `json:"cold_start_running"`
+}
+
+// GetTailorCvID returns the value of TailorCvID.
+func (s *CvTailorResult) GetTailorCvID() string {
+	return s.TailorCvID
+}
+
+// GetBaseCvID returns the value of BaseCvID.
+func (s *CvTailorResult) GetBaseCvID() string {
+	return s.BaseCvID
+}
+
+// GetAnalysis returns the value of Analysis.
+func (s *CvTailorResult) GetAnalysis() jx.Raw {
+	return s.Analysis
+}
+
+// GetSessionID returns the value of SessionID.
+func (s *CvTailorResult) GetSessionID() string {
+	return s.SessionID
+}
+
+// GetColdStartRunning returns the value of ColdStartRunning.
+func (s *CvTailorResult) GetColdStartRunning() bool {
+	return s.ColdStartRunning
+}
+
+// SetTailorCvID sets the value of TailorCvID.
+func (s *CvTailorResult) SetTailorCvID(val string) {
+	s.TailorCvID = val
+}
+
+// SetBaseCvID sets the value of BaseCvID.
+func (s *CvTailorResult) SetBaseCvID(val string) {
+	s.BaseCvID = val
+}
+
+// SetAnalysis sets the value of Analysis.
+func (s *CvTailorResult) SetAnalysis(val jx.Raw) {
+	s.Analysis = val
+}
+
+// SetSessionID sets the value of SessionID.
+func (s *CvTailorResult) SetSessionID(val string) {
+	s.SessionID = val
+}
+
+// SetColdStartRunning sets the value of ColdStartRunning.
+func (s *CvTailorResult) SetColdStartRunning(val bool) {
+	s.ColdStartRunning = val
+}
+
+// Ref: #/components/schemas/CvTailorSession
+type CvTailorSession struct {
+	TailorCvID string `json:"tailor_cv_id"`
+	BaseCvID   string `json:"base_cv_id"`
+	SessionID  string `json:"session_id"`
+}
+
+// GetTailorCvID returns the value of TailorCvID.
+func (s *CvTailorSession) GetTailorCvID() string {
+	return s.TailorCvID
+}
+
+// GetBaseCvID returns the value of BaseCvID.
+func (s *CvTailorSession) GetBaseCvID() string {
+	return s.BaseCvID
+}
+
+// GetSessionID returns the value of SessionID.
+func (s *CvTailorSession) GetSessionID() string {
+	return s.SessionID
+}
+
+// SetTailorCvID sets the value of TailorCvID.
+func (s *CvTailorSession) SetTailorCvID(val string) {
+	s.TailorCvID = val
+}
+
+// SetBaseCvID sets the value of BaseCvID.
+func (s *CvTailorSession) SetBaseCvID(val string) {
+	s.BaseCvID = val
+}
+
+// SetSessionID sets the value of SessionID.
+func (s *CvTailorSession) SetSessionID(val string) {
+	s.SessionID = val
+}
+
+// A tailored CV in the re-open list.
+// Ref: #/components/schemas/CvTailored
+type CvTailored struct {
+	ID             string    `json:"id"`
+	Title          string    `json:"title"`
+	TemplateID     string    `json:"template_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	JobSlug        string    `json:"job_slug"`
+	JobTitle       string    `json:"job_title"`
+	JobCompany     string    `json:"job_company"`
+	AgentSessionID string    `json:"agent_session_id"`
+}
+
+// GetID returns the value of ID.
+func (s *CvTailored) GetID() string {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *CvTailored) GetTitle() string {
+	return s.Title
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvTailored) GetTemplateID() string {
+	return s.TemplateID
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *CvTailored) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *CvTailored) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *CvTailored) GetJobSlug() string {
+	return s.JobSlug
+}
+
+// GetJobTitle returns the value of JobTitle.
+func (s *CvTailored) GetJobTitle() string {
+	return s.JobTitle
+}
+
+// GetJobCompany returns the value of JobCompany.
+func (s *CvTailored) GetJobCompany() string {
+	return s.JobCompany
+}
+
+// GetAgentSessionID returns the value of AgentSessionID.
+func (s *CvTailored) GetAgentSessionID() string {
+	return s.AgentSessionID
+}
+
+// SetID sets the value of ID.
+func (s *CvTailored) SetID(val string) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *CvTailored) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvTailored) SetTemplateID(val string) {
+	s.TemplateID = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *CvTailored) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *CvTailored) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *CvTailored) SetJobSlug(val string) {
+	s.JobSlug = val
+}
+
+// SetJobTitle sets the value of JobTitle.
+func (s *CvTailored) SetJobTitle(val string) {
+	s.JobTitle = val
+}
+
+// SetJobCompany sets the value of JobCompany.
+func (s *CvTailored) SetJobCompany(val string) {
+	s.JobCompany = val
+}
+
+// SetAgentSessionID sets the value of AgentSessionID.
+func (s *CvTailored) SetAgentSessionID(val string) {
+	s.AgentSessionID = val
+}
+
+// Ref: #/components/schemas/CvTemplateChoice
+type CvTemplateChoice struct {
+	TemplateID OptString `json:"template_id"`
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvTemplateChoice) GetTemplateID() OptString {
+	return s.TemplateID
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvTemplateChoice) SetTemplateID(val OptString) {
+	s.TemplateID = val
+}
+
+// One traced link as the owner reads it.
+// Ref: #/components/schemas/CvTracerLink
+type CvTracerLink struct {
+	SourcePath     string `json:"source_path"`
+	DestinationURL string `json:"destination_url"`
+	TracedURL      string `json:"traced_url"`
+	Clicks         int64  `json:"clicks"`
+	BotClicks      int64  `json:"bot_clicks"`
+	// Absent when the deployment has no visitor salt.
+	DistinctVisitors OptInt64    `json:"distinct_visitors"`
+	LastClickAt      OptDateTime `json:"last_click_at"`
+}
+
+// GetSourcePath returns the value of SourcePath.
+func (s *CvTracerLink) GetSourcePath() string {
+	return s.SourcePath
+}
+
+// GetDestinationURL returns the value of DestinationURL.
+func (s *CvTracerLink) GetDestinationURL() string {
+	return s.DestinationURL
+}
+
+// GetTracedURL returns the value of TracedURL.
+func (s *CvTracerLink) GetTracedURL() string {
+	return s.TracedURL
+}
+
+// GetClicks returns the value of Clicks.
+func (s *CvTracerLink) GetClicks() int64 {
+	return s.Clicks
+}
+
+// GetBotClicks returns the value of BotClicks.
+func (s *CvTracerLink) GetBotClicks() int64 {
+	return s.BotClicks
+}
+
+// GetDistinctVisitors returns the value of DistinctVisitors.
+func (s *CvTracerLink) GetDistinctVisitors() OptInt64 {
+	return s.DistinctVisitors
+}
+
+// GetLastClickAt returns the value of LastClickAt.
+func (s *CvTracerLink) GetLastClickAt() OptDateTime {
+	return s.LastClickAt
+}
+
+// SetSourcePath sets the value of SourcePath.
+func (s *CvTracerLink) SetSourcePath(val string) {
+	s.SourcePath = val
+}
+
+// SetDestinationURL sets the value of DestinationURL.
+func (s *CvTracerLink) SetDestinationURL(val string) {
+	s.DestinationURL = val
+}
+
+// SetTracedURL sets the value of TracedURL.
+func (s *CvTracerLink) SetTracedURL(val string) {
+	s.TracedURL = val
+}
+
+// SetClicks sets the value of Clicks.
+func (s *CvTracerLink) SetClicks(val int64) {
+	s.Clicks = val
+}
+
+// SetBotClicks sets the value of BotClicks.
+func (s *CvTracerLink) SetBotClicks(val int64) {
+	s.BotClicks = val
+}
+
+// SetDistinctVisitors sets the value of DistinctVisitors.
+func (s *CvTracerLink) SetDistinctVisitors(val OptInt64) {
+	s.DistinctVisitors = val
+}
+
+// SetLastClickAt sets the value of LastClickAt.
+func (s *CvTracerLink) SetLastClickAt(val OptDateTime) {
+	s.LastClickAt = val
+}
+
+// Ref: #/components/schemas/CvTracerLinksSetting
+type CvTracerLinksSetting struct {
+	Enabled OptBool `json:"enabled"`
+}
+
+// GetEnabled returns the value of Enabled.
+func (s *CvTracerLinksSetting) GetEnabled() OptBool {
+	return s.Enabled
+}
+
+// SetEnabled sets the value of Enabled.
+func (s *CvTracerLinksSetting) SetEnabled(val OptBool) {
+	s.Enabled = val
+}
+
+// Ref: #/components/schemas/CvTracerLinksState
+type CvTracerLinksState struct {
+	TracerLinksEnabled bool `json:"tracer_links_enabled"`
+}
+
+// GetTracerLinksEnabled returns the value of TracerLinksEnabled.
+func (s *CvTracerLinksState) GetTracerLinksEnabled() bool {
+	return s.TracerLinksEnabled
+}
+
+// SetTracerLinksEnabled sets the value of TracerLinksEnabled.
+func (s *CvTracerLinksState) SetTracerLinksEnabled(val bool) {
+	s.TracerLinksEnabled = val
+}
+
+// Ref: #/components/schemas/CvUpdate
+type CvUpdate struct {
+	Title      OptString `json:"title"`
+	TemplateID OptString `json:"template_id"`
+	Document   jx.Raw    `json:"document"`
+}
+
+// GetTitle returns the value of Title.
+func (s *CvUpdate) GetTitle() OptString {
+	return s.Title
+}
+
+// GetTemplateID returns the value of TemplateID.
+func (s *CvUpdate) GetTemplateID() OptString {
+	return s.TemplateID
+}
+
+// GetDocument returns the value of Document.
+func (s *CvUpdate) GetDocument() jx.Raw {
+	return s.Document
+}
+
+// SetTitle sets the value of Title.
+func (s *CvUpdate) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetTemplateID sets the value of TemplateID.
+func (s *CvUpdate) SetTemplateID(val OptString) {
+	s.TemplateID = val
+}
+
+// SetDocument sets the value of Document.
+func (s *CvUpdate) SetDocument(val jx.Raw) {
+	s.Document = val
+}
+
+// A single item: `{"data": ...}`.
+type DecideMentorProfileOK struct {
+	Data MentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DecideMentorProfileOK) GetData() MentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DecideMentorProfileOK) SetData(val MentorshipMentor) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type DecideReferralOfferOK struct {
+	Data ReferralOffer `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DecideReferralOfferOK) GetData() ReferralOffer {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DecideReferralOfferOK) SetData(val ReferralOffer) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type DeclineConversationOK struct {
+	Data Conversation `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DeclineConversationOK) GetData() Conversation {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DeclineConversationOK) SetData(val Conversation) {
+	s.Data = val
+}
+
+// DeleteAtomNoContent is response for DeleteAtom operation.
+type DeleteAtomNoContent struct{}
+
+// DeleteAvailabilityRuleNoContent is response for DeleteAvailabilityRule operation.
+type DeleteAvailabilityRuleNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type DeleteBankedAnswerOK struct {
+	Data Deleted `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DeleteBankedAnswerOK) GetData() Deleted {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DeleteBankedAnswerOK) SetData(val Deleted) {
+	s.Data = val
+}
+
+// DeleteCVNoContent is response for DeleteCV operation.
+type DeleteCVNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type DeleteCompanyFeedbackOK struct {
+	Data CompanyFeedbackSummary `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DeleteCompanyFeedbackOK) GetData() CompanyFeedbackSummary {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DeleteCompanyFeedbackOK) SetData(val CompanyFeedbackSummary) {
+	s.Data = val
+}
+
+// DeleteEmploymentNoContent is response for DeleteEmployment operation.
+type DeleteEmploymentNoContent struct{}
+
+// DeleteProfileNoContent is response for DeleteProfile operation.
+type DeleteProfileNoContent struct{}
+
+// DeleteResumeNoContent is response for DeleteResume operation.
+type DeleteResumeNoContent struct{}
+
+// DeleteSavedSearchNoContent is response for DeleteSavedSearch operation.
+type DeleteSavedSearchNoContent struct{}
+
+// DeleteSubscriptionNoContent is response for DeleteSubscription operation.
+type DeleteSubscriptionNoContent struct{}
+
+// Ref: #/components/schemas/Deleted
+type Deleted struct {
+	Deleted bool `json:"deleted"`
+}
+
+// GetDeleted returns the value of Deleted.
+func (s *Deleted) GetDeleted() bool {
+	return s.Deleted
+}
+
+// SetDeleted sets the value of Deleted.
+func (s *Deleted) SetDeleted(val bool) {
+	s.Deleted = val
+}
+
+// Where the CV says the caller IS, as the location dictionary resolved it. Read-only.
+// Ref: #/components/schemas/DerivedLocation
+type DerivedLocation struct {
+	Countries []string `json:"countries"`
+	Regions   []string `json:"regions"`
+	Cities    []string `json:"cities"`
+}
+
+// GetCountries returns the value of Countries.
+func (s *DerivedLocation) GetCountries() []string {
+	return s.Countries
+}
+
+// GetRegions returns the value of Regions.
+func (s *DerivedLocation) GetRegions() []string {
+	return s.Regions
+}
+
+// GetCities returns the value of Cities.
+func (s *DerivedLocation) GetCities() []string {
+	return s.Cities
+}
+
+// SetCountries sets the value of Countries.
+func (s *DerivedLocation) SetCountries(val []string) {
+	s.Countries = val
+}
+
+// SetRegions sets the value of Regions.
+func (s *DerivedLocation) SetRegions(val []string) {
+	s.Regions = val
+}
+
+// SetCities sets the value of Cities.
+func (s *DerivedLocation) SetCities(val []string) {
+	s.Cities = val
 }
 
 // Ref: #/components/schemas/DictionaryGap
@@ -185,6 +5449,363 @@ func (s *DictionaryGapRecorded) SetRequestCount(val int64) {
 // SetStatus sets the value of Status.
 func (s *DictionaryGapRecorded) SetStatus(val string) {
 	s.Status = val
+}
+
+// What the signed-in candidate can send.
+// Ref: #/components/schemas/DirectApplyCVOptions
+type DirectApplyCVOptions struct {
+	// The CV tailored for this vacancy, null when none.
+	Tailored  NilDirectApplyTailoredCV `json:"tailored"`
+	HasResume bool                     `json:"has_resume"`
+}
+
+// GetTailored returns the value of Tailored.
+func (s *DirectApplyCVOptions) GetTailored() NilDirectApplyTailoredCV {
+	return s.Tailored
+}
+
+// GetHasResume returns the value of HasResume.
+func (s *DirectApplyCVOptions) GetHasResume() bool {
+	return s.HasResume
+}
+
+// SetTailored sets the value of Tailored.
+func (s *DirectApplyCVOptions) SetTailored(val NilDirectApplyTailoredCV) {
+	s.Tailored = val
+}
+
+// SetHasResume sets the value of HasResume.
+func (s *DirectApplyCVOptions) SetHasResume(val bool) {
+	s.HasResume = val
+}
+
+// Ref: #/components/schemas/DirectApplyForm
+type DirectApplyForm struct {
+	CompanyName string                 `json:"company_name"`
+	Questions   []DirectApplyQuestion  `json:"questions"`
+	Open        bool                   `json:"open"`
+	Applied     bool                   `json:"applied"`
+	Prefill     DirectApplyFormPrefill `json:"prefill"`
+	Cvs         DirectApplyCVOptions   `json:"cvs"`
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *DirectApplyForm) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetQuestions returns the value of Questions.
+func (s *DirectApplyForm) GetQuestions() []DirectApplyQuestion {
+	return s.Questions
+}
+
+// GetOpen returns the value of Open.
+func (s *DirectApplyForm) GetOpen() bool {
+	return s.Open
+}
+
+// GetApplied returns the value of Applied.
+func (s *DirectApplyForm) GetApplied() bool {
+	return s.Applied
+}
+
+// GetPrefill returns the value of Prefill.
+func (s *DirectApplyForm) GetPrefill() DirectApplyFormPrefill {
+	return s.Prefill
+}
+
+// GetCvs returns the value of Cvs.
+func (s *DirectApplyForm) GetCvs() DirectApplyCVOptions {
+	return s.Cvs
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *DirectApplyForm) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetQuestions sets the value of Questions.
+func (s *DirectApplyForm) SetQuestions(val []DirectApplyQuestion) {
+	s.Questions = val
+}
+
+// SetOpen sets the value of Open.
+func (s *DirectApplyForm) SetOpen(val bool) {
+	s.Open = val
+}
+
+// SetApplied sets the value of Applied.
+func (s *DirectApplyForm) SetApplied(val bool) {
+	s.Applied = val
+}
+
+// SetPrefill sets the value of Prefill.
+func (s *DirectApplyForm) SetPrefill(val DirectApplyFormPrefill) {
+	s.Prefill = val
+}
+
+// SetCvs sets the value of Cvs.
+func (s *DirectApplyForm) SetCvs(val DirectApplyCVOptions) {
+	s.Cvs = val
+}
+
+type DirectApplyFormPrefill map[string]string
+
+func (s *DirectApplyFormPrefill) init() DirectApplyFormPrefill {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
+// Ref: #/components/schemas/DirectApplyQuestion
+type DirectApplyQuestion struct {
+	ID       string   `json:"id"`
+	Label    string   `json:"label"`
+	Type     string   `json:"type"`
+	Required bool     `json:"required"`
+	Options  []string `json:"options"`
+}
+
+// GetID returns the value of ID.
+func (s *DirectApplyQuestion) GetID() string {
+	return s.ID
+}
+
+// GetLabel returns the value of Label.
+func (s *DirectApplyQuestion) GetLabel() string {
+	return s.Label
+}
+
+// GetType returns the value of Type.
+func (s *DirectApplyQuestion) GetType() string {
+	return s.Type
+}
+
+// GetRequired returns the value of Required.
+func (s *DirectApplyQuestion) GetRequired() bool {
+	return s.Required
+}
+
+// GetOptions returns the value of Options.
+func (s *DirectApplyQuestion) GetOptions() []string {
+	return s.Options
+}
+
+// SetID sets the value of ID.
+func (s *DirectApplyQuestion) SetID(val string) {
+	s.ID = val
+}
+
+// SetLabel sets the value of Label.
+func (s *DirectApplyQuestion) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetType sets the value of Type.
+func (s *DirectApplyQuestion) SetType(val string) {
+	s.Type = val
+}
+
+// SetRequired sets the value of Required.
+func (s *DirectApplyQuestion) SetRequired(val bool) {
+	s.Required = val
+}
+
+// SetOptions sets the value of Options.
+func (s *DirectApplyQuestion) SetOptions(val []string) {
+	s.Options = val
+}
+
+// Names the CV to send: `resume: true` for the uploaded one, or `cv_id`, exactly one.
+// Ref: #/components/schemas/DirectApplyRequest
+type DirectApplyRequest struct {
+	Resume  OptBool                      `json:"resume"`
+	CvID    OptString                    `json:"cv_id"`
+	Answers OptDirectApplyRequestAnswers `json:"answers"`
+	Note    OptString                    `json:"note"`
+}
+
+// GetResume returns the value of Resume.
+func (s *DirectApplyRequest) GetResume() OptBool {
+	return s.Resume
+}
+
+// GetCvID returns the value of CvID.
+func (s *DirectApplyRequest) GetCvID() OptString {
+	return s.CvID
+}
+
+// GetAnswers returns the value of Answers.
+func (s *DirectApplyRequest) GetAnswers() OptDirectApplyRequestAnswers {
+	return s.Answers
+}
+
+// GetNote returns the value of Note.
+func (s *DirectApplyRequest) GetNote() OptString {
+	return s.Note
+}
+
+// SetResume sets the value of Resume.
+func (s *DirectApplyRequest) SetResume(val OptBool) {
+	s.Resume = val
+}
+
+// SetCvID sets the value of CvID.
+func (s *DirectApplyRequest) SetCvID(val OptString) {
+	s.CvID = val
+}
+
+// SetAnswers sets the value of Answers.
+func (s *DirectApplyRequest) SetAnswers(val OptDirectApplyRequestAnswers) {
+	s.Answers = val
+}
+
+// SetNote sets the value of Note.
+func (s *DirectApplyRequest) SetNote(val OptString) {
+	s.Note = val
+}
+
+type DirectApplyRequestAnswers map[string]string
+
+func (s *DirectApplyRequestAnswers) init() DirectApplyRequestAnswers {
+	m := *s
+	if m == nil {
+		m = map[string]string{}
+		*s = m
+	}
+	return m
+}
+
+// Ref: #/components/schemas/DirectApplySent
+type DirectApplySent struct {
+	Sent bool `json:"sent"`
+}
+
+// GetSent returns the value of Sent.
+func (s *DirectApplySent) GetSent() bool {
+	return s.Sent
+}
+
+// SetSent sets the value of Sent.
+func (s *DirectApplySent) SetSent(val bool) {
+	s.Sent = val
+}
+
+// Ref: #/components/schemas/DirectApplyTailoredCV
+type DirectApplyTailoredCV struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
+// GetID returns the value of ID.
+func (s *DirectApplyTailoredCV) GetID() string {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *DirectApplyTailoredCV) GetTitle() string {
+	return s.Title
+}
+
+// SetID sets the value of ID.
+func (s *DirectApplyTailoredCV) SetID(val string) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *DirectApplyTailoredCV) SetTitle(val string) {
+	s.Title = val
+}
+
+// A single item: `{"data": ...}`.
+type DismissJobOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DismissJobOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DismissJobOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type DismissJobReportOK struct {
+	Data JobReport `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DismissJobReportOK) GetData() JobReport {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DismissJobReportOK) SetData(val JobReport) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/DismissJobReportRequest
+type DismissJobReportRequest struct {
+	Reason         OptString `json:"reason"`
+	NotifyReporter OptBool   `json:"notify_reporter"`
+}
+
+// GetReason returns the value of Reason.
+func (s *DismissJobReportRequest) GetReason() OptString {
+	return s.Reason
+}
+
+// GetNotifyReporter returns the value of NotifyReporter.
+func (s *DismissJobReportRequest) GetNotifyReporter() OptBool {
+	return s.NotifyReporter
+}
+
+// SetReason sets the value of Reason.
+func (s *DismissJobReportRequest) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetNotifyReporter sets the value of NotifyReporter.
+func (s *DismissJobReportRequest) SetNotifyReporter(val OptBool) {
+	s.NotifyReporter = val
+}
+
+// A single item: `{"data": ...}`.
+type DraftCVCoverLetterOK struct {
+	Data CvCoverLetter `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DraftCVCoverLetterOK) GetData() CvCoverLetter {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DraftCVCoverLetterOK) SetData(val CvCoverLetter) {
+	s.Data = val
+}
+
+func (*DraftCVCoverLetterOK) draftCVCoverLetterRes() {}
+
+// A single item: `{"data": ...}`.
+type DuplicateCVCreated struct {
+	Data CvRecord `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *DuplicateCVCreated) GetData() CvRecord {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *DuplicateCVCreated) SetData(val CvRecord) {
+	s.Data = val
 }
 
 // The preference page's state: the address mail goes to and the three switches.
@@ -396,6 +6017,927 @@ func (s *EmailPrefsUpdate) SetDeactivateSearches(val []int64) {
 	s.DeactivateSearches = val
 }
 
+// A company account. `user_id` is the address the moderator and admin actions take.
+// Ref: #/components/schemas/EmployerAccount
+type EmployerAccount struct {
+	UserID      int64       `json:"user_id"`
+	CompanySlug string      `json:"company_slug"`
+	CompanyName string      `json:"company_name"`
+	WorkEmail   string      `json:"work_email"`
+	Status      string      `json:"status"`
+	VerifiedAt  OptDateTime `json:"verified_at"`
+	// Whether the claimant still owes the mailed code or is waiting on a moderator.
+	EmailConfirmed bool      `json:"email_confirmed"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+// GetUserID returns the value of UserID.
+func (s *EmployerAccount) GetUserID() int64 {
+	return s.UserID
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *EmployerAccount) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *EmployerAccount) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetWorkEmail returns the value of WorkEmail.
+func (s *EmployerAccount) GetWorkEmail() string {
+	return s.WorkEmail
+}
+
+// GetStatus returns the value of Status.
+func (s *EmployerAccount) GetStatus() string {
+	return s.Status
+}
+
+// GetVerifiedAt returns the value of VerifiedAt.
+func (s *EmployerAccount) GetVerifiedAt() OptDateTime {
+	return s.VerifiedAt
+}
+
+// GetEmailConfirmed returns the value of EmailConfirmed.
+func (s *EmployerAccount) GetEmailConfirmed() bool {
+	return s.EmailConfirmed
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *EmployerAccount) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetUserID sets the value of UserID.
+func (s *EmployerAccount) SetUserID(val int64) {
+	s.UserID = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *EmployerAccount) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *EmployerAccount) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetWorkEmail sets the value of WorkEmail.
+func (s *EmployerAccount) SetWorkEmail(val string) {
+	s.WorkEmail = val
+}
+
+// SetStatus sets the value of Status.
+func (s *EmployerAccount) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetVerifiedAt sets the value of VerifiedAt.
+func (s *EmployerAccount) SetVerifiedAt(val OptDateTime) {
+	s.VerifiedAt = val
+}
+
+// SetEmailConfirmed sets the value of EmailConfirmed.
+func (s *EmployerAccount) SetEmailConfirmed(val bool) {
+	s.EmailConfirmed = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *EmployerAccount) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/EmployerClaim
+type EmployerClaim struct {
+	CompanyName OptString `json:"company_name"`
+	WorkEmail   OptString `json:"work_email"`
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *EmployerClaim) GetCompanyName() OptString {
+	return s.CompanyName
+}
+
+// GetWorkEmail returns the value of WorkEmail.
+func (s *EmployerClaim) GetWorkEmail() OptString {
+	return s.WorkEmail
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *EmployerClaim) SetCompanyName(val OptString) {
+	s.CompanyName = val
+}
+
+// SetWorkEmail sets the value of WorkEmail.
+func (s *EmployerClaim) SetWorkEmail(val OptString) {
+	s.WorkEmail = val
+}
+
+// Ref: #/components/schemas/EmployerClosed
+type EmployerClosed struct {
+	Closed bool `json:"closed"`
+}
+
+// GetClosed returns the value of Closed.
+func (s *EmployerClosed) GetClosed() bool {
+	return s.Closed
+}
+
+// SetClosed sets the value of Closed.
+func (s *EmployerClosed) SetClosed(val bool) {
+	s.Closed = val
+}
+
+// The account plus its company's curated profile; an unset profile field is left out.
+// Ref: #/components/schemas/EmployerCompany
+type EmployerCompany struct {
+	UserID      int64       `json:"user_id"`
+	CompanySlug string      `json:"company_slug"`
+	CompanyName string      `json:"company_name"`
+	WorkEmail   string      `json:"work_email"`
+	Status      string      `json:"status"`
+	VerifiedAt  OptDateTime `json:"verified_at"`
+	// Whether the claimant still owes the mailed code or is waiting on a moderator.
+	EmailConfirmed bool      `json:"email_confirmed"`
+	CreatedAt      time.Time `json:"created_at"`
+	Tagline        OptString `json:"tagline"`
+	Description    OptString `json:"description"`
+	Website        OptString `json:"website"`
+	Industries     []string  `json:"industries"`
+	YearFounded    OptInt64  `json:"year_founded"`
+	EmployeeCount  OptInt64  `json:"employee_count"`
+	HqCountry      OptString `json:"hq_country"`
+	Subindustry    OptString `json:"subindustry"`
+}
+
+// GetUserID returns the value of UserID.
+func (s *EmployerCompany) GetUserID() int64 {
+	return s.UserID
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *EmployerCompany) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *EmployerCompany) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetWorkEmail returns the value of WorkEmail.
+func (s *EmployerCompany) GetWorkEmail() string {
+	return s.WorkEmail
+}
+
+// GetStatus returns the value of Status.
+func (s *EmployerCompany) GetStatus() string {
+	return s.Status
+}
+
+// GetVerifiedAt returns the value of VerifiedAt.
+func (s *EmployerCompany) GetVerifiedAt() OptDateTime {
+	return s.VerifiedAt
+}
+
+// GetEmailConfirmed returns the value of EmailConfirmed.
+func (s *EmployerCompany) GetEmailConfirmed() bool {
+	return s.EmailConfirmed
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *EmployerCompany) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetTagline returns the value of Tagline.
+func (s *EmployerCompany) GetTagline() OptString {
+	return s.Tagline
+}
+
+// GetDescription returns the value of Description.
+func (s *EmployerCompany) GetDescription() OptString {
+	return s.Description
+}
+
+// GetWebsite returns the value of Website.
+func (s *EmployerCompany) GetWebsite() OptString {
+	return s.Website
+}
+
+// GetIndustries returns the value of Industries.
+func (s *EmployerCompany) GetIndustries() []string {
+	return s.Industries
+}
+
+// GetYearFounded returns the value of YearFounded.
+func (s *EmployerCompany) GetYearFounded() OptInt64 {
+	return s.YearFounded
+}
+
+// GetEmployeeCount returns the value of EmployeeCount.
+func (s *EmployerCompany) GetEmployeeCount() OptInt64 {
+	return s.EmployeeCount
+}
+
+// GetHqCountry returns the value of HqCountry.
+func (s *EmployerCompany) GetHqCountry() OptString {
+	return s.HqCountry
+}
+
+// GetSubindustry returns the value of Subindustry.
+func (s *EmployerCompany) GetSubindustry() OptString {
+	return s.Subindustry
+}
+
+// SetUserID sets the value of UserID.
+func (s *EmployerCompany) SetUserID(val int64) {
+	s.UserID = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *EmployerCompany) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *EmployerCompany) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetWorkEmail sets the value of WorkEmail.
+func (s *EmployerCompany) SetWorkEmail(val string) {
+	s.WorkEmail = val
+}
+
+// SetStatus sets the value of Status.
+func (s *EmployerCompany) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetVerifiedAt sets the value of VerifiedAt.
+func (s *EmployerCompany) SetVerifiedAt(val OptDateTime) {
+	s.VerifiedAt = val
+}
+
+// SetEmailConfirmed sets the value of EmailConfirmed.
+func (s *EmployerCompany) SetEmailConfirmed(val bool) {
+	s.EmailConfirmed = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *EmployerCompany) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetTagline sets the value of Tagline.
+func (s *EmployerCompany) SetTagline(val OptString) {
+	s.Tagline = val
+}
+
+// SetDescription sets the value of Description.
+func (s *EmployerCompany) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetWebsite sets the value of Website.
+func (s *EmployerCompany) SetWebsite(val OptString) {
+	s.Website = val
+}
+
+// SetIndustries sets the value of Industries.
+func (s *EmployerCompany) SetIndustries(val []string) {
+	s.Industries = val
+}
+
+// SetYearFounded sets the value of YearFounded.
+func (s *EmployerCompany) SetYearFounded(val OptInt64) {
+	s.YearFounded = val
+}
+
+// SetEmployeeCount sets the value of EmployeeCount.
+func (s *EmployerCompany) SetEmployeeCount(val OptInt64) {
+	s.EmployeeCount = val
+}
+
+// SetHqCountry sets the value of HqCountry.
+func (s *EmployerCompany) SetHqCountry(val OptString) {
+	s.HqCountry = val
+}
+
+// SetSubindustry sets the value of Subindustry.
+func (s *EmployerCompany) SetSubindustry(val OptString) {
+	s.Subindustry = val
+}
+
+// An absent or null field is kept; `industries` replaces the whole curated set, even as `[]`.
+// Ref: #/components/schemas/EmployerCompanyPatch
+type EmployerCompanyPatch struct {
+	Tagline       OptNilString      `json:"tagline"`
+	Description   OptNilString      `json:"description"`
+	Website       OptNilString      `json:"website"`
+	Industries    OptNilStringArray `json:"industries"`
+	YearFounded   OptNilInt64       `json:"year_founded"`
+	EmployeeCount OptNilInt64       `json:"employee_count"`
+	HqCountry     OptNilString      `json:"hq_country"`
+	Subindustry   OptNilString      `json:"subindustry"`
+}
+
+// GetTagline returns the value of Tagline.
+func (s *EmployerCompanyPatch) GetTagline() OptNilString {
+	return s.Tagline
+}
+
+// GetDescription returns the value of Description.
+func (s *EmployerCompanyPatch) GetDescription() OptNilString {
+	return s.Description
+}
+
+// GetWebsite returns the value of Website.
+func (s *EmployerCompanyPatch) GetWebsite() OptNilString {
+	return s.Website
+}
+
+// GetIndustries returns the value of Industries.
+func (s *EmployerCompanyPatch) GetIndustries() OptNilStringArray {
+	return s.Industries
+}
+
+// GetYearFounded returns the value of YearFounded.
+func (s *EmployerCompanyPatch) GetYearFounded() OptNilInt64 {
+	return s.YearFounded
+}
+
+// GetEmployeeCount returns the value of EmployeeCount.
+func (s *EmployerCompanyPatch) GetEmployeeCount() OptNilInt64 {
+	return s.EmployeeCount
+}
+
+// GetHqCountry returns the value of HqCountry.
+func (s *EmployerCompanyPatch) GetHqCountry() OptNilString {
+	return s.HqCountry
+}
+
+// GetSubindustry returns the value of Subindustry.
+func (s *EmployerCompanyPatch) GetSubindustry() OptNilString {
+	return s.Subindustry
+}
+
+// SetTagline sets the value of Tagline.
+func (s *EmployerCompanyPatch) SetTagline(val OptNilString) {
+	s.Tagline = val
+}
+
+// SetDescription sets the value of Description.
+func (s *EmployerCompanyPatch) SetDescription(val OptNilString) {
+	s.Description = val
+}
+
+// SetWebsite sets the value of Website.
+func (s *EmployerCompanyPatch) SetWebsite(val OptNilString) {
+	s.Website = val
+}
+
+// SetIndustries sets the value of Industries.
+func (s *EmployerCompanyPatch) SetIndustries(val OptNilStringArray) {
+	s.Industries = val
+}
+
+// SetYearFounded sets the value of YearFounded.
+func (s *EmployerCompanyPatch) SetYearFounded(val OptNilInt64) {
+	s.YearFounded = val
+}
+
+// SetEmployeeCount sets the value of EmployeeCount.
+func (s *EmployerCompanyPatch) SetEmployeeCount(val OptNilInt64) {
+	s.EmployeeCount = val
+}
+
+// SetHqCountry sets the value of HqCountry.
+func (s *EmployerCompanyPatch) SetHqCountry(val OptNilString) {
+	s.HqCountry = val
+}
+
+// SetSubindustry sets the value of Subindustry.
+func (s *EmployerCompanyPatch) SetSubindustry(val OptNilString) {
+	s.Subindustry = val
+}
+
+// Ref: #/components/schemas/EmployerConfirm
+type EmployerConfirm struct {
+	Code OptString `json:"code"`
+}
+
+// GetCode returns the value of Code.
+func (s *EmployerConfirm) GetCode() OptString {
+	return s.Code
+}
+
+// SetCode sets the value of Code.
+func (s *EmployerConfirm) SetCode(val OptString) {
+	s.Code = val
+}
+
+// `type` is "text", "boolean" or "select"; `options` are a select's choices.
+// Ref: #/components/schemas/EmployerQuestion
+type EmployerQuestion struct {
+	Label    OptString `json:"label"`
+	Type     OptString `json:"type"`
+	Required OptBool   `json:"required"`
+	Options  []string  `json:"options"`
+}
+
+// GetLabel returns the value of Label.
+func (s *EmployerQuestion) GetLabel() OptString {
+	return s.Label
+}
+
+// GetType returns the value of Type.
+func (s *EmployerQuestion) GetType() OptString {
+	return s.Type
+}
+
+// GetRequired returns the value of Required.
+func (s *EmployerQuestion) GetRequired() OptBool {
+	return s.Required
+}
+
+// GetOptions returns the value of Options.
+func (s *EmployerQuestion) GetOptions() []string {
+	return s.Options
+}
+
+// SetLabel sets the value of Label.
+func (s *EmployerQuestion) SetLabel(val OptString) {
+	s.Label = val
+}
+
+// SetType sets the value of Type.
+func (s *EmployerQuestion) SetType(val OptString) {
+	s.Type = val
+}
+
+// SetRequired sets the value of Required.
+func (s *EmployerQuestion) SetRequired(val OptBool) {
+	s.Required = val
+}
+
+// SetOptions sets the value of Options.
+func (s *EmployerQuestion) SetOptions(val []string) {
+	s.Options = val
+}
+
+// Ref: #/components/schemas/EmployerRejected
+type EmployerRejected struct {
+	Rejected bool `json:"rejected"`
+}
+
+// GetRejected returns the value of Rejected.
+func (s *EmployerRejected) GetRejected() bool {
+	return s.Rejected
+}
+
+// SetRejected sets the value of Rejected.
+func (s *EmployerRejected) SetRejected(val bool) {
+	s.Rejected = val
+}
+
+// `title` is required, and `url` too unless `apply_mode` is "freehire".
+// Ref: #/components/schemas/EmployerVacancyCreate
+type EmployerVacancyCreate struct {
+	ApplyMode      OptString          `json:"apply_mode"`
+	Questions      []EmployerQuestion `json:"questions"`
+	URL            OptString          `json:"url"`
+	Title          OptString          `json:"title"`
+	Location       OptString          `json:"location"`
+	Remote         OptBool            `json:"remote"`
+	Description    OptString          `json:"description"`
+	PostedAt       OptNilDateTime     `json:"posted_at"`
+	Skills         []string           `json:"skills"`
+	Regions        []string           `json:"regions"`
+	Cities         []string           `json:"cities"`
+	WorkMode       OptString          `json:"work_mode"`
+	EmploymentType OptString          `json:"employment_type"`
+	Seniority      OptString          `json:"seniority"`
+	SalaryMin      OptNilInt64        `json:"salary_min"`
+	SalaryMax      OptNilInt64        `json:"salary_max"`
+	SalaryCurrency OptString          `json:"salary_currency"`
+	SalaryPeriod   OptString          `json:"salary_period"`
+}
+
+// GetApplyMode returns the value of ApplyMode.
+func (s *EmployerVacancyCreate) GetApplyMode() OptString {
+	return s.ApplyMode
+}
+
+// GetQuestions returns the value of Questions.
+func (s *EmployerVacancyCreate) GetQuestions() []EmployerQuestion {
+	return s.Questions
+}
+
+// GetURL returns the value of URL.
+func (s *EmployerVacancyCreate) GetURL() OptString {
+	return s.URL
+}
+
+// GetTitle returns the value of Title.
+func (s *EmployerVacancyCreate) GetTitle() OptString {
+	return s.Title
+}
+
+// GetLocation returns the value of Location.
+func (s *EmployerVacancyCreate) GetLocation() OptString {
+	return s.Location
+}
+
+// GetRemote returns the value of Remote.
+func (s *EmployerVacancyCreate) GetRemote() OptBool {
+	return s.Remote
+}
+
+// GetDescription returns the value of Description.
+func (s *EmployerVacancyCreate) GetDescription() OptString {
+	return s.Description
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *EmployerVacancyCreate) GetPostedAt() OptNilDateTime {
+	return s.PostedAt
+}
+
+// GetSkills returns the value of Skills.
+func (s *EmployerVacancyCreate) GetSkills() []string {
+	return s.Skills
+}
+
+// GetRegions returns the value of Regions.
+func (s *EmployerVacancyCreate) GetRegions() []string {
+	return s.Regions
+}
+
+// GetCities returns the value of Cities.
+func (s *EmployerVacancyCreate) GetCities() []string {
+	return s.Cities
+}
+
+// GetWorkMode returns the value of WorkMode.
+func (s *EmployerVacancyCreate) GetWorkMode() OptString {
+	return s.WorkMode
+}
+
+// GetEmploymentType returns the value of EmploymentType.
+func (s *EmployerVacancyCreate) GetEmploymentType() OptString {
+	return s.EmploymentType
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *EmployerVacancyCreate) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetSalaryMin returns the value of SalaryMin.
+func (s *EmployerVacancyCreate) GetSalaryMin() OptNilInt64 {
+	return s.SalaryMin
+}
+
+// GetSalaryMax returns the value of SalaryMax.
+func (s *EmployerVacancyCreate) GetSalaryMax() OptNilInt64 {
+	return s.SalaryMax
+}
+
+// GetSalaryCurrency returns the value of SalaryCurrency.
+func (s *EmployerVacancyCreate) GetSalaryCurrency() OptString {
+	return s.SalaryCurrency
+}
+
+// GetSalaryPeriod returns the value of SalaryPeriod.
+func (s *EmployerVacancyCreate) GetSalaryPeriod() OptString {
+	return s.SalaryPeriod
+}
+
+// SetApplyMode sets the value of ApplyMode.
+func (s *EmployerVacancyCreate) SetApplyMode(val OptString) {
+	s.ApplyMode = val
+}
+
+// SetQuestions sets the value of Questions.
+func (s *EmployerVacancyCreate) SetQuestions(val []EmployerQuestion) {
+	s.Questions = val
+}
+
+// SetURL sets the value of URL.
+func (s *EmployerVacancyCreate) SetURL(val OptString) {
+	s.URL = val
+}
+
+// SetTitle sets the value of Title.
+func (s *EmployerVacancyCreate) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetLocation sets the value of Location.
+func (s *EmployerVacancyCreate) SetLocation(val OptString) {
+	s.Location = val
+}
+
+// SetRemote sets the value of Remote.
+func (s *EmployerVacancyCreate) SetRemote(val OptBool) {
+	s.Remote = val
+}
+
+// SetDescription sets the value of Description.
+func (s *EmployerVacancyCreate) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *EmployerVacancyCreate) SetPostedAt(val OptNilDateTime) {
+	s.PostedAt = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *EmployerVacancyCreate) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetRegions sets the value of Regions.
+func (s *EmployerVacancyCreate) SetRegions(val []string) {
+	s.Regions = val
+}
+
+// SetCities sets the value of Cities.
+func (s *EmployerVacancyCreate) SetCities(val []string) {
+	s.Cities = val
+}
+
+// SetWorkMode sets the value of WorkMode.
+func (s *EmployerVacancyCreate) SetWorkMode(val OptString) {
+	s.WorkMode = val
+}
+
+// SetEmploymentType sets the value of EmploymentType.
+func (s *EmployerVacancyCreate) SetEmploymentType(val OptString) {
+	s.EmploymentType = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *EmployerVacancyCreate) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetSalaryMin sets the value of SalaryMin.
+func (s *EmployerVacancyCreate) SetSalaryMin(val OptNilInt64) {
+	s.SalaryMin = val
+}
+
+// SetSalaryMax sets the value of SalaryMax.
+func (s *EmployerVacancyCreate) SetSalaryMax(val OptNilInt64) {
+	s.SalaryMax = val
+}
+
+// SetSalaryCurrency sets the value of SalaryCurrency.
+func (s *EmployerVacancyCreate) SetSalaryCurrency(val OptString) {
+	s.SalaryCurrency = val
+}
+
+// SetSalaryPeriod sets the value of SalaryPeriod.
+func (s *EmployerVacancyCreate) SetSalaryPeriod(val OptString) {
+	s.SalaryPeriod = val
+}
+
+// An absent or null field is kept.
+// Ref: #/components/schemas/EmployerVacancyPatch
+type EmployerVacancyPatch struct {
+	ApplyMode   OptNilString                `json:"apply_mode"`
+	Questions   OptNilEmployerQuestionArray `json:"questions"`
+	Title       OptNilString                `json:"title"`
+	Location    OptNilString                `json:"location"`
+	Remote      OptNilBool                  `json:"remote"`
+	Description OptNilString                `json:"description"`
+	PostedAt    OptNilDateTime              `json:"posted_at"`
+}
+
+// GetApplyMode returns the value of ApplyMode.
+func (s *EmployerVacancyPatch) GetApplyMode() OptNilString {
+	return s.ApplyMode
+}
+
+// GetQuestions returns the value of Questions.
+func (s *EmployerVacancyPatch) GetQuestions() OptNilEmployerQuestionArray {
+	return s.Questions
+}
+
+// GetTitle returns the value of Title.
+func (s *EmployerVacancyPatch) GetTitle() OptNilString {
+	return s.Title
+}
+
+// GetLocation returns the value of Location.
+func (s *EmployerVacancyPatch) GetLocation() OptNilString {
+	return s.Location
+}
+
+// GetRemote returns the value of Remote.
+func (s *EmployerVacancyPatch) GetRemote() OptNilBool {
+	return s.Remote
+}
+
+// GetDescription returns the value of Description.
+func (s *EmployerVacancyPatch) GetDescription() OptNilString {
+	return s.Description
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *EmployerVacancyPatch) GetPostedAt() OptNilDateTime {
+	return s.PostedAt
+}
+
+// SetApplyMode sets the value of ApplyMode.
+func (s *EmployerVacancyPatch) SetApplyMode(val OptNilString) {
+	s.ApplyMode = val
+}
+
+// SetQuestions sets the value of Questions.
+func (s *EmployerVacancyPatch) SetQuestions(val OptNilEmployerQuestionArray) {
+	s.Questions = val
+}
+
+// SetTitle sets the value of Title.
+func (s *EmployerVacancyPatch) SetTitle(val OptNilString) {
+	s.Title = val
+}
+
+// SetLocation sets the value of Location.
+func (s *EmployerVacancyPatch) SetLocation(val OptNilString) {
+	s.Location = val
+}
+
+// SetRemote sets the value of Remote.
+func (s *EmployerVacancyPatch) SetRemote(val OptNilBool) {
+	s.Remote = val
+}
+
+// SetDescription sets the value of Description.
+func (s *EmployerVacancyPatch) SetDescription(val OptNilString) {
+	s.Description = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *EmployerVacancyPatch) SetPostedAt(val OptNilDateTime) {
+	s.PostedAt = val
+}
+
+// Ref: #/components/schemas/Engagement
+type Engagement struct {
+	Saved   int64 `json:"saved"`
+	Applied int64 `json:"applied"`
+	Viewed  int64 `json:"viewed"`
+	// The first day `viewed` covers, YYYY-MM-DD; null when nothing is rolled up yet.
+	ViewedSince      NilString `json:"viewed_since"`
+	CvsUploaded      int64     `json:"cvs_uploaded"`
+	CvsTailored      int64     `json:"cvs_tailored"`
+	AlertSubscribers int64     `json:"alert_subscribers"`
+	InboxesConnected int64     `json:"inboxes_connected"`
+	SavedSearches    int64     `json:"saved_searches"`
+}
+
+// GetSaved returns the value of Saved.
+func (s *Engagement) GetSaved() int64 {
+	return s.Saved
+}
+
+// GetApplied returns the value of Applied.
+func (s *Engagement) GetApplied() int64 {
+	return s.Applied
+}
+
+// GetViewed returns the value of Viewed.
+func (s *Engagement) GetViewed() int64 {
+	return s.Viewed
+}
+
+// GetViewedSince returns the value of ViewedSince.
+func (s *Engagement) GetViewedSince() NilString {
+	return s.ViewedSince
+}
+
+// GetCvsUploaded returns the value of CvsUploaded.
+func (s *Engagement) GetCvsUploaded() int64 {
+	return s.CvsUploaded
+}
+
+// GetCvsTailored returns the value of CvsTailored.
+func (s *Engagement) GetCvsTailored() int64 {
+	return s.CvsTailored
+}
+
+// GetAlertSubscribers returns the value of AlertSubscribers.
+func (s *Engagement) GetAlertSubscribers() int64 {
+	return s.AlertSubscribers
+}
+
+// GetInboxesConnected returns the value of InboxesConnected.
+func (s *Engagement) GetInboxesConnected() int64 {
+	return s.InboxesConnected
+}
+
+// GetSavedSearches returns the value of SavedSearches.
+func (s *Engagement) GetSavedSearches() int64 {
+	return s.SavedSearches
+}
+
+// SetSaved sets the value of Saved.
+func (s *Engagement) SetSaved(val int64) {
+	s.Saved = val
+}
+
+// SetApplied sets the value of Applied.
+func (s *Engagement) SetApplied(val int64) {
+	s.Applied = val
+}
+
+// SetViewed sets the value of Viewed.
+func (s *Engagement) SetViewed(val int64) {
+	s.Viewed = val
+}
+
+// SetViewedSince sets the value of ViewedSince.
+func (s *Engagement) SetViewedSince(val NilString) {
+	s.ViewedSince = val
+}
+
+// SetCvsUploaded sets the value of CvsUploaded.
+func (s *Engagement) SetCvsUploaded(val int64) {
+	s.CvsUploaded = val
+}
+
+// SetCvsTailored sets the value of CvsTailored.
+func (s *Engagement) SetCvsTailored(val int64) {
+	s.CvsTailored = val
+}
+
+// SetAlertSubscribers sets the value of AlertSubscribers.
+func (s *Engagement) SetAlertSubscribers(val int64) {
+	s.AlertSubscribers = val
+}
+
+// SetInboxesConnected sets the value of InboxesConnected.
+func (s *Engagement) SetInboxesConnected(val int64) {
+	s.InboxesConnected = val
+}
+
+// SetSavedSearches sets the value of SavedSearches.
+func (s *Engagement) SetSavedSearches(val int64) {
+	s.SavedSearches = val
+}
+
+// A single item: `{"data": ...}`.
+type EngagementStatsOK struct {
+	Data Engagement `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *EngagementStatsOK) GetData() Engagement {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *EngagementStatsOK) SetData(val Engagement) {
+	s.Data = val
+}
+
+// The places with their achievements, and the achievements that belong to no place.
+// Ref: #/components/schemas/ExperienceBank
+type ExperienceBank struct {
+	// Each place with an `atoms` array of its achievements.
+	Employments []jx.Raw `json:"employments"`
+	Unplaced    []jx.Raw `json:"unplaced"`
+}
+
+// GetEmployments returns the value of Employments.
+func (s *ExperienceBank) GetEmployments() []jx.Raw {
+	return s.Employments
+}
+
+// GetUnplaced returns the value of Unplaced.
+func (s *ExperienceBank) GetUnplaced() []jx.Raw {
+	return s.Unplaced
+}
+
+// SetEmployments sets the value of Employments.
+func (s *ExperienceBank) SetEmployments(val []jx.Raw) {
+	s.Employments = val
+}
+
+// SetUnplaced sets the value of Unplaced.
+func (s *ExperienceBank) SetUnplaced(val []jx.Raw) {
+	s.Unplaced = val
+}
+
 // Ref: #/components/schemas/FacetRange
 type FacetRange struct {
 	Min int32 `json:"min"`
@@ -422,6 +6964,52 @@ func (s *FacetRange) SetMax(val int32) {
 	s.Max = val
 }
 
+// Ref: #/components/schemas/FacetStats
+type FacetStats struct {
+	// Facet param, then value, then count. Every covered facet is present.
+	Facets jx.Raw `json:"facets"`
+}
+
+// GetFacets returns the value of Facets.
+func (s *FacetStats) GetFacets() jx.Raw {
+	return s.Facets
+}
+
+// SetFacets sets the value of Facets.
+func (s *FacetStats) SetFacets(val jx.Raw) {
+	s.Facets = val
+}
+
+// A single item: `{"data": ...}`.
+type FileProcessReportCreated struct {
+	Data ProcessReport `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *FileProcessReportCreated) GetData() ProcessReport {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *FileProcessReportCreated) SetData(val ProcessReport) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type FindModeratedUserOK struct {
+	Data ModeratedUser `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *FindModeratedUserOK) GetData() ModeratedUser {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *FindModeratedUserOK) SetData(val ModeratedUser) {
+	s.Data = val
+}
+
 // A single item: `{"data": ...}`.
 type GetAgentPermissionsOK struct {
 	Data AgentPermissions `json:"data"`
@@ -434,6 +7022,171 @@ func (s *GetAgentPermissionsOK) GetData() AgentPermissions {
 
 // SetData sets the value of Data.
 func (s *GetAgentPermissionsOK) SetData(val AgentPermissions) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetAtsReportOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetAtsReportOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetAtsReportOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetBillingCheckoutOK struct {
+	Data BillingCheckout `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetBillingCheckoutOK) GetData() BillingCheckout {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetBillingCheckoutOK) SetData(val BillingCheckout) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetBillingManageOK struct {
+	Data BillingUrl `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetBillingManageOK) GetData() BillingUrl {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetBillingManageOK) SetData(val BillingUrl) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetBillingSubscriptionOK struct {
+	Data BillingOverview `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetBillingSubscriptionOK) GetData() BillingOverview {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetBillingSubscriptionOK) SetData(val BillingOverview) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetCVATSDeltaOK struct {
+	Data CvAtsDelta `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVATSDeltaOK) GetData() CvAtsDelta {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVATSDeltaOK) SetData(val CvAtsDelta) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetCVAppearanceDefaultsOK struct {
+	Data CvAppearanceDefaultsResult `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVAppearanceDefaultsOK) GetData() CvAppearanceDefaultsResult {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVAppearanceDefaultsOK) SetData(val CvAppearanceDefaultsResult) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetCVCoverLetterOK struct {
+	Data CvCoverLetter `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVCoverLetterOK) GetData() CvCoverLetter {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVCoverLetterOK) SetData(val CvCoverLetter) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetCVJobMatchOK struct {
+	Data CvJobMatch `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVJobMatchOK) GetData() CvJobMatch {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVJobMatchOK) SetData(val CvJobMatch) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetCVOK struct {
+	Data CvRecord `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVOK) GetData() CvRecord {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVOK) SetData(val CvRecord) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetCVTailorContextOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVTailorContextOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVTailorContextOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetDirectApplyFormOK struct {
+	Data DirectApplyForm `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetDirectApplyFormOK) GetData() DirectApplyForm {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetDirectApplyFormOK) SetData(val DirectApplyForm) {
 	s.Data = val
 }
 
@@ -453,6 +7206,131 @@ func (s *GetEmailPrefsOK) SetData(val EmailPrefs) {
 }
 
 // A single item: `{"data": ...}`.
+type GetEmployerCompanyOK struct {
+	Data EmployerCompany `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetEmployerCompanyOK) GetData() EmployerCompany {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetEmployerCompanyOK) SetData(val EmployerCompany) {
+	s.Data = val
+}
+
+type GetInterviewsOK struct {
+	Data []ScheduledInterview `json:"data"`
+	Meta TimelineMeta         `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *GetInterviewsOK) GetData() []ScheduledInterview {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *GetInterviewsOK) GetMeta() TimelineMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *GetInterviewsOK) SetData(val []ScheduledInterview) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *GetInterviewsOK) SetMeta(val TimelineMeta) {
+	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type GetInviteOK struct {
+	Data Invite `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetInviteOK) GetData() Invite {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetInviteOK) SetData(val Invite) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetJobOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetJobOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetJobOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+type GetMarketPulseOK struct {
+	Data []SkillPulse    `json:"data"`
+	Meta MarketPulseMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *GetMarketPulseOK) GetData() []SkillPulse {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *GetMarketPulseOK) GetMeta() MarketPulseMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *GetMarketPulseOK) SetData(val []SkillPulse) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *GetMarketPulseOK) SetMeta(val MarketPulseMeta) {
+	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type GetMentorOK struct {
+	Data MentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetMentorOK) GetData() MentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetMentorOK) SetData(val MentorshipMentor) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetMentorProfileSuggestionsOK struct {
+	Data MentorProfileSuggestions `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetMentorProfileSuggestionsOK) GetData() MentorProfileSuggestions {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetMentorProfileSuggestionsOK) SetData(val MentorProfileSuggestions) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type GetMyEmailGroupsOK struct {
 	Data EmailPrefs `json:"data"`
 }
@@ -464,6 +7342,51 @@ func (s *GetMyEmailGroupsOK) GetData() EmailPrefs {
 
 // SetData sets the value of Data.
 func (s *GetMyEmailGroupsOK) SetData(val EmailPrefs) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetMyMentorProfileOK struct {
+	Data NilMentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetMyMentorProfileOK) GetData() NilMentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetMyMentorProfileOK) SetData(val NilMentorshipMentor) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetMyPlanHistoryOK struct {
+	Data []PlanHistoryEntry `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetMyPlanHistoryOK) GetData() []PlanHistoryEntry {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetMyPlanHistoryOK) SetData(val []PlanHistoryEntry) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetMyPlanOK struct {
+	Data PlanStanding `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetMyPlanOK) GetData() PlanStanding {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetMyPlanOK) SetData(val PlanStanding) {
 	s.Data = val
 }
 
@@ -483,6 +7406,21 @@ func (s *GetMyUsageOK) SetData(val Usage) {
 }
 
 // A single item: `{"data": ...}`.
+type GetNotificationSettingsOK struct {
+	Data NotificationSettings `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetNotificationSettingsOK) GetData() NotificationSettings {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetNotificationSettingsOK) SetData(val NotificationSettings) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type GetPlansOK struct {
 	Data Plans `json:"data"`
 }
@@ -497,6 +7435,50 @@ func (s *GetPlansOK) SetData(val Plans) {
 	s.Data = val
 }
 
+type GetProfileOK struct {
+	Data NilProfile `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetProfileOK) GetData() NilProfile {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetProfileOK) SetData(val NilProfile) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetResumeOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetResumeOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetResumeOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetResumeVerdictOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetResumeVerdictOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetResumeVerdictOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
 type GetScreeningAnswersOK struct {
 	Data NilScreeningAnswers `json:"data"`
 }
@@ -508,6 +7490,21 @@ func (s *GetScreeningAnswersOK) GetData() NilScreeningAnswers {
 
 // SetData sets the value of Data.
 func (s *GetScreeningAnswersOK) SetData(val NilScreeningAnswers) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetSessionOK struct {
+	Data MentorshipBooking `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetSessionOK) GetData() MentorshipBooking {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetSessionOK) SetData(val MentorshipBooking) {
 	s.Data = val
 }
 
@@ -670,6 +7667,31 @@ func (s *GetTalentPhotoOKHeaders) SetResponse(val GetTalentPhotoOK) {
 	s.Response = val
 }
 
+type GetTimelineOK struct {
+	Data []TimelineEvent `json:"data"`
+	Meta TimelineMeta    `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *GetTimelineOK) GetData() []TimelineEvent {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *GetTimelineOK) GetMeta() TimelineMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *GetTimelineOK) SetData(val []TimelineEvent) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *GetTimelineOK) SetMeta(val TimelineMeta) {
+	s.Meta = val
+}
+
 // A single item: `{"data": ...}`.
 type GetWatchingOK struct {
 	Data Watching `json:"data"`
@@ -765,10 +7787,54 @@ func (s *GhostReportRequest) SetAppliedOn(val OptString) {
 	s.AppliedOn = val
 }
 
+// Ref: #/components/schemas/GrowthPoint
+type GrowthPoint struct {
+	// YYYY-MM-DD.
+	Date string `json:"date"`
+	// Cumulative members as of that day.
+	Total int64 `json:"total"`
+	// That day's own signups.
+	New int64 `json:"new"`
+}
+
+// GetDate returns the value of Date.
+func (s *GrowthPoint) GetDate() string {
+	return s.Date
+}
+
+// GetTotal returns the value of Total.
+func (s *GrowthPoint) GetTotal() int64 {
+	return s.Total
+}
+
+// GetNew returns the value of New.
+func (s *GrowthPoint) GetNew() int64 {
+	return s.New
+}
+
+// SetDate sets the value of Date.
+func (s *GrowthPoint) SetDate(val string) {
+	s.Date = val
+}
+
+// SetTotal sets the value of Total.
+func (s *GrowthPoint) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetNew sets the value of New.
+func (s *GrowthPoint) SetNew(val int64) {
+	s.New = val
+}
+
+// HideCompanyFeedbackNoContent is response for HideCompanyFeedback operation.
+type HideCompanyFeedbackNoContent struct{}
+
 // The meta of a single-item answer, sent only to carry a warning.
 // Ref: #/components/schemas/IgnoredMeta
 type IgnoredMeta struct {
 	IgnoredParams []IgnoredParam `json:"ignored_params"`
+	IgnoredValues jx.Raw         `json:"ignored_values"`
 }
 
 // GetIgnoredParams returns the value of IgnoredParams.
@@ -776,9 +7842,19 @@ func (s *IgnoredMeta) GetIgnoredParams() []IgnoredParam {
 	return s.IgnoredParams
 }
 
+// GetIgnoredValues returns the value of IgnoredValues.
+func (s *IgnoredMeta) GetIgnoredValues() jx.Raw {
+	return s.IgnoredValues
+}
+
 // SetIgnoredParams sets the value of IgnoredParams.
 func (s *IgnoredMeta) SetIgnoredParams(val []IgnoredParam) {
 	s.IgnoredParams = val
+}
+
+// SetIgnoredValues sets the value of IgnoredValues.
+func (s *IgnoredMeta) SetIgnoredValues(val jx.Raw) {
+	s.IgnoredValues = val
 }
 
 // A query param the endpoint did not read: unknown, or known but unreadable (`min_years=lots`). Either
@@ -822,6 +7898,533 @@ func (s *ImportWatchlistOK) GetData() WatchlistImportResult {
 // SetData sets the value of Data.
 func (s *ImportWatchlistOK) SetData(val WatchlistImportResult) {
 	s.Data = val
+}
+
+// Ref: #/components/schemas/IngestStatus
+type IngestStatus struct {
+	Overall        string           `json:"overall"`
+	GeneratedAt    string           `json:"generated_at"`
+	LastJobAddedAt NilString        `json:"last_job_added_at"`
+	Providers      []StatusProvider `json:"providers"`
+	Site           SiteHealth       `json:"site"`
+}
+
+// GetOverall returns the value of Overall.
+func (s *IngestStatus) GetOverall() string {
+	return s.Overall
+}
+
+// GetGeneratedAt returns the value of GeneratedAt.
+func (s *IngestStatus) GetGeneratedAt() string {
+	return s.GeneratedAt
+}
+
+// GetLastJobAddedAt returns the value of LastJobAddedAt.
+func (s *IngestStatus) GetLastJobAddedAt() NilString {
+	return s.LastJobAddedAt
+}
+
+// GetProviders returns the value of Providers.
+func (s *IngestStatus) GetProviders() []StatusProvider {
+	return s.Providers
+}
+
+// GetSite returns the value of Site.
+func (s *IngestStatus) GetSite() SiteHealth {
+	return s.Site
+}
+
+// SetOverall sets the value of Overall.
+func (s *IngestStatus) SetOverall(val string) {
+	s.Overall = val
+}
+
+// SetGeneratedAt sets the value of GeneratedAt.
+func (s *IngestStatus) SetGeneratedAt(val string) {
+	s.GeneratedAt = val
+}
+
+// SetLastJobAddedAt sets the value of LastJobAddedAt.
+func (s *IngestStatus) SetLastJobAddedAt(val NilString) {
+	s.LastJobAddedAt = val
+}
+
+// SetProviders sets the value of Providers.
+func (s *IngestStatus) SetProviders(val []StatusProvider) {
+	s.Providers = val
+}
+
+// SetSite sets the value of Site.
+func (s *IngestStatus) SetSite(val SiteHealth) {
+	s.Site = val
+}
+
+// A single item: `{"data": ...}`.
+type IngestStatusOK struct {
+	Data IngestStatus `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *IngestStatusOK) GetData() IngestStatus {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *IngestStatusOK) SetData(val IngestStatus) {
+	s.Data = val
+}
+
+// The caller's interaction with one job. Every timestamp, the stage and the notes are null until the
+// job is viewed, saved, applied to, dismissed or tracked.
+// Ref: #/components/schemas/Interaction
+type Interaction struct {
+	JobID       int64       `json:"job_id"`
+	ViewedAt    NilDateTime `json:"viewed_at"`
+	SavedAt     NilDateTime `json:"saved_at"`
+	AppliedAt   NilDateTime `json:"applied_at"`
+	DismissedAt NilDateTime `json:"dismissed_at"`
+	Stage       NilString   `json:"stage"`
+	Notes       NilString   `json:"notes"`
+}
+
+// GetJobID returns the value of JobID.
+func (s *Interaction) GetJobID() int64 {
+	return s.JobID
+}
+
+// GetViewedAt returns the value of ViewedAt.
+func (s *Interaction) GetViewedAt() NilDateTime {
+	return s.ViewedAt
+}
+
+// GetSavedAt returns the value of SavedAt.
+func (s *Interaction) GetSavedAt() NilDateTime {
+	return s.SavedAt
+}
+
+// GetAppliedAt returns the value of AppliedAt.
+func (s *Interaction) GetAppliedAt() NilDateTime {
+	return s.AppliedAt
+}
+
+// GetDismissedAt returns the value of DismissedAt.
+func (s *Interaction) GetDismissedAt() NilDateTime {
+	return s.DismissedAt
+}
+
+// GetStage returns the value of Stage.
+func (s *Interaction) GetStage() NilString {
+	return s.Stage
+}
+
+// GetNotes returns the value of Notes.
+func (s *Interaction) GetNotes() NilString {
+	return s.Notes
+}
+
+// SetJobID sets the value of JobID.
+func (s *Interaction) SetJobID(val int64) {
+	s.JobID = val
+}
+
+// SetViewedAt sets the value of ViewedAt.
+func (s *Interaction) SetViewedAt(val NilDateTime) {
+	s.ViewedAt = val
+}
+
+// SetSavedAt sets the value of SavedAt.
+func (s *Interaction) SetSavedAt(val NilDateTime) {
+	s.SavedAt = val
+}
+
+// SetAppliedAt sets the value of AppliedAt.
+func (s *Interaction) SetAppliedAt(val NilDateTime) {
+	s.AppliedAt = val
+}
+
+// SetDismissedAt sets the value of DismissedAt.
+func (s *Interaction) SetDismissedAt(val NilDateTime) {
+	s.DismissedAt = val
+}
+
+// SetStage sets the value of Stage.
+func (s *Interaction) SetStage(val NilString) {
+	s.Stage = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *Interaction) SetNotes(val NilString) {
+	s.Notes = val
+}
+
+// Ref: #/components/schemas/Invite
+type Invite struct {
+	Link        string `json:"link"`
+	Invitees    int64  `json:"invitees"`
+	Rewarded    int64  `json:"rewarded"`
+	CreditCents int64  `json:"credit_cents"`
+	// The discount an invitee gets.
+	PercentOff int64 `json:"percent_off"`
+}
+
+// GetLink returns the value of Link.
+func (s *Invite) GetLink() string {
+	return s.Link
+}
+
+// GetInvitees returns the value of Invitees.
+func (s *Invite) GetInvitees() int64 {
+	return s.Invitees
+}
+
+// GetRewarded returns the value of Rewarded.
+func (s *Invite) GetRewarded() int64 {
+	return s.Rewarded
+}
+
+// GetCreditCents returns the value of CreditCents.
+func (s *Invite) GetCreditCents() int64 {
+	return s.CreditCents
+}
+
+// GetPercentOff returns the value of PercentOff.
+func (s *Invite) GetPercentOff() int64 {
+	return s.PercentOff
+}
+
+// SetLink sets the value of Link.
+func (s *Invite) SetLink(val string) {
+	s.Link = val
+}
+
+// SetInvitees sets the value of Invitees.
+func (s *Invite) SetInvitees(val int64) {
+	s.Invitees = val
+}
+
+// SetRewarded sets the value of Rewarded.
+func (s *Invite) SetRewarded(val int64) {
+	s.Rewarded = val
+}
+
+// SetCreditCents sets the value of CreditCents.
+func (s *Invite) SetCreditCents(val int64) {
+	s.CreditCents = val
+}
+
+// SetPercentOff sets the value of PercentOff.
+func (s *Invite) SetPercentOff(val int64) {
+	s.PercentOff = val
+}
+
+// A single item: `{"data": ...}`.
+type JobApplyFormOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *JobApplyFormOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *JobApplyFormOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/JobCopiesMeta
+type JobCopiesMeta struct {
+	// The whole closure's open size, even when the list is a capped page.
+	Total int64 `json:"total"`
+}
+
+// GetTotal returns the value of Total.
+func (s *JobCopiesMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// SetTotal sets the value of Total.
+func (s *JobCopiesMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// Ref: #/components/schemas/JobCopiesPage
+type JobCopiesPage struct {
+	Data []JobCopy     `json:"data"`
+	Meta JobCopiesMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *JobCopiesPage) GetData() []JobCopy {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *JobCopiesPage) GetMeta() JobCopiesMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *JobCopiesPage) SetData(val []JobCopy) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *JobCopiesPage) SetMeta(val JobCopiesMeta) {
+	s.Meta = val
+}
+
+// One per-city opening folded under a canonical job.
+// Ref: #/components/schemas/JobCopy
+type JobCopy struct {
+	PublicSlug string      `json:"public_slug"`
+	Location   string      `json:"location"`
+	ApplyURL   string      `json:"apply_url"`
+	PostedAt   NilDateTime `json:"posted_at"`
+}
+
+// GetPublicSlug returns the value of PublicSlug.
+func (s *JobCopy) GetPublicSlug() string {
+	return s.PublicSlug
+}
+
+// GetLocation returns the value of Location.
+func (s *JobCopy) GetLocation() string {
+	return s.Location
+}
+
+// GetApplyURL returns the value of ApplyURL.
+func (s *JobCopy) GetApplyURL() string {
+	return s.ApplyURL
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *JobCopy) GetPostedAt() NilDateTime {
+	return s.PostedAt
+}
+
+// SetPublicSlug sets the value of PublicSlug.
+func (s *JobCopy) SetPublicSlug(val string) {
+	s.PublicSlug = val
+}
+
+// SetLocation sets the value of Location.
+func (s *JobCopy) SetLocation(val string) {
+	s.Location = val
+}
+
+// SetApplyURL sets the value of ApplyURL.
+func (s *JobCopy) SetApplyURL(val string) {
+	s.ApplyURL = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *JobCopy) SetPostedAt(val NilDateTime) {
+	s.PostedAt = val
+}
+
+// The moderator create body. url, title and company are required, and the service refuses a request
+// without them.
+// Ref: #/components/schemas/JobCreate
+type JobCreate struct {
+	URL            OptString      `json:"url"`
+	Source         OptString      `json:"source"`
+	Title          OptString      `json:"title"`
+	Company        OptString      `json:"company"`
+	Location       OptString      `json:"location"`
+	Remote         OptBool        `json:"remote"`
+	Description    OptString      `json:"description"`
+	PostedAt       OptNilDateTime `json:"posted_at"`
+	Skills         []string       `json:"skills"`
+	Regions        []string       `json:"regions"`
+	Cities         []string       `json:"cities"`
+	WorkMode       OptString      `json:"work_mode"`
+	EmploymentType OptString      `json:"employment_type"`
+	Seniority      OptString      `json:"seniority"`
+	SalaryMin      OptNilInt64    `json:"salary_min"`
+	SalaryMax      OptNilInt64    `json:"salary_max"`
+	SalaryCurrency OptString      `json:"salary_currency"`
+	SalaryPeriod   OptString      `json:"salary_period"`
+}
+
+// GetURL returns the value of URL.
+func (s *JobCreate) GetURL() OptString {
+	return s.URL
+}
+
+// GetSource returns the value of Source.
+func (s *JobCreate) GetSource() OptString {
+	return s.Source
+}
+
+// GetTitle returns the value of Title.
+func (s *JobCreate) GetTitle() OptString {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *JobCreate) GetCompany() OptString {
+	return s.Company
+}
+
+// GetLocation returns the value of Location.
+func (s *JobCreate) GetLocation() OptString {
+	return s.Location
+}
+
+// GetRemote returns the value of Remote.
+func (s *JobCreate) GetRemote() OptBool {
+	return s.Remote
+}
+
+// GetDescription returns the value of Description.
+func (s *JobCreate) GetDescription() OptString {
+	return s.Description
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *JobCreate) GetPostedAt() OptNilDateTime {
+	return s.PostedAt
+}
+
+// GetSkills returns the value of Skills.
+func (s *JobCreate) GetSkills() []string {
+	return s.Skills
+}
+
+// GetRegions returns the value of Regions.
+func (s *JobCreate) GetRegions() []string {
+	return s.Regions
+}
+
+// GetCities returns the value of Cities.
+func (s *JobCreate) GetCities() []string {
+	return s.Cities
+}
+
+// GetWorkMode returns the value of WorkMode.
+func (s *JobCreate) GetWorkMode() OptString {
+	return s.WorkMode
+}
+
+// GetEmploymentType returns the value of EmploymentType.
+func (s *JobCreate) GetEmploymentType() OptString {
+	return s.EmploymentType
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *JobCreate) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetSalaryMin returns the value of SalaryMin.
+func (s *JobCreate) GetSalaryMin() OptNilInt64 {
+	return s.SalaryMin
+}
+
+// GetSalaryMax returns the value of SalaryMax.
+func (s *JobCreate) GetSalaryMax() OptNilInt64 {
+	return s.SalaryMax
+}
+
+// GetSalaryCurrency returns the value of SalaryCurrency.
+func (s *JobCreate) GetSalaryCurrency() OptString {
+	return s.SalaryCurrency
+}
+
+// GetSalaryPeriod returns the value of SalaryPeriod.
+func (s *JobCreate) GetSalaryPeriod() OptString {
+	return s.SalaryPeriod
+}
+
+// SetURL sets the value of URL.
+func (s *JobCreate) SetURL(val OptString) {
+	s.URL = val
+}
+
+// SetSource sets the value of Source.
+func (s *JobCreate) SetSource(val OptString) {
+	s.Source = val
+}
+
+// SetTitle sets the value of Title.
+func (s *JobCreate) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *JobCreate) SetCompany(val OptString) {
+	s.Company = val
+}
+
+// SetLocation sets the value of Location.
+func (s *JobCreate) SetLocation(val OptString) {
+	s.Location = val
+}
+
+// SetRemote sets the value of Remote.
+func (s *JobCreate) SetRemote(val OptBool) {
+	s.Remote = val
+}
+
+// SetDescription sets the value of Description.
+func (s *JobCreate) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *JobCreate) SetPostedAt(val OptNilDateTime) {
+	s.PostedAt = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *JobCreate) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetRegions sets the value of Regions.
+func (s *JobCreate) SetRegions(val []string) {
+	s.Regions = val
+}
+
+// SetCities sets the value of Cities.
+func (s *JobCreate) SetCities(val []string) {
+	s.Cities = val
+}
+
+// SetWorkMode sets the value of WorkMode.
+func (s *JobCreate) SetWorkMode(val OptString) {
+	s.WorkMode = val
+}
+
+// SetEmploymentType sets the value of EmploymentType.
+func (s *JobCreate) SetEmploymentType(val OptString) {
+	s.EmploymentType = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *JobCreate) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetSalaryMin sets the value of SalaryMin.
+func (s *JobCreate) SetSalaryMin(val OptNilInt64) {
+	s.SalaryMin = val
+}
+
+// SetSalaryMax sets the value of SalaryMax.
+func (s *JobCreate) SetSalaryMax(val OptNilInt64) {
+	s.SalaryMax = val
+}
+
+// SetSalaryCurrency sets the value of SalaryCurrency.
+func (s *JobCreate) SetSalaryCurrency(val OptString) {
+	s.SalaryCurrency = val
+}
+
+// SetSalaryPeriod sets the value of SalaryPeriod.
+func (s *JobCreate) SetSalaryPeriod(val OptString) {
+	s.SalaryPeriod = val
 }
 
 // Exactly one of `job_slug`, `url` and `text`; anything else is a 400.
@@ -885,6 +8488,766 @@ func (s *JobDescriptionSource) SetCompany(val OptString) {
 	s.Company = val
 }
 
+// A single item that read query params: `{"data": ...}`, plus `meta` when one was dropped.
+type JobFacetsOK struct {
+	Data jx.Raw         `json:"data"`
+	Meta OptIgnoredMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *JobFacetsOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *JobFacetsOK) GetMeta() OptIgnoredMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *JobFacetsOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *JobFacetsOK) SetMeta(val OptIgnoredMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/JobFindMeta
+type JobFindMeta struct {
+	// Whether the URL sits on an ATS board freehire knows how to crawl.
+	AtsBoard bool `json:"ats_board"`
+}
+
+// GetAtsBoard returns the value of AtsBoard.
+func (s *JobFindMeta) GetAtsBoard() bool {
+	return s.AtsBoard
+}
+
+// SetAtsBoard sets the value of AtsBoard.
+func (s *JobFindMeta) SetAtsBoard(val bool) {
+	s.AtsBoard = val
+}
+
+// `data` is null when the posting cannot be identified, and then `meta` says whether the board is
+// crawlable.
+// Ref: #/components/schemas/JobFindResult
+type JobFindResult struct {
+	Data NilJobFoundPosting `json:"data"`
+	Meta OptJobFindMeta     `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *JobFindResult) GetData() NilJobFoundPosting {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *JobFindResult) GetMeta() OptJobFindMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *JobFindResult) SetData(val NilJobFoundPosting) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *JobFindResult) SetMeta(val OptJobFindMeta) {
+	s.Meta = val
+}
+
+// The posting a page URL is, when the catalogue carries it.
+// Ref: #/components/schemas/JobFoundPosting
+type JobFoundPosting struct {
+	PublicSlug string `json:"public_slug"`
+}
+
+// GetPublicSlug returns the value of PublicSlug.
+func (s *JobFoundPosting) GetPublicSlug() string {
+	return s.PublicSlug
+}
+
+// SetPublicSlug sets the value of PublicSlug.
+func (s *JobFoundPosting) SetPublicSlug(val string) {
+	s.PublicSlug = val
+}
+
+// Ref: #/components/schemas/JobReport
+type JobReport struct {
+	ID              int64       `json:"id"`
+	Reason          string      `json:"reason"`
+	Details         string      `json:"details"`
+	ContactTelegram OptString   `json:"contact_telegram"`
+	Status          string      `json:"status"`
+	ReviewReason    OptString   `json:"review_reason"`
+	ReviewedAt      OptDateTime `json:"reviewed_at"`
+	CreatedAt       NilDateTime `json:"created_at"`
+	// Only on the moderator queue.
+	ReporterEmail OptString `json:"reporter_email"`
+	JobSlug       OptString `json:"job_slug"`
+	JobTitle      OptString `json:"job_title"`
+	// Only on a decision: whether the reporter was actually told.
+	Notified OptBool `json:"notified"`
+}
+
+// GetID returns the value of ID.
+func (s *JobReport) GetID() int64 {
+	return s.ID
+}
+
+// GetReason returns the value of Reason.
+func (s *JobReport) GetReason() string {
+	return s.Reason
+}
+
+// GetDetails returns the value of Details.
+func (s *JobReport) GetDetails() string {
+	return s.Details
+}
+
+// GetContactTelegram returns the value of ContactTelegram.
+func (s *JobReport) GetContactTelegram() OptString {
+	return s.ContactTelegram
+}
+
+// GetStatus returns the value of Status.
+func (s *JobReport) GetStatus() string {
+	return s.Status
+}
+
+// GetReviewReason returns the value of ReviewReason.
+func (s *JobReport) GetReviewReason() OptString {
+	return s.ReviewReason
+}
+
+// GetReviewedAt returns the value of ReviewedAt.
+func (s *JobReport) GetReviewedAt() OptDateTime {
+	return s.ReviewedAt
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *JobReport) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// GetReporterEmail returns the value of ReporterEmail.
+func (s *JobReport) GetReporterEmail() OptString {
+	return s.ReporterEmail
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *JobReport) GetJobSlug() OptString {
+	return s.JobSlug
+}
+
+// GetJobTitle returns the value of JobTitle.
+func (s *JobReport) GetJobTitle() OptString {
+	return s.JobTitle
+}
+
+// GetNotified returns the value of Notified.
+func (s *JobReport) GetNotified() OptBool {
+	return s.Notified
+}
+
+// SetID sets the value of ID.
+func (s *JobReport) SetID(val int64) {
+	s.ID = val
+}
+
+// SetReason sets the value of Reason.
+func (s *JobReport) SetReason(val string) {
+	s.Reason = val
+}
+
+// SetDetails sets the value of Details.
+func (s *JobReport) SetDetails(val string) {
+	s.Details = val
+}
+
+// SetContactTelegram sets the value of ContactTelegram.
+func (s *JobReport) SetContactTelegram(val OptString) {
+	s.ContactTelegram = val
+}
+
+// SetStatus sets the value of Status.
+func (s *JobReport) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetReviewReason sets the value of ReviewReason.
+func (s *JobReport) SetReviewReason(val OptString) {
+	s.ReviewReason = val
+}
+
+// SetReviewedAt sets the value of ReviewedAt.
+func (s *JobReport) SetReviewedAt(val OptDateTime) {
+	s.ReviewedAt = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *JobReport) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// SetReporterEmail sets the value of ReporterEmail.
+func (s *JobReport) SetReporterEmail(val OptString) {
+	s.ReporterEmail = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *JobReport) SetJobSlug(val OptString) {
+	s.JobSlug = val
+}
+
+// SetJobTitle sets the value of JobTitle.
+func (s *JobReport) SetJobTitle(val OptString) {
+	s.JobTitle = val
+}
+
+// SetNotified sets the value of Notified.
+func (s *JobReport) SetNotified(val OptBool) {
+	s.Notified = val
+}
+
+// Ref: #/components/schemas/JobReportRequest
+type JobReportRequest struct {
+	// From the controlled vocabulary.
+	Reason          OptString `json:"reason"`
+	Details         OptString `json:"details"`
+	ContactTelegram OptString `json:"contact_telegram"`
+}
+
+// GetReason returns the value of Reason.
+func (s *JobReportRequest) GetReason() OptString {
+	return s.Reason
+}
+
+// GetDetails returns the value of Details.
+func (s *JobReportRequest) GetDetails() OptString {
+	return s.Details
+}
+
+// GetContactTelegram returns the value of ContactTelegram.
+func (s *JobReportRequest) GetContactTelegram() OptString {
+	return s.ContactTelegram
+}
+
+// SetReason sets the value of Reason.
+func (s *JobReportRequest) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetDetails sets the value of Details.
+func (s *JobReportRequest) SetDetails(val OptString) {
+	s.Details = val
+}
+
+// SetContactTelegram sets the value of ContactTelegram.
+func (s *JobReportRequest) SetContactTelegram(val OptString) {
+	s.ContactTelegram = val
+}
+
+// Ref: #/components/schemas/JobSearchMeta
+type JobSearchMeta struct {
+	Total  int64 `json:"total"`
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+	// Absent when every param was read.
+	IgnoredParams []IgnoredParam `json:"ignored_params"`
+	IgnoredValues jx.Raw         `json:"ignored_values"`
+	// True when `total` counts only what was read, not the whole match.
+	TotalIsLowerBound OptBool `json:"total_is_lower_bound"`
+}
+
+// GetTotal returns the value of Total.
+func (s *JobSearchMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// GetLimit returns the value of Limit.
+func (s *JobSearchMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *JobSearchMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// GetIgnoredParams returns the value of IgnoredParams.
+func (s *JobSearchMeta) GetIgnoredParams() []IgnoredParam {
+	return s.IgnoredParams
+}
+
+// GetIgnoredValues returns the value of IgnoredValues.
+func (s *JobSearchMeta) GetIgnoredValues() jx.Raw {
+	return s.IgnoredValues
+}
+
+// GetTotalIsLowerBound returns the value of TotalIsLowerBound.
+func (s *JobSearchMeta) GetTotalIsLowerBound() OptBool {
+	return s.TotalIsLowerBound
+}
+
+// SetTotal sets the value of Total.
+func (s *JobSearchMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *JobSearchMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *JobSearchMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// SetIgnoredParams sets the value of IgnoredParams.
+func (s *JobSearchMeta) SetIgnoredParams(val []IgnoredParam) {
+	s.IgnoredParams = val
+}
+
+// SetIgnoredValues sets the value of IgnoredValues.
+func (s *JobSearchMeta) SetIgnoredValues(val jx.Raw) {
+	s.IgnoredValues = val
+}
+
+// SetTotalIsLowerBound sets the value of TotalIsLowerBound.
+func (s *JobSearchMeta) SetTotalIsLowerBound(val OptBool) {
+	s.TotalIsLowerBound = val
+}
+
+// Ref: #/components/schemas/JobSearchPage
+type JobSearchPage struct {
+	Data []jx.Raw      `json:"data"`
+	Meta JobSearchMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *JobSearchPage) GetData() []jx.Raw {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *JobSearchPage) GetMeta() JobSearchMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *JobSearchPage) SetData(val []jx.Raw) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *JobSearchPage) SetMeta(val JobSearchMeta) {
+	s.Meta = val
+}
+
+// JobSearchPageHeaders wraps JobSearchPage with response headers.
+type JobSearchPageHeaders struct {
+	CacheControl OptString
+	Response     JobSearchPage
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *JobSearchPageHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetResponse returns the value of Response.
+func (s *JobSearchPageHeaders) GetResponse() JobSearchPage {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *JobSearchPageHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetResponse sets the value of Response.
+func (s *JobSearchPageHeaders) SetResponse(val JobSearchPage) {
+	s.Response = val
+}
+
+// The moderator edit body: a field left out or null is unchanged.
+// Ref: #/components/schemas/JobUpdate
+type JobUpdate struct {
+	Title       OptNilString   `json:"title"`
+	Company     OptNilString   `json:"company"`
+	Location    OptNilString   `json:"location"`
+	Remote      OptNilBool     `json:"remote"`
+	Description OptNilString   `json:"description"`
+	PostedAt    OptNilDateTime `json:"posted_at"`
+}
+
+// GetTitle returns the value of Title.
+func (s *JobUpdate) GetTitle() OptNilString {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *JobUpdate) GetCompany() OptNilString {
+	return s.Company
+}
+
+// GetLocation returns the value of Location.
+func (s *JobUpdate) GetLocation() OptNilString {
+	return s.Location
+}
+
+// GetRemote returns the value of Remote.
+func (s *JobUpdate) GetRemote() OptNilBool {
+	return s.Remote
+}
+
+// GetDescription returns the value of Description.
+func (s *JobUpdate) GetDescription() OptNilString {
+	return s.Description
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *JobUpdate) GetPostedAt() OptNilDateTime {
+	return s.PostedAt
+}
+
+// SetTitle sets the value of Title.
+func (s *JobUpdate) SetTitle(val OptNilString) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *JobUpdate) SetCompany(val OptNilString) {
+	s.Company = val
+}
+
+// SetLocation sets the value of Location.
+func (s *JobUpdate) SetLocation(val OptNilString) {
+	s.Location = val
+}
+
+// SetRemote sets the value of Remote.
+func (s *JobUpdate) SetRemote(val OptNilBool) {
+	s.Remote = val
+}
+
+// SetDescription sets the value of Description.
+func (s *JobUpdate) SetDescription(val OptNilString) {
+	s.Description = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *JobUpdate) SetPostedAt(val OptNilDateTime) {
+	s.PostedAt = val
+}
+
+// Ref: #/components/schemas/JobsActivity
+type JobsActivity struct {
+	Data []ActivityPoint `json:"data"`
+	Meta ActivityMeta    `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *JobsActivity) GetData() []ActivityPoint {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *JobsActivity) GetMeta() ActivityMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *JobsActivity) SetData(val []ActivityPoint) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *JobsActivity) SetMeta(val ActivityMeta) {
+	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type ListAppliedCompanySlugsOK struct {
+	Data []string `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListAppliedCompanySlugsOK) GetData() []string {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListAppliedCompanySlugsOK) SetData(val []string) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListBankedAnswersOK struct {
+	Data []BankedAnswer `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListBankedAnswersOK) GetData() []BankedAnswer {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListBankedAnswersOK) SetData(val []BankedAnswer) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListBaseCVsOK struct {
+	Data []CvBase `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListBaseCVsOK) GetData() []CvBase {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListBaseCVsOK) SetData(val []CvBase) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListCVFontsOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCVFontsOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListCVFontsOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListCVRevisionsOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCVRevisionsOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListCVRevisionsOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListCVTemplatesOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCVTemplatesOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListCVTemplatesOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListCVTracerLinksOK struct {
+	Data []CvTracerLink `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCVTracerLinksOK) GetData() []CvTracerLink {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListCVTracerLinksOK) SetData(val []CvTracerLink) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListCVsOK struct {
+	Data []CvTailored `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCVsOK) GetData() []CvTailored {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListCVsOK) SetData(val []CvTailored) {
+	s.Data = val
+}
+
+// A list: `{"data": [...], "meta": {...}}`.
+type ListCompaniesOK struct {
+	Data []jx.Raw `json:"data"`
+	Meta ListMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCompaniesOK) GetData() []jx.Raw {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *ListCompaniesOK) GetMeta() ListMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *ListCompaniesOK) SetData(val []jx.Raw) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *ListCompaniesOK) SetMeta(val ListMeta) {
+	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type ListConversationMessagesOK struct {
+	Data []ConversationMessage `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListConversationMessagesOK) GetData() []ConversationMessage {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListConversationMessagesOK) SetData(val []ConversationMessage) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListConversationsOK struct {
+	Data []Conversation `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListConversationsOK) GetData() []Conversation {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListConversationsOK) SetData(val []Conversation) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListDismissedSlugsOK struct {
+	Data []string `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListDismissedSlugsOK) GetData() []string {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListDismissedSlugsOK) SetData(val []string) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListEmployerPendingClaimsOK struct {
+	Data []EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListEmployerPendingClaimsOK) GetData() []EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListEmployerPendingClaimsOK) SetData(val []EmployerAccount) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListEmployerVacanciesOK struct {
+	Data []jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListEmployerVacanciesOK) GetData() []jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListEmployerVacanciesOK) SetData(val []jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListExperienceOK struct {
+	Data ExperienceBank `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListExperienceOK) GetData() ExperienceBank {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListExperienceOK) SetData(val ExperienceBank) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListIncomingReferralRequestsOK struct {
+	Data []ReferralIncomingRequest `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListIncomingReferralRequestsOK) GetData() []ReferralIncomingRequest {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListIncomingReferralRequestsOK) SetData(val []ReferralIncomingRequest) {
+	s.Data = val
+}
+
+// A list: `{"data": [...], "meta": {...}}`.
+type ListJobsOK struct {
+	Data []jx.Raw `json:"data"`
+	Meta ListMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *ListJobsOK) GetData() []jx.Raw {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *ListJobsOK) GetMeta() ListMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *ListJobsOK) SetData(val []jx.Raw) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *ListJobsOK) SetMeta(val ListMeta) {
+	s.Meta = val
+}
+
 // A page of a filtered list, with what the filter dropped.
 // Ref: #/components/schemas/ListMeta
 type ListMeta struct {
@@ -893,6 +9256,7 @@ type ListMeta struct {
 	Offset int64 `json:"offset"`
 	// Absent when every param was read.
 	IgnoredParams []IgnoredParam `json:"ignored_params"`
+	IgnoredValues jx.Raw         `json:"ignored_values"`
 }
 
 // GetTotal returns the value of Total.
@@ -915,6 +9279,11 @@ func (s *ListMeta) GetIgnoredParams() []IgnoredParam {
 	return s.IgnoredParams
 }
 
+// GetIgnoredValues returns the value of IgnoredValues.
+func (s *ListMeta) GetIgnoredValues() jx.Raw {
+	return s.IgnoredValues
+}
+
 // SetTotal sets the value of Total.
 func (s *ListMeta) SetTotal(val int64) {
 	s.Total = val
@@ -933,6 +9302,216 @@ func (s *ListMeta) SetOffset(val int64) {
 // SetIgnoredParams sets the value of IgnoredParams.
 func (s *ListMeta) SetIgnoredParams(val []IgnoredParam) {
 	s.IgnoredParams = val
+}
+
+// SetIgnoredValues sets the value of IgnoredValues.
+func (s *ListMeta) SetIgnoredValues(val jx.Raw) {
+	s.IgnoredValues = val
+}
+
+// A single item: `{"data": ...}`.
+type ListMyContributionsOK struct {
+	Data []Contribution `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListMyContributionsOK) GetData() []Contribution {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListMyContributionsOK) SetData(val []Contribution) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListMyReferralOffersOK struct {
+	Data []ReferralOffer `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListMyReferralOffersOK) GetData() []ReferralOffer {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListMyReferralOffersOK) SetData(val []ReferralOffer) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListMyReferralRequestsOK struct {
+	Data []ReferralSeekerRequest `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListMyReferralRequestsOK) GetData() []ReferralSeekerRequest {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListMyReferralRequestsOK) SetData(val []ReferralSeekerRequest) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListMySubmissionsOK struct {
+	Data []Submission `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListMySubmissionsOK) GetData() []Submission {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListMySubmissionsOK) SetData(val []Submission) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListPendingCompanyRelationsOK struct {
+	Data []PendingCompanyRelation `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListPendingCompanyRelationsOK) GetData() []PendingCompanyRelation {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListPendingCompanyRelationsOK) SetData(val []PendingCompanyRelation) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListPendingJobReportsOK struct {
+	Data []JobReport `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListPendingJobReportsOK) GetData() []JobReport {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListPendingJobReportsOK) SetData(val []JobReport) {
+	s.Data = val
+}
+
+type ListPendingMentorProfilesOK struct {
+	Data []MentorshipPendingMentor `json:"data"`
+	Meta MentorshipCountMeta       `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *ListPendingMentorProfilesOK) GetData() []MentorshipPendingMentor {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *ListPendingMentorProfilesOK) GetMeta() MentorshipCountMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *ListPendingMentorProfilesOK) SetData(val []MentorshipPendingMentor) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *ListPendingMentorProfilesOK) SetMeta(val MentorshipCountMeta) {
+	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type ListPendingReferralOffersOK struct {
+	Data []ReferralOffer `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListPendingReferralOffersOK) GetData() []ReferralOffer {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListPendingReferralOffersOK) SetData(val []ReferralOffer) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListPendingSubmissionsOK struct {
+	Data []Submission `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListPendingSubmissionsOK) GetData() []Submission {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListPendingSubmissionsOK) SetData(val []Submission) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListReferralCVOptionsOK struct {
+	Data ReferralCVOptions `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListReferralCVOptionsOK) GetData() ReferralCVOptions {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListReferralCVOptionsOK) SetData(val ReferralCVOptions) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListReportedCompanyFeedbackOK struct {
+	Data []ReportedCompanyFeedback `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListReportedCompanyFeedbackOK) GetData() []ReportedCompanyFeedback {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListReportedCompanyFeedbackOK) SetData(val []ReportedCompanyFeedback) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListSavedSlugsOK struct {
+	Data []string `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListSavedSlugsOK) GetData() []string {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListSavedSlugsOK) SetData(val []string) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListSourcesOK struct {
+	Data []SourceEntry `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListSourcesOK) GetData() []SourceEntry {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListSourcesOK) SetData(val []SourceEntry) {
+	s.Data = val
 }
 
 // A list: `{"data": [...], "meta": {...}}`.
@@ -959,6 +9538,2121 @@ func (s *ListTalentOK) SetData(val []TalentMember) {
 // SetMeta sets the value of Meta.
 func (s *ListTalentOK) SetMeta(val ListMeta) {
 	s.Meta = val
+}
+
+// A single item: `{"data": ...}`.
+type ListViewedSlugsOK struct {
+	Data []string `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListViewedSlugsOK) GetData() []string {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListViewedSlugsOK) SetData(val []string) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type MarkAppliedOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *MarkAppliedOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *MarkAppliedOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// MarkConversationReadNoContent is response for MarkConversationRead operation.
+type MarkConversationReadNoContent struct{}
+
+// A single item that read query params: `{"data": ...}`, plus `meta` when one was dropped.
+type MarketCoverageOK struct {
+	Data jx.Raw         `json:"data"`
+	Meta OptIgnoredMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *MarketCoverageOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *MarketCoverageOK) GetMeta() OptIgnoredMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *MarketCoverageOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *MarketCoverageOK) SetMeta(val OptIgnoredMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/MarketPulseMeta
+type MarketPulseMeta struct {
+	// The current ISO week's Monday, YYYY-MM-DD.
+	WeekStart string `json:"week_start"`
+}
+
+// GetWeekStart returns the value of WeekStart.
+func (s *MarketPulseMeta) GetWeekStart() string {
+	return s.WeekStart
+}
+
+// SetWeekStart sets the value of WeekStart.
+func (s *MarketPulseMeta) SetWeekStart(val string) {
+	s.WeekStart = val
+}
+
+// A prefill for the mentor-profile form, from what the account already knows.
+// Ref: #/components/schemas/MentorProfileSuggestions
+type MentorProfileSuggestions struct {
+	Name        OptString `json:"name"`
+	Headline    OptString `json:"headline"`
+	Bio         OptString `json:"bio"`
+	Languages   []string  `json:"languages"`
+	Topics      []string  `json:"topics"`
+	Timezone    OptString `json:"timezone"`
+	CompanySlug OptString `json:"company_slug"`
+}
+
+// GetName returns the value of Name.
+func (s *MentorProfileSuggestions) GetName() OptString {
+	return s.Name
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorProfileSuggestions) GetHeadline() OptString {
+	return s.Headline
+}
+
+// GetBio returns the value of Bio.
+func (s *MentorProfileSuggestions) GetBio() OptString {
+	return s.Bio
+}
+
+// GetLanguages returns the value of Languages.
+func (s *MentorProfileSuggestions) GetLanguages() []string {
+	return s.Languages
+}
+
+// GetTopics returns the value of Topics.
+func (s *MentorProfileSuggestions) GetTopics() []string {
+	return s.Topics
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorProfileSuggestions) GetTimezone() OptString {
+	return s.Timezone
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *MentorProfileSuggestions) GetCompanySlug() OptString {
+	return s.CompanySlug
+}
+
+// SetName sets the value of Name.
+func (s *MentorProfileSuggestions) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorProfileSuggestions) SetHeadline(val OptString) {
+	s.Headline = val
+}
+
+// SetBio sets the value of Bio.
+func (s *MentorProfileSuggestions) SetBio(val OptString) {
+	s.Bio = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *MentorProfileSuggestions) SetLanguages(val []string) {
+	s.Languages = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *MentorProfileSuggestions) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorProfileSuggestions) SetTimezone(val OptString) {
+	s.Timezone = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *MentorProfileSuggestions) SetCompanySlug(val OptString) {
+	s.CompanySlug = val
+}
+
+// One session as a party to it sees it; seeker_email only for the mentor.
+// Ref: #/components/schemas/MentorshipBooking
+type MentorshipBooking struct {
+	ID          string    `json:"id"`
+	MentorSlug  string    `json:"mentor_slug"`
+	Headline    string    `json:"headline"`
+	StartsAt    time.Time `json:"starts_at"`
+	EndsAt      time.Time `json:"ends_at"`
+	Status      string    `json:"status"`
+	Note        string    `json:"note"`
+	MeetingURL  string    `json:"meeting_url"`
+	SeekerEmail OptString `json:"seeker_email"`
+	Completed   bool      `json:"completed"`
+}
+
+// GetID returns the value of ID.
+func (s *MentorshipBooking) GetID() string {
+	return s.ID
+}
+
+// GetMentorSlug returns the value of MentorSlug.
+func (s *MentorshipBooking) GetMentorSlug() string {
+	return s.MentorSlug
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorshipBooking) GetHeadline() string {
+	return s.Headline
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *MentorshipBooking) GetStartsAt() time.Time {
+	return s.StartsAt
+}
+
+// GetEndsAt returns the value of EndsAt.
+func (s *MentorshipBooking) GetEndsAt() time.Time {
+	return s.EndsAt
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipBooking) GetStatus() string {
+	return s.Status
+}
+
+// GetNote returns the value of Note.
+func (s *MentorshipBooking) GetNote() string {
+	return s.Note
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *MentorshipBooking) GetMeetingURL() string {
+	return s.MeetingURL
+}
+
+// GetSeekerEmail returns the value of SeekerEmail.
+func (s *MentorshipBooking) GetSeekerEmail() OptString {
+	return s.SeekerEmail
+}
+
+// GetCompleted returns the value of Completed.
+func (s *MentorshipBooking) GetCompleted() bool {
+	return s.Completed
+}
+
+// SetID sets the value of ID.
+func (s *MentorshipBooking) SetID(val string) {
+	s.ID = val
+}
+
+// SetMentorSlug sets the value of MentorSlug.
+func (s *MentorshipBooking) SetMentorSlug(val string) {
+	s.MentorSlug = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorshipBooking) SetHeadline(val string) {
+	s.Headline = val
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *MentorshipBooking) SetStartsAt(val time.Time) {
+	s.StartsAt = val
+}
+
+// SetEndsAt sets the value of EndsAt.
+func (s *MentorshipBooking) SetEndsAt(val time.Time) {
+	s.EndsAt = val
+}
+
+// SetStatus sets the value of Status.
+func (s *MentorshipBooking) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetNote sets the value of Note.
+func (s *MentorshipBooking) SetNote(val string) {
+	s.Note = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *MentorshipBooking) SetMeetingURL(val string) {
+	s.MeetingURL = val
+}
+
+// SetSeekerEmail sets the value of SeekerEmail.
+func (s *MentorshipBooking) SetSeekerEmail(val OptString) {
+	s.SeekerEmail = val
+}
+
+// SetCompleted sets the value of Completed.
+func (s *MentorshipBooking) SetCompleted(val bool) {
+	s.Completed = val
+}
+
+// Ref: #/components/schemas/MentorshipBookingBody
+type MentorshipBookingBody struct {
+	// RFC 3339.
+	StartsAt OptString `json:"starts_at"`
+	Timezone OptString `json:"timezone"`
+	Note     OptString `json:"note"`
+	JobID    OptInt64  `json:"job_id"`
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *MentorshipBookingBody) GetStartsAt() OptString {
+	return s.StartsAt
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipBookingBody) GetTimezone() OptString {
+	return s.Timezone
+}
+
+// GetNote returns the value of Note.
+func (s *MentorshipBookingBody) GetNote() OptString {
+	return s.Note
+}
+
+// GetJobID returns the value of JobID.
+func (s *MentorshipBookingBody) GetJobID() OptInt64 {
+	return s.JobID
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *MentorshipBookingBody) SetStartsAt(val OptString) {
+	s.StartsAt = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipBookingBody) SetTimezone(val OptString) {
+	s.Timezone = val
+}
+
+// SetNote sets the value of Note.
+func (s *MentorshipBookingBody) SetNote(val OptString) {
+	s.Note = val
+}
+
+// SetJobID sets the value of JobID.
+func (s *MentorshipBookingBody) SetJobID(val OptInt64) {
+	s.JobID = val
+}
+
+// Ref: #/components/schemas/MentorshipCalendarInterval
+type MentorshipCalendarInterval struct {
+	StartsAt time.Time `json:"starts_at"`
+	EndsAt   time.Time `json:"ends_at"`
+	// One of booked, busy, free or closed.
+	Status string `json:"status"`
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *MentorshipCalendarInterval) GetStartsAt() time.Time {
+	return s.StartsAt
+}
+
+// GetEndsAt returns the value of EndsAt.
+func (s *MentorshipCalendarInterval) GetEndsAt() time.Time {
+	return s.EndsAt
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipCalendarInterval) GetStatus() string {
+	return s.Status
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *MentorshipCalendarInterval) SetStartsAt(val time.Time) {
+	s.StartsAt = val
+}
+
+// SetEndsAt sets the value of EndsAt.
+func (s *MentorshipCalendarInterval) SetEndsAt(val time.Time) {
+	s.EndsAt = val
+}
+
+// SetStatus sets the value of Status.
+func (s *MentorshipCalendarInterval) SetStatus(val string) {
+	s.Status = val
+}
+
+// Ref: #/components/schemas/MentorshipCalendarPage
+type MentorshipCalendarPage struct {
+	Data []MentorshipCalendarInterval `json:"data"`
+	Meta MentorshipTimezoneMeta       `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *MentorshipCalendarPage) GetData() []MentorshipCalendarInterval {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *MentorshipCalendarPage) GetMeta() MentorshipTimezoneMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *MentorshipCalendarPage) SetData(val []MentorshipCalendarInterval) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *MentorshipCalendarPage) SetMeta(val MentorshipTimezoneMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/MentorshipCancelBody
+type MentorshipCancelBody struct {
+	Reason OptString `json:"reason"`
+}
+
+// GetReason returns the value of Reason.
+func (s *MentorshipCancelBody) GetReason() OptString {
+	return s.Reason
+}
+
+// SetReason sets the value of Reason.
+func (s *MentorshipCancelBody) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// Ref: #/components/schemas/MentorshipCountMeta
+type MentorshipCountMeta struct {
+	Count int64 `json:"count"`
+}
+
+// GetCount returns the value of Count.
+func (s *MentorshipCountMeta) GetCount() int64 {
+	return s.Count
+}
+
+// SetCount sets the value of Count.
+func (s *MentorshipCountMeta) SetCount(val int64) {
+	s.Count = val
+}
+
+// Ref: #/components/schemas/MentorshipDecideBody
+type MentorshipDecideBody struct {
+	Status OptString `json:"status"`
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipDecideBody) GetStatus() OptString {
+	return s.Status
+}
+
+// SetStatus sets the value of Status.
+func (s *MentorshipDecideBody) SetStatus(val OptString) {
+	s.Status = val
+}
+
+// `ignored_params` lists the query params the directory did not read.
+// Ref: #/components/schemas/MentorshipDirectoryMeta
+type MentorshipDirectoryMeta struct {
+	Count         int64    `json:"count"`
+	IgnoredParams []string `json:"ignored_params"`
+}
+
+// GetCount returns the value of Count.
+func (s *MentorshipDirectoryMeta) GetCount() int64 {
+	return s.Count
+}
+
+// GetIgnoredParams returns the value of IgnoredParams.
+func (s *MentorshipDirectoryMeta) GetIgnoredParams() []string {
+	return s.IgnoredParams
+}
+
+// SetCount sets the value of Count.
+func (s *MentorshipDirectoryMeta) SetCount(val int64) {
+	s.Count = val
+}
+
+// SetIgnoredParams sets the value of IgnoredParams.
+func (s *MentorshipDirectoryMeta) SetIgnoredParams(val []string) {
+	s.IgnoredParams = val
+}
+
+// Ref: #/components/schemas/MentorshipDirectoryPage
+type MentorshipDirectoryPage struct {
+	Data []MentorshipMentor      `json:"data"`
+	Meta MentorshipDirectoryMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *MentorshipDirectoryPage) GetData() []MentorshipMentor {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *MentorshipDirectoryPage) GetMeta() MentorshipDirectoryMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *MentorshipDirectoryPage) SetData(val []MentorshipMentor) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *MentorshipDirectoryPage) SetMeta(val MentorshipDirectoryMeta) {
+	s.Meta = val
+}
+
+// A mentor as the public, the owner and a moderator see them. The owner and moderator views add
+// status, paused and created_at; the owner alone gets meeting_url and the session parameters.
+// Ref: #/components/schemas/MentorshipMentor
+type MentorshipMentor struct {
+	Slug                string      `json:"slug"`
+	Name                string      `json:"name"`
+	CompanySlug         string      `json:"company_slug"`
+	CompanyName         string      `json:"company_name"`
+	Headline            string      `json:"headline"`
+	Bio                 string      `json:"bio"`
+	Topics              []string    `json:"topics"`
+	Languages           []string    `json:"languages"`
+	Timezone            string      `json:"timezone"`
+	SessionMinutes      int64       `json:"session_minutes"`
+	RatingCount         int64       `json:"rating_count"`
+	RatingAvg           float64     `json:"rating_avg"`
+	ShowPhoto           bool        `json:"show_photo"`
+	Seniority           OptString   `json:"seniority"`
+	Status              OptString   `json:"status"`
+	Paused              OptBool     `json:"paused"`
+	MeetingURL          OptString   `json:"meeting_url"`
+	CreatedAt           OptDateTime `json:"created_at"`
+	BufferBeforeMinutes OptInt64    `json:"buffer_before_minutes"`
+	BufferAfterMinutes  OptInt64    `json:"buffer_after_minutes"`
+	NoticeMinutes       OptInt64    `json:"notice_minutes"`
+	HorizonDays         OptInt64    `json:"horizon_days"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *MentorshipMentor) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *MentorshipMentor) GetName() string {
+	return s.Name
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *MentorshipMentor) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *MentorshipMentor) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorshipMentor) GetHeadline() string {
+	return s.Headline
+}
+
+// GetBio returns the value of Bio.
+func (s *MentorshipMentor) GetBio() string {
+	return s.Bio
+}
+
+// GetTopics returns the value of Topics.
+func (s *MentorshipMentor) GetTopics() []string {
+	return s.Topics
+}
+
+// GetLanguages returns the value of Languages.
+func (s *MentorshipMentor) GetLanguages() []string {
+	return s.Languages
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipMentor) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetSessionMinutes returns the value of SessionMinutes.
+func (s *MentorshipMentor) GetSessionMinutes() int64 {
+	return s.SessionMinutes
+}
+
+// GetRatingCount returns the value of RatingCount.
+func (s *MentorshipMentor) GetRatingCount() int64 {
+	return s.RatingCount
+}
+
+// GetRatingAvg returns the value of RatingAvg.
+func (s *MentorshipMentor) GetRatingAvg() float64 {
+	return s.RatingAvg
+}
+
+// GetShowPhoto returns the value of ShowPhoto.
+func (s *MentorshipMentor) GetShowPhoto() bool {
+	return s.ShowPhoto
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *MentorshipMentor) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipMentor) GetStatus() OptString {
+	return s.Status
+}
+
+// GetPaused returns the value of Paused.
+func (s *MentorshipMentor) GetPaused() OptBool {
+	return s.Paused
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *MentorshipMentor) GetMeetingURL() OptString {
+	return s.MeetingURL
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *MentorshipMentor) GetCreatedAt() OptDateTime {
+	return s.CreatedAt
+}
+
+// GetBufferBeforeMinutes returns the value of BufferBeforeMinutes.
+func (s *MentorshipMentor) GetBufferBeforeMinutes() OptInt64 {
+	return s.BufferBeforeMinutes
+}
+
+// GetBufferAfterMinutes returns the value of BufferAfterMinutes.
+func (s *MentorshipMentor) GetBufferAfterMinutes() OptInt64 {
+	return s.BufferAfterMinutes
+}
+
+// GetNoticeMinutes returns the value of NoticeMinutes.
+func (s *MentorshipMentor) GetNoticeMinutes() OptInt64 {
+	return s.NoticeMinutes
+}
+
+// GetHorizonDays returns the value of HorizonDays.
+func (s *MentorshipMentor) GetHorizonDays() OptInt64 {
+	return s.HorizonDays
+}
+
+// SetSlug sets the value of Slug.
+func (s *MentorshipMentor) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *MentorshipMentor) SetName(val string) {
+	s.Name = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *MentorshipMentor) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *MentorshipMentor) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorshipMentor) SetHeadline(val string) {
+	s.Headline = val
+}
+
+// SetBio sets the value of Bio.
+func (s *MentorshipMentor) SetBio(val string) {
+	s.Bio = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *MentorshipMentor) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *MentorshipMentor) SetLanguages(val []string) {
+	s.Languages = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipMentor) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetSessionMinutes sets the value of SessionMinutes.
+func (s *MentorshipMentor) SetSessionMinutes(val int64) {
+	s.SessionMinutes = val
+}
+
+// SetRatingCount sets the value of RatingCount.
+func (s *MentorshipMentor) SetRatingCount(val int64) {
+	s.RatingCount = val
+}
+
+// SetRatingAvg sets the value of RatingAvg.
+func (s *MentorshipMentor) SetRatingAvg(val float64) {
+	s.RatingAvg = val
+}
+
+// SetShowPhoto sets the value of ShowPhoto.
+func (s *MentorshipMentor) SetShowPhoto(val bool) {
+	s.ShowPhoto = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *MentorshipMentor) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetStatus sets the value of Status.
+func (s *MentorshipMentor) SetStatus(val OptString) {
+	s.Status = val
+}
+
+// SetPaused sets the value of Paused.
+func (s *MentorshipMentor) SetPaused(val OptBool) {
+	s.Paused = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *MentorshipMentor) SetMeetingURL(val OptString) {
+	s.MeetingURL = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *MentorshipMentor) SetCreatedAt(val OptDateTime) {
+	s.CreatedAt = val
+}
+
+// SetBufferBeforeMinutes sets the value of BufferBeforeMinutes.
+func (s *MentorshipMentor) SetBufferBeforeMinutes(val OptInt64) {
+	s.BufferBeforeMinutes = val
+}
+
+// SetBufferAfterMinutes sets the value of BufferAfterMinutes.
+func (s *MentorshipMentor) SetBufferAfterMinutes(val OptInt64) {
+	s.BufferAfterMinutes = val
+}
+
+// SetNoticeMinutes sets the value of NoticeMinutes.
+func (s *MentorshipMentor) SetNoticeMinutes(val OptInt64) {
+	s.NoticeMinutes = val
+}
+
+// SetHorizonDays sets the value of HorizonDays.
+func (s *MentorshipMentor) SetHorizonDays(val OptInt64) {
+	s.HorizonDays = val
+}
+
+// Ref: #/components/schemas/MentorshipPauseBody
+type MentorshipPauseBody struct {
+	Paused OptBool `json:"paused"`
+}
+
+// GetPaused returns the value of Paused.
+func (s *MentorshipPauseBody) GetPaused() OptBool {
+	return s.Paused
+}
+
+// SetPaused sets the value of Paused.
+func (s *MentorshipPauseBody) SetPaused(val OptBool) {
+	s.Paused = val
+}
+
+// A pending profile in the moderation queue.
+// Ref: #/components/schemas/MentorshipPendingMentor
+type MentorshipPendingMentor struct {
+	Slug                     string      `json:"slug"`
+	Name                     string      `json:"name"`
+	CompanySlug              string      `json:"company_slug"`
+	CompanyName              string      `json:"company_name"`
+	Headline                 string      `json:"headline"`
+	Bio                      string      `json:"bio"`
+	Topics                   []string    `json:"topics"`
+	Languages                []string    `json:"languages"`
+	Timezone                 string      `json:"timezone"`
+	SessionMinutes           int64       `json:"session_minutes"`
+	RatingCount              int64       `json:"rating_count"`
+	RatingAvg                float64     `json:"rating_avg"`
+	ShowPhoto                bool        `json:"show_photo"`
+	Seniority                OptString   `json:"seniority"`
+	Status                   OptString   `json:"status"`
+	Paused                   OptBool     `json:"paused"`
+	MeetingURL               OptString   `json:"meeting_url"`
+	CreatedAt                OptDateTime `json:"created_at"`
+	BufferBeforeMinutes      OptInt64    `json:"buffer_before_minutes"`
+	BufferAfterMinutes       OptInt64    `json:"buffer_after_minutes"`
+	NoticeMinutes            OptInt64    `json:"notice_minutes"`
+	HorizonDays              OptInt64    `json:"horizon_days"`
+	ID                       int64       `json:"id"`
+	HasApprovedReferralOffer bool        `json:"has_approved_referral_offer"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *MentorshipPendingMentor) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *MentorshipPendingMentor) GetName() string {
+	return s.Name
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *MentorshipPendingMentor) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *MentorshipPendingMentor) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorshipPendingMentor) GetHeadline() string {
+	return s.Headline
+}
+
+// GetBio returns the value of Bio.
+func (s *MentorshipPendingMentor) GetBio() string {
+	return s.Bio
+}
+
+// GetTopics returns the value of Topics.
+func (s *MentorshipPendingMentor) GetTopics() []string {
+	return s.Topics
+}
+
+// GetLanguages returns the value of Languages.
+func (s *MentorshipPendingMentor) GetLanguages() []string {
+	return s.Languages
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipPendingMentor) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetSessionMinutes returns the value of SessionMinutes.
+func (s *MentorshipPendingMentor) GetSessionMinutes() int64 {
+	return s.SessionMinutes
+}
+
+// GetRatingCount returns the value of RatingCount.
+func (s *MentorshipPendingMentor) GetRatingCount() int64 {
+	return s.RatingCount
+}
+
+// GetRatingAvg returns the value of RatingAvg.
+func (s *MentorshipPendingMentor) GetRatingAvg() float64 {
+	return s.RatingAvg
+}
+
+// GetShowPhoto returns the value of ShowPhoto.
+func (s *MentorshipPendingMentor) GetShowPhoto() bool {
+	return s.ShowPhoto
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *MentorshipPendingMentor) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipPendingMentor) GetStatus() OptString {
+	return s.Status
+}
+
+// GetPaused returns the value of Paused.
+func (s *MentorshipPendingMentor) GetPaused() OptBool {
+	return s.Paused
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *MentorshipPendingMentor) GetMeetingURL() OptString {
+	return s.MeetingURL
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *MentorshipPendingMentor) GetCreatedAt() OptDateTime {
+	return s.CreatedAt
+}
+
+// GetBufferBeforeMinutes returns the value of BufferBeforeMinutes.
+func (s *MentorshipPendingMentor) GetBufferBeforeMinutes() OptInt64 {
+	return s.BufferBeforeMinutes
+}
+
+// GetBufferAfterMinutes returns the value of BufferAfterMinutes.
+func (s *MentorshipPendingMentor) GetBufferAfterMinutes() OptInt64 {
+	return s.BufferAfterMinutes
+}
+
+// GetNoticeMinutes returns the value of NoticeMinutes.
+func (s *MentorshipPendingMentor) GetNoticeMinutes() OptInt64 {
+	return s.NoticeMinutes
+}
+
+// GetHorizonDays returns the value of HorizonDays.
+func (s *MentorshipPendingMentor) GetHorizonDays() OptInt64 {
+	return s.HorizonDays
+}
+
+// GetID returns the value of ID.
+func (s *MentorshipPendingMentor) GetID() int64 {
+	return s.ID
+}
+
+// GetHasApprovedReferralOffer returns the value of HasApprovedReferralOffer.
+func (s *MentorshipPendingMentor) GetHasApprovedReferralOffer() bool {
+	return s.HasApprovedReferralOffer
+}
+
+// SetSlug sets the value of Slug.
+func (s *MentorshipPendingMentor) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *MentorshipPendingMentor) SetName(val string) {
+	s.Name = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *MentorshipPendingMentor) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *MentorshipPendingMentor) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorshipPendingMentor) SetHeadline(val string) {
+	s.Headline = val
+}
+
+// SetBio sets the value of Bio.
+func (s *MentorshipPendingMentor) SetBio(val string) {
+	s.Bio = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *MentorshipPendingMentor) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *MentorshipPendingMentor) SetLanguages(val []string) {
+	s.Languages = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipPendingMentor) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetSessionMinutes sets the value of SessionMinutes.
+func (s *MentorshipPendingMentor) SetSessionMinutes(val int64) {
+	s.SessionMinutes = val
+}
+
+// SetRatingCount sets the value of RatingCount.
+func (s *MentorshipPendingMentor) SetRatingCount(val int64) {
+	s.RatingCount = val
+}
+
+// SetRatingAvg sets the value of RatingAvg.
+func (s *MentorshipPendingMentor) SetRatingAvg(val float64) {
+	s.RatingAvg = val
+}
+
+// SetShowPhoto sets the value of ShowPhoto.
+func (s *MentorshipPendingMentor) SetShowPhoto(val bool) {
+	s.ShowPhoto = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *MentorshipPendingMentor) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetStatus sets the value of Status.
+func (s *MentorshipPendingMentor) SetStatus(val OptString) {
+	s.Status = val
+}
+
+// SetPaused sets the value of Paused.
+func (s *MentorshipPendingMentor) SetPaused(val OptBool) {
+	s.Paused = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *MentorshipPendingMentor) SetMeetingURL(val OptString) {
+	s.MeetingURL = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *MentorshipPendingMentor) SetCreatedAt(val OptDateTime) {
+	s.CreatedAt = val
+}
+
+// SetBufferBeforeMinutes sets the value of BufferBeforeMinutes.
+func (s *MentorshipPendingMentor) SetBufferBeforeMinutes(val OptInt64) {
+	s.BufferBeforeMinutes = val
+}
+
+// SetBufferAfterMinutes sets the value of BufferAfterMinutes.
+func (s *MentorshipPendingMentor) SetBufferAfterMinutes(val OptInt64) {
+	s.BufferAfterMinutes = val
+}
+
+// SetNoticeMinutes sets the value of NoticeMinutes.
+func (s *MentorshipPendingMentor) SetNoticeMinutes(val OptInt64) {
+	s.NoticeMinutes = val
+}
+
+// SetHorizonDays sets the value of HorizonDays.
+func (s *MentorshipPendingMentor) SetHorizonDays(val OptInt64) {
+	s.HorizonDays = val
+}
+
+// SetID sets the value of ID.
+func (s *MentorshipPendingMentor) SetID(val int64) {
+	s.ID = val
+}
+
+// SetHasApprovedReferralOffer sets the value of HasApprovedReferralOffer.
+func (s *MentorshipPendingMentor) SetHasApprovedReferralOffer(val bool) {
+	s.HasApprovedReferralOffer = val
+}
+
+// Ref: #/components/schemas/MentorshipProfileBody
+type MentorshipProfileBody struct {
+	CompanySlug         OptString         `json:"company_slug"`
+	Slug                OptString         `json:"slug"`
+	Name                OptString         `json:"name"`
+	Headline            OptString         `json:"headline"`
+	Bio                 OptString         `json:"bio"`
+	Topics              OptNilStringArray `json:"topics"`
+	Languages           OptNilStringArray `json:"languages"`
+	Timezone            OptString         `json:"timezone"`
+	SessionMinutes      OptInt64          `json:"session_minutes"`
+	BufferBeforeMinutes OptInt64          `json:"buffer_before_minutes"`
+	BufferAfterMinutes  OptInt64          `json:"buffer_after_minutes"`
+	NoticeMinutes       OptInt64          `json:"notice_minutes"`
+	HorizonDays         OptInt64          `json:"horizon_days"`
+	MeetingURL          OptString         `json:"meeting_url"`
+	ShowPhoto           OptBool           `json:"show_photo"`
+	Seniority           OptString         `json:"seniority"`
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *MentorshipProfileBody) GetCompanySlug() OptString {
+	return s.CompanySlug
+}
+
+// GetSlug returns the value of Slug.
+func (s *MentorshipProfileBody) GetSlug() OptString {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *MentorshipProfileBody) GetName() OptString {
+	return s.Name
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorshipProfileBody) GetHeadline() OptString {
+	return s.Headline
+}
+
+// GetBio returns the value of Bio.
+func (s *MentorshipProfileBody) GetBio() OptString {
+	return s.Bio
+}
+
+// GetTopics returns the value of Topics.
+func (s *MentorshipProfileBody) GetTopics() OptNilStringArray {
+	return s.Topics
+}
+
+// GetLanguages returns the value of Languages.
+func (s *MentorshipProfileBody) GetLanguages() OptNilStringArray {
+	return s.Languages
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipProfileBody) GetTimezone() OptString {
+	return s.Timezone
+}
+
+// GetSessionMinutes returns the value of SessionMinutes.
+func (s *MentorshipProfileBody) GetSessionMinutes() OptInt64 {
+	return s.SessionMinutes
+}
+
+// GetBufferBeforeMinutes returns the value of BufferBeforeMinutes.
+func (s *MentorshipProfileBody) GetBufferBeforeMinutes() OptInt64 {
+	return s.BufferBeforeMinutes
+}
+
+// GetBufferAfterMinutes returns the value of BufferAfterMinutes.
+func (s *MentorshipProfileBody) GetBufferAfterMinutes() OptInt64 {
+	return s.BufferAfterMinutes
+}
+
+// GetNoticeMinutes returns the value of NoticeMinutes.
+func (s *MentorshipProfileBody) GetNoticeMinutes() OptInt64 {
+	return s.NoticeMinutes
+}
+
+// GetHorizonDays returns the value of HorizonDays.
+func (s *MentorshipProfileBody) GetHorizonDays() OptInt64 {
+	return s.HorizonDays
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *MentorshipProfileBody) GetMeetingURL() OptString {
+	return s.MeetingURL
+}
+
+// GetShowPhoto returns the value of ShowPhoto.
+func (s *MentorshipProfileBody) GetShowPhoto() OptBool {
+	return s.ShowPhoto
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *MentorshipProfileBody) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *MentorshipProfileBody) SetCompanySlug(val OptString) {
+	s.CompanySlug = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *MentorshipProfileBody) SetSlug(val OptString) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *MentorshipProfileBody) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorshipProfileBody) SetHeadline(val OptString) {
+	s.Headline = val
+}
+
+// SetBio sets the value of Bio.
+func (s *MentorshipProfileBody) SetBio(val OptString) {
+	s.Bio = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *MentorshipProfileBody) SetTopics(val OptNilStringArray) {
+	s.Topics = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *MentorshipProfileBody) SetLanguages(val OptNilStringArray) {
+	s.Languages = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipProfileBody) SetTimezone(val OptString) {
+	s.Timezone = val
+}
+
+// SetSessionMinutes sets the value of SessionMinutes.
+func (s *MentorshipProfileBody) SetSessionMinutes(val OptInt64) {
+	s.SessionMinutes = val
+}
+
+// SetBufferBeforeMinutes sets the value of BufferBeforeMinutes.
+func (s *MentorshipProfileBody) SetBufferBeforeMinutes(val OptInt64) {
+	s.BufferBeforeMinutes = val
+}
+
+// SetBufferAfterMinutes sets the value of BufferAfterMinutes.
+func (s *MentorshipProfileBody) SetBufferAfterMinutes(val OptInt64) {
+	s.BufferAfterMinutes = val
+}
+
+// SetNoticeMinutes sets the value of NoticeMinutes.
+func (s *MentorshipProfileBody) SetNoticeMinutes(val OptInt64) {
+	s.NoticeMinutes = val
+}
+
+// SetHorizonDays sets the value of HorizonDays.
+func (s *MentorshipProfileBody) SetHorizonDays(val OptInt64) {
+	s.HorizonDays = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *MentorshipProfileBody) SetMeetingURL(val OptString) {
+	s.MeetingURL = val
+}
+
+// SetShowPhoto sets the value of ShowPhoto.
+func (s *MentorshipProfileBody) SetShowPhoto(val OptBool) {
+	s.ShowPhoto = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *MentorshipProfileBody) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// Ref: #/components/schemas/MentorshipReview
+type MentorshipReview struct {
+	BookingID string `json:"booking_id"`
+	Rating    int64  `json:"rating"`
+	Comment   string `json:"comment"`
+}
+
+// GetBookingID returns the value of BookingID.
+func (s *MentorshipReview) GetBookingID() string {
+	return s.BookingID
+}
+
+// GetRating returns the value of Rating.
+func (s *MentorshipReview) GetRating() int64 {
+	return s.Rating
+}
+
+// GetComment returns the value of Comment.
+func (s *MentorshipReview) GetComment() string {
+	return s.Comment
+}
+
+// SetBookingID sets the value of BookingID.
+func (s *MentorshipReview) SetBookingID(val string) {
+	s.BookingID = val
+}
+
+// SetRating sets the value of Rating.
+func (s *MentorshipReview) SetRating(val int64) {
+	s.Rating = val
+}
+
+// SetComment sets the value of Comment.
+func (s *MentorshipReview) SetComment(val string) {
+	s.Comment = val
+}
+
+// Ref: #/components/schemas/MentorshipReviewBody
+type MentorshipReviewBody struct {
+	Rating  OptInt64  `json:"rating"`
+	Comment OptString `json:"comment"`
+}
+
+// GetRating returns the value of Rating.
+func (s *MentorshipReviewBody) GetRating() OptInt64 {
+	return s.Rating
+}
+
+// GetComment returns the value of Comment.
+func (s *MentorshipReviewBody) GetComment() OptString {
+	return s.Comment
+}
+
+// SetRating sets the value of Rating.
+func (s *MentorshipReviewBody) SetRating(val OptInt64) {
+	s.Rating = val
+}
+
+// SetComment sets the value of Comment.
+func (s *MentorshipReviewBody) SetComment(val OptString) {
+	s.Comment = val
+}
+
+// Ref: #/components/schemas/MentorshipRulesPage
+type MentorshipRulesPage struct {
+	Data []BuddyMockRuleOut  `json:"data"`
+	Meta MentorshipCountMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *MentorshipRulesPage) GetData() []BuddyMockRuleOut {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *MentorshipRulesPage) GetMeta() MentorshipCountMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *MentorshipRulesPage) SetData(val []BuddyMockRuleOut) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *MentorshipRulesPage) SetMeta(val MentorshipCountMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/MentorshipSessions
+type MentorshipSessions struct {
+	Upcoming []MentorshipBooking `json:"upcoming"`
+	Past     []MentorshipBooking `json:"past"`
+}
+
+// GetUpcoming returns the value of Upcoming.
+func (s *MentorshipSessions) GetUpcoming() []MentorshipBooking {
+	return s.Upcoming
+}
+
+// GetPast returns the value of Past.
+func (s *MentorshipSessions) GetPast() []MentorshipBooking {
+	return s.Past
+}
+
+// SetUpcoming sets the value of Upcoming.
+func (s *MentorshipSessions) SetUpcoming(val []MentorshipBooking) {
+	s.Upcoming = val
+}
+
+// SetPast sets the value of Past.
+func (s *MentorshipSessions) SetPast(val []MentorshipBooking) {
+	s.Past = val
+}
+
+// Ref: #/components/schemas/MentorshipSessionsPage
+type MentorshipSessionsPage struct {
+	Data MentorshipSessions  `json:"data"`
+	Meta MentorshipCountMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *MentorshipSessionsPage) GetData() MentorshipSessions {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *MentorshipSessionsPage) GetMeta() MentorshipCountMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *MentorshipSessionsPage) SetData(val MentorshipSessions) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *MentorshipSessionsPage) SetMeta(val MentorshipCountMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/MentorshipSlotsPage
+type MentorshipSlotsPage struct {
+	Data []BuddyMockSlot        `json:"data"`
+	Meta MentorshipTimezoneMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *MentorshipSlotsPage) GetData() []BuddyMockSlot {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *MentorshipSlotsPage) GetMeta() MentorshipTimezoneMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *MentorshipSlotsPage) SetData(val []BuddyMockSlot) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *MentorshipSlotsPage) SetMeta(val MentorshipTimezoneMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/MentorshipTimezoneMeta
+type MentorshipTimezoneMeta struct {
+	Timezone string `json:"timezone"`
+	Count    int64  `json:"count"`
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipTimezoneMeta) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetCount returns the value of Count.
+func (s *MentorshipTimezoneMeta) GetCount() int64 {
+	return s.Count
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipTimezoneMeta) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetCount sets the value of Count.
+func (s *MentorshipTimezoneMeta) SetCount(val int64) {
+	s.Count = val
+}
+
+// Ref: #/components/schemas/MergeAtoms
+type MergeAtoms struct {
+	// Exactly two achievement ids; anything else is a 400.
+	Ids OptNilStringArray `json:"ids"`
+}
+
+// GetIds returns the value of Ids.
+func (s *MergeAtoms) GetIds() OptNilStringArray {
+	return s.Ids
+}
+
+// SetIds sets the value of Ids.
+func (s *MergeAtoms) SetIds(val OptNilStringArray) {
+	s.Ids = val
+}
+
+// A single item: `{"data": ...}`.
+type MergeAtomsOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *MergeAtomsOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *MergeAtomsOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/ModeratedUser
+type ModeratedUser struct {
+	ID        int64       `json:"id"`
+	Email     string      `json:"email"`
+	Username  NilString   `json:"username"`
+	Role      string      `json:"role"`
+	Banned    bool        `json:"banned"`
+	BannedAt  NilDateTime `json:"banned_at"`
+	BanReason NilString   `json:"ban_reason"`
+}
+
+// GetID returns the value of ID.
+func (s *ModeratedUser) GetID() int64 {
+	return s.ID
+}
+
+// GetEmail returns the value of Email.
+func (s *ModeratedUser) GetEmail() string {
+	return s.Email
+}
+
+// GetUsername returns the value of Username.
+func (s *ModeratedUser) GetUsername() NilString {
+	return s.Username
+}
+
+// GetRole returns the value of Role.
+func (s *ModeratedUser) GetRole() string {
+	return s.Role
+}
+
+// GetBanned returns the value of Banned.
+func (s *ModeratedUser) GetBanned() bool {
+	return s.Banned
+}
+
+// GetBannedAt returns the value of BannedAt.
+func (s *ModeratedUser) GetBannedAt() NilDateTime {
+	return s.BannedAt
+}
+
+// GetBanReason returns the value of BanReason.
+func (s *ModeratedUser) GetBanReason() NilString {
+	return s.BanReason
+}
+
+// SetID sets the value of ID.
+func (s *ModeratedUser) SetID(val int64) {
+	s.ID = val
+}
+
+// SetEmail sets the value of Email.
+func (s *ModeratedUser) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetUsername sets the value of Username.
+func (s *ModeratedUser) SetUsername(val NilString) {
+	s.Username = val
+}
+
+// SetRole sets the value of Role.
+func (s *ModeratedUser) SetRole(val string) {
+	s.Role = val
+}
+
+// SetBanned sets the value of Banned.
+func (s *ModeratedUser) SetBanned(val bool) {
+	s.Banned = val
+}
+
+// SetBannedAt sets the value of BannedAt.
+func (s *ModeratedUser) SetBannedAt(val NilDateTime) {
+	s.BannedAt = val
+}
+
+// SetBanReason sets the value of BanReason.
+func (s *ModeratedUser) SetBanReason(val NilString) {
+	s.BanReason = val
+}
+
+// A single item: `{"data": ...}`.
+type MyCompanyFeedbackOK struct {
+	Data []CompanyFeedback `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *MyCompanyFeedbackOK) GetData() []CompanyFeedback {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *MyCompanyFeedbackOK) SetData(val []CompanyFeedback) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type MyProcessReportsOK struct {
+	Data []string `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *MyProcessReportsOK) GetData() []string {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *MyProcessReportsOK) SetData(val []string) {
+	s.Data = val
+}
+
+// NewNilBuddyCounterpart returns new NilBuddyCounterpart with value set to v.
+func NewNilBuddyCounterpart(v BuddyCounterpart) NilBuddyCounterpart {
+	return NilBuddyCounterpart{
+		Value: v,
+	}
+}
+
+// NilBuddyCounterpart is nullable BuddyCounterpart.
+type NilBuddyCounterpart struct {
+	Value BuddyCounterpart
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilBuddyCounterpart) SetTo(v BuddyCounterpart) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilBuddyCounterpart) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilBuddyCounterpart) SetToNull() {
+	o.Null = true
+	var v BuddyCounterpart
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilBuddyCounterpart) Get() (v BuddyCounterpart, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilBuddyCounterpart) Or(d BuddyCounterpart) BuddyCounterpart {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilBuddyCounterpartDetail returns new NilBuddyCounterpartDetail with value set to v.
+func NewNilBuddyCounterpartDetail(v BuddyCounterpartDetail) NilBuddyCounterpartDetail {
+	return NilBuddyCounterpartDetail{
+		Value: v,
+	}
+}
+
+// NilBuddyCounterpartDetail is nullable BuddyCounterpartDetail.
+type NilBuddyCounterpartDetail struct {
+	Value BuddyCounterpartDetail
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilBuddyCounterpartDetail) SetTo(v BuddyCounterpartDetail) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilBuddyCounterpartDetail) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilBuddyCounterpartDetail) SetToNull() {
+	o.Null = true
+	var v BuddyCounterpartDetail
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilBuddyCounterpartDetail) Get() (v BuddyCounterpartDetail, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilBuddyCounterpartDetail) Or(d BuddyCounterpartDetail) BuddyCounterpartDetail {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilBuddyMockReview returns new NilBuddyMockReview with value set to v.
+func NewNilBuddyMockReview(v BuddyMockReview) NilBuddyMockReview {
+	return NilBuddyMockReview{
+		Value: v,
+	}
+}
+
+// NilBuddyMockReview is nullable BuddyMockReview.
+type NilBuddyMockReview struct {
+	Value BuddyMockReview
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilBuddyMockReview) SetTo(v BuddyMockReview) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilBuddyMockReview) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilBuddyMockReview) SetToNull() {
+	o.Null = true
+	var v BuddyMockReview
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilBuddyMockReview) Get() (v BuddyMockReview, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilBuddyMockReview) Or(d BuddyMockReview) BuddyMockReview {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilBuddyMockSettingsOut returns new NilBuddyMockSettingsOut with value set to v.
+func NewNilBuddyMockSettingsOut(v BuddyMockSettingsOut) NilBuddyMockSettingsOut {
+	return NilBuddyMockSettingsOut{
+		Value: v,
+	}
+}
+
+// NilBuddyMockSettingsOut is nullable BuddyMockSettingsOut.
+type NilBuddyMockSettingsOut struct {
+	Value BuddyMockSettingsOut
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilBuddyMockSettingsOut) SetTo(v BuddyMockSettingsOut) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilBuddyMockSettingsOut) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilBuddyMockSettingsOut) SetToNull() {
+	o.Null = true
+	var v BuddyMockSettingsOut
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilBuddyMockSettingsOut) Get() (v BuddyMockSettingsOut, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilBuddyMockSettingsOut) Or(d BuddyMockSettingsOut) BuddyMockSettingsOut {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilDateTime returns new NilDateTime with value set to v.
+func NewNilDateTime(v time.Time) NilDateTime {
+	return NilDateTime{
+		Value: v,
+	}
+}
+
+// NilDateTime is nullable time.Time.
+type NilDateTime struct {
+	Value time.Time
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilDateTime) SetTo(v time.Time) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilDateTime) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilDateTime) SetToNull() {
+	o.Null = true
+	var v time.Time
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilDateTime) Get() (v time.Time, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilDerivedLocation returns new NilDerivedLocation with value set to v.
+func NewNilDerivedLocation(v DerivedLocation) NilDerivedLocation {
+	return NilDerivedLocation{
+		Value: v,
+	}
+}
+
+// NilDerivedLocation is nullable DerivedLocation.
+type NilDerivedLocation struct {
+	Value DerivedLocation
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilDerivedLocation) SetTo(v DerivedLocation) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilDerivedLocation) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilDerivedLocation) SetToNull() {
+	o.Null = true
+	var v DerivedLocation
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilDerivedLocation) Get() (v DerivedLocation, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilDerivedLocation) Or(d DerivedLocation) DerivedLocation {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilDirectApplyTailoredCV returns new NilDirectApplyTailoredCV with value set to v.
+func NewNilDirectApplyTailoredCV(v DirectApplyTailoredCV) NilDirectApplyTailoredCV {
+	return NilDirectApplyTailoredCV{
+		Value: v,
+	}
+}
+
+// NilDirectApplyTailoredCV is nullable DirectApplyTailoredCV.
+type NilDirectApplyTailoredCV struct {
+	Value DirectApplyTailoredCV
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilDirectApplyTailoredCV) SetTo(v DirectApplyTailoredCV) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilDirectApplyTailoredCV) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilDirectApplyTailoredCV) SetToNull() {
+	o.Null = true
+	var v DirectApplyTailoredCV
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilDirectApplyTailoredCV) Get() (v DirectApplyTailoredCV, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilDirectApplyTailoredCV) Or(d DirectApplyTailoredCV) DirectApplyTailoredCV {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilFloat32 returns new NilFloat32 with value set to v.
+func NewNilFloat32(v float32) NilFloat32 {
+	return NilFloat32{
+		Value: v,
+	}
+}
+
+// NilFloat32 is nullable float32.
+type NilFloat32 struct {
+	Value float32
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilFloat32) SetTo(v float32) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilFloat32) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilFloat32) SetToNull() {
+	o.Null = true
+	var v float32
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilFloat32) Get() (v float32, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilFloat32) Or(d float32) float32 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilFloat64 returns new NilFloat64 with value set to v.
+func NewNilFloat64(v float64) NilFloat64 {
+	return NilFloat64{
+		Value: v,
+	}
+}
+
+// NilFloat64 is nullable float64.
+type NilFloat64 struct {
+	Value float64
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilFloat64) SetTo(v float64) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilFloat64) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilFloat64) SetToNull() {
+	o.Null = true
+	var v float64
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilFloat64) Get() (v float64, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilFloat64) Or(d float64) float64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilInt64 returns new NilInt64 with value set to v.
+func NewNilInt64(v int64) NilInt64 {
+	return NilInt64{
+		Value: v,
+	}
+}
+
+// NilInt64 is nullable int64.
+type NilInt64 struct {
+	Value int64
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilInt64) SetTo(v int64) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilInt64) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilInt64) SetToNull() {
+	o.Null = true
+	var v int64
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilInt64) Get() (v int64, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilInt64) Or(d int64) int64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilJobFoundPosting returns new NilJobFoundPosting with value set to v.
+func NewNilJobFoundPosting(v JobFoundPosting) NilJobFoundPosting {
+	return NilJobFoundPosting{
+		Value: v,
+	}
+}
+
+// NilJobFoundPosting is nullable JobFoundPosting.
+type NilJobFoundPosting struct {
+	Value JobFoundPosting
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilJobFoundPosting) SetTo(v JobFoundPosting) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilJobFoundPosting) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilJobFoundPosting) SetToNull() {
+	o.Null = true
+	var v JobFoundPosting
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilJobFoundPosting) Get() (v JobFoundPosting, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilJobFoundPosting) Or(d JobFoundPosting) JobFoundPosting {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilMentorshipMentor returns new NilMentorshipMentor with value set to v.
+func NewNilMentorshipMentor(v MentorshipMentor) NilMentorshipMentor {
+	return NilMentorshipMentor{
+		Value: v,
+	}
+}
+
+// NilMentorshipMentor is nullable MentorshipMentor.
+type NilMentorshipMentor struct {
+	Value MentorshipMentor
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilMentorshipMentor) SetTo(v MentorshipMentor) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilMentorshipMentor) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilMentorshipMentor) SetToNull() {
+	o.Null = true
+	var v MentorshipMentor
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilMentorshipMentor) Get() (v MentorshipMentor, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilMentorshipMentor) Or(d MentorshipMentor) MentorshipMentor {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilProfile returns new NilProfile with value set to v.
+func NewNilProfile(v Profile) NilProfile {
+	return NilProfile{
+		Value: v,
+	}
+}
+
+// NilProfile is nullable Profile.
+type NilProfile struct {
+	Value Profile
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilProfile) SetTo(v Profile) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilProfile) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilProfile) SetToNull() {
+	o.Null = true
+	var v Profile
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilProfile) Get() (v Profile, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilProfile) Or(d Profile) Profile {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
 }
 
 // NewNilScreeningAnswers returns new NilScreeningAnswers with value set to v.
@@ -1004,6 +11698,305 @@ func (o NilScreeningAnswers) Or(d ScreeningAnswers) ScreeningAnswers {
 		return v
 	}
 	return d
+}
+
+// NewNilSourceHealth returns new NilSourceHealth with value set to v.
+func NewNilSourceHealth(v SourceHealth) NilSourceHealth {
+	return NilSourceHealth{
+		Value: v,
+	}
+}
+
+// NilSourceHealth is nullable SourceHealth.
+type NilSourceHealth struct {
+	Value SourceHealth
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilSourceHealth) SetTo(v SourceHealth) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilSourceHealth) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilSourceHealth) SetToNull() {
+	o.Null = true
+	var v SourceHealth
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilSourceHealth) Get() (v SourceHealth, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilSourceHealth) Or(d SourceHealth) SourceHealth {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilSourceJobs returns new NilSourceJobs with value set to v.
+func NewNilSourceJobs(v SourceJobs) NilSourceJobs {
+	return NilSourceJobs{
+		Value: v,
+	}
+}
+
+// NilSourceJobs is nullable SourceJobs.
+type NilSourceJobs struct {
+	Value SourceJobs
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilSourceJobs) SetTo(v SourceJobs) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilSourceJobs) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilSourceJobs) SetToNull() {
+	o.Null = true
+	var v SourceJobs
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilSourceJobs) Get() (v SourceJobs, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilSourceJobs) Or(d SourceJobs) SourceJobs {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilString returns new NilString with value set to v.
+func NewNilString(v string) NilString {
+	return NilString{
+		Value: v,
+	}
+}
+
+// NilString is nullable string.
+type NilString struct {
+	Value string
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilString) SetTo(v string) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilString) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilString) SetToNull() {
+	o.Null = true
+	var v string
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilString) Get() (v string, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilString) Or(d string) string {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// Ref: #/components/schemas/NotificationSettings
+type NotificationSettings struct {
+	Enabled         bool     `json:"enabled"`
+	Channels        []string `json:"channels"`
+	DigestFrequency string   `json:"digest_frequency"`
+	// `HH:MM`.
+	DigestTime          NilString `json:"digest_time"`
+	DigestIntervalHours int64     `json:"digest_interval_hours"`
+	QuietHoursStart     NilString `json:"quiet_hours_start"`
+	QuietHoursEnd       NilString `json:"quiet_hours_end"`
+}
+
+// GetEnabled returns the value of Enabled.
+func (s *NotificationSettings) GetEnabled() bool {
+	return s.Enabled
+}
+
+// GetChannels returns the value of Channels.
+func (s *NotificationSettings) GetChannels() []string {
+	return s.Channels
+}
+
+// GetDigestFrequency returns the value of DigestFrequency.
+func (s *NotificationSettings) GetDigestFrequency() string {
+	return s.DigestFrequency
+}
+
+// GetDigestTime returns the value of DigestTime.
+func (s *NotificationSettings) GetDigestTime() NilString {
+	return s.DigestTime
+}
+
+// GetDigestIntervalHours returns the value of DigestIntervalHours.
+func (s *NotificationSettings) GetDigestIntervalHours() int64 {
+	return s.DigestIntervalHours
+}
+
+// GetQuietHoursStart returns the value of QuietHoursStart.
+func (s *NotificationSettings) GetQuietHoursStart() NilString {
+	return s.QuietHoursStart
+}
+
+// GetQuietHoursEnd returns the value of QuietHoursEnd.
+func (s *NotificationSettings) GetQuietHoursEnd() NilString {
+	return s.QuietHoursEnd
+}
+
+// SetEnabled sets the value of Enabled.
+func (s *NotificationSettings) SetEnabled(val bool) {
+	s.Enabled = val
+}
+
+// SetChannels sets the value of Channels.
+func (s *NotificationSettings) SetChannels(val []string) {
+	s.Channels = val
+}
+
+// SetDigestFrequency sets the value of DigestFrequency.
+func (s *NotificationSettings) SetDigestFrequency(val string) {
+	s.DigestFrequency = val
+}
+
+// SetDigestTime sets the value of DigestTime.
+func (s *NotificationSettings) SetDigestTime(val NilString) {
+	s.DigestTime = val
+}
+
+// SetDigestIntervalHours sets the value of DigestIntervalHours.
+func (s *NotificationSettings) SetDigestIntervalHours(val int64) {
+	s.DigestIntervalHours = val
+}
+
+// SetQuietHoursStart sets the value of QuietHoursStart.
+func (s *NotificationSettings) SetQuietHoursStart(val NilString) {
+	s.QuietHoursStart = val
+}
+
+// SetQuietHoursEnd sets the value of QuietHoursEnd.
+func (s *NotificationSettings) SetQuietHoursEnd(val NilString) {
+	s.QuietHoursEnd = val
+}
+
+// Every field is read as its zero value when left out. Times are `HH:MM`.
+// Ref: #/components/schemas/NotificationSettingsUpdate
+type NotificationSettingsUpdate struct {
+	Enabled             OptNilBool        `json:"enabled"`
+	Channels            OptNilStringArray `json:"channels"`
+	DigestFrequency     OptNilString      `json:"digest_frequency"`
+	DigestTime          OptNilString      `json:"digest_time"`
+	DigestIntervalHours OptNilInt64       `json:"digest_interval_hours"`
+	QuietHoursStart     OptNilString      `json:"quiet_hours_start"`
+	QuietHoursEnd       OptNilString      `json:"quiet_hours_end"`
+}
+
+// GetEnabled returns the value of Enabled.
+func (s *NotificationSettingsUpdate) GetEnabled() OptNilBool {
+	return s.Enabled
+}
+
+// GetChannels returns the value of Channels.
+func (s *NotificationSettingsUpdate) GetChannels() OptNilStringArray {
+	return s.Channels
+}
+
+// GetDigestFrequency returns the value of DigestFrequency.
+func (s *NotificationSettingsUpdate) GetDigestFrequency() OptNilString {
+	return s.DigestFrequency
+}
+
+// GetDigestTime returns the value of DigestTime.
+func (s *NotificationSettingsUpdate) GetDigestTime() OptNilString {
+	return s.DigestTime
+}
+
+// GetDigestIntervalHours returns the value of DigestIntervalHours.
+func (s *NotificationSettingsUpdate) GetDigestIntervalHours() OptNilInt64 {
+	return s.DigestIntervalHours
+}
+
+// GetQuietHoursStart returns the value of QuietHoursStart.
+func (s *NotificationSettingsUpdate) GetQuietHoursStart() OptNilString {
+	return s.QuietHoursStart
+}
+
+// GetQuietHoursEnd returns the value of QuietHoursEnd.
+func (s *NotificationSettingsUpdate) GetQuietHoursEnd() OptNilString {
+	return s.QuietHoursEnd
+}
+
+// SetEnabled sets the value of Enabled.
+func (s *NotificationSettingsUpdate) SetEnabled(val OptNilBool) {
+	s.Enabled = val
+}
+
+// SetChannels sets the value of Channels.
+func (s *NotificationSettingsUpdate) SetChannels(val OptNilStringArray) {
+	s.Channels = val
+}
+
+// SetDigestFrequency sets the value of DigestFrequency.
+func (s *NotificationSettingsUpdate) SetDigestFrequency(val OptNilString) {
+	s.DigestFrequency = val
+}
+
+// SetDigestTime sets the value of DigestTime.
+func (s *NotificationSettingsUpdate) SetDigestTime(val OptNilString) {
+	s.DigestTime = val
+}
+
+// SetDigestIntervalHours sets the value of DigestIntervalHours.
+func (s *NotificationSettingsUpdate) SetDigestIntervalHours(val OptNilInt64) {
+	s.DigestIntervalHours = val
+}
+
+// SetQuietHoursStart sets the value of QuietHoursStart.
+func (s *NotificationSettingsUpdate) SetQuietHoursStart(val OptNilString) {
+	s.QuietHoursStart = val
+}
+
+// SetQuietHoursEnd sets the value of QuietHoursEnd.
+func (s *NotificationSettingsUpdate) SetQuietHoursEnd(val OptNilString) {
+	s.QuietHoursEnd = val
 }
 
 // Ref: #/components/schemas/OnboardingCompleted
@@ -1062,6 +12055,52 @@ func (s *OneClickUnsubscribeOK) SetData(val OneClickResult) {
 	s.Data = val
 }
 
+// NewOptApplyJob returns new OptApplyJob with value set to v.
+func NewOptApplyJob(v ApplyJob) OptApplyJob {
+	return OptApplyJob{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptApplyJob is optional ApplyJob.
+type OptApplyJob struct {
+	Value ApplyJob
+	Set   bool
+}
+
+// IsSet returns true if OptApplyJob was set.
+func (o OptApplyJob) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptApplyJob) Reset() {
+	var v ApplyJob
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptApplyJob) SetTo(v ApplyJob) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptApplyJob) Get() (v ApplyJob, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptApplyJob) Or(d ApplyJob) ApplyJob {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptBool returns new OptBool with value set to v.
 func NewOptBool(v bool) OptBool {
 	return OptBool{
@@ -1108,6 +12147,52 @@ func (o OptBool) Or(d bool) bool {
 	return d
 }
 
+// NewOptCompanyFeedbackSummary returns new OptCompanyFeedbackSummary with value set to v.
+func NewOptCompanyFeedbackSummary(v CompanyFeedbackSummary) OptCompanyFeedbackSummary {
+	return OptCompanyFeedbackSummary{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptCompanyFeedbackSummary is optional CompanyFeedbackSummary.
+type OptCompanyFeedbackSummary struct {
+	Value CompanyFeedbackSummary
+	Set   bool
+}
+
+// IsSet returns true if OptCompanyFeedbackSummary was set.
+func (o OptCompanyFeedbackSummary) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptCompanyFeedbackSummary) Reset() {
+	var v CompanyFeedbackSummary
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptCompanyFeedbackSummary) SetTo(v CompanyFeedbackSummary) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptCompanyFeedbackSummary) Get() (v CompanyFeedbackSummary, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptCompanyFeedbackSummary) Or(d CompanyFeedbackSummary) CompanyFeedbackSummary {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptDateTime returns new OptDateTime with value set to v.
 func NewOptDateTime(v time.Time) OptDateTime {
 	return OptDateTime{
@@ -1148,6 +12233,98 @@ func (o OptDateTime) Get() (v time.Time, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDirectApplyRequestAnswers returns new OptDirectApplyRequestAnswers with value set to v.
+func NewOptDirectApplyRequestAnswers(v DirectApplyRequestAnswers) OptDirectApplyRequestAnswers {
+	return OptDirectApplyRequestAnswers{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDirectApplyRequestAnswers is optional DirectApplyRequestAnswers.
+type OptDirectApplyRequestAnswers struct {
+	Value DirectApplyRequestAnswers
+	Set   bool
+}
+
+// IsSet returns true if OptDirectApplyRequestAnswers was set.
+func (o OptDirectApplyRequestAnswers) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDirectApplyRequestAnswers) Reset() {
+	var v DirectApplyRequestAnswers
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDirectApplyRequestAnswers) SetTo(v DirectApplyRequestAnswers) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDirectApplyRequestAnswers) Get() (v DirectApplyRequestAnswers, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDirectApplyRequestAnswers) Or(d DirectApplyRequestAnswers) DirectApplyRequestAnswers {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptDismissJobReportRequest returns new OptDismissJobReportRequest with value set to v.
+func NewOptDismissJobReportRequest(v DismissJobReportRequest) OptDismissJobReportRequest {
+	return OptDismissJobReportRequest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptDismissJobReportRequest is optional DismissJobReportRequest.
+type OptDismissJobReportRequest struct {
+	Value DismissJobReportRequest
+	Set   bool
+}
+
+// IsSet returns true if OptDismissJobReportRequest was set.
+func (o OptDismissJobReportRequest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptDismissJobReportRequest) Reset() {
+	var v DismissJobReportRequest
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptDismissJobReportRequest) SetTo(v DismissJobReportRequest) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptDismissJobReportRequest) Get() (v DismissJobReportRequest, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptDismissJobReportRequest) Or(d DismissJobReportRequest) DismissJobReportRequest {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -1246,6 +12423,144 @@ func (o OptInt32) Or(d int32) int32 {
 	return d
 }
 
+// NewOptInt64 returns new OptInt64 with value set to v.
+func NewOptInt64(v int64) OptInt64 {
+	return OptInt64{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptInt64 is optional int64.
+type OptInt64 struct {
+	Value int64
+	Set   bool
+}
+
+// IsSet returns true if OptInt64 was set.
+func (o OptInt64) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptInt64) Reset() {
+	var v int64
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptInt64) SetTo(v int64) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptInt64) Get() (v int64, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptInt64) Or(d int64) int64 {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptJobFindMeta returns new OptJobFindMeta with value set to v.
+func NewOptJobFindMeta(v JobFindMeta) OptJobFindMeta {
+	return OptJobFindMeta{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptJobFindMeta is optional JobFindMeta.
+type OptJobFindMeta struct {
+	Value JobFindMeta
+	Set   bool
+}
+
+// IsSet returns true if OptJobFindMeta was set.
+func (o OptJobFindMeta) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptJobFindMeta) Reset() {
+	var v JobFindMeta
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptJobFindMeta) SetTo(v JobFindMeta) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptJobFindMeta) Get() (v JobFindMeta, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptJobFindMeta) Or(d JobFindMeta) JobFindMeta {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptMentorshipCancelBody returns new OptMentorshipCancelBody with value set to v.
+func NewOptMentorshipCancelBody(v MentorshipCancelBody) OptMentorshipCancelBody {
+	return OptMentorshipCancelBody{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptMentorshipCancelBody is optional MentorshipCancelBody.
+type OptMentorshipCancelBody struct {
+	Value MentorshipCancelBody
+	Set   bool
+}
+
+// IsSet returns true if OptMentorshipCancelBody was set.
+func (o OptMentorshipCancelBody) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptMentorshipCancelBody) Reset() {
+	var v MentorshipCancelBody
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptMentorshipCancelBody) SetTo(v MentorshipCancelBody) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptMentorshipCancelBody) Get() (v MentorshipCancelBody, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptMentorshipCancelBody) Or(d MentorshipCancelBody) MentorshipCancelBody {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptNilBool returns new OptNilBool with value set to v.
 func NewOptNilBool(v bool) OptNilBool {
 	return OptNilBool{
@@ -1308,6 +12623,142 @@ func (o OptNilBool) Get() (v bool, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptNilBool) Or(d bool) bool {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilDateTime returns new OptNilDateTime with value set to v.
+func NewOptNilDateTime(v time.Time) OptNilDateTime {
+	return OptNilDateTime{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilDateTime is optional nullable time.Time.
+type OptNilDateTime struct {
+	Value time.Time
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilDateTime was set.
+func (o OptNilDateTime) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilDateTime) Reset() {
+	var v time.Time
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilDateTime) SetTo(v time.Time) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilDateTime) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilDateTime) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v time.Time
+	o.Value = v
+}
+
+// IsEmpty returns true if the field was omitted from the payload (not Set and not Null).
+func (o OptNilDateTime) IsEmpty() bool {
+	return !o.Set && !o.Null
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilDateTime) Get() (v time.Time, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilDateTime) Or(d time.Time) time.Time {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptNilEmployerQuestionArray returns new OptNilEmployerQuestionArray with value set to v.
+func NewOptNilEmployerQuestionArray(v []EmployerQuestion) OptNilEmployerQuestionArray {
+	return OptNilEmployerQuestionArray{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptNilEmployerQuestionArray is optional nullable []EmployerQuestion.
+type OptNilEmployerQuestionArray struct {
+	Value []EmployerQuestion
+	Set   bool
+	Null  bool
+}
+
+// IsSet returns true if OptNilEmployerQuestionArray was set.
+func (o OptNilEmployerQuestionArray) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptNilEmployerQuestionArray) Reset() {
+	var v []EmployerQuestion
+	o.Value = v
+	o.Set = false
+	o.Null = false
+}
+
+// SetTo sets value to v.
+func (o *OptNilEmployerQuestionArray) SetTo(v []EmployerQuestion) {
+	o.Set = true
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o OptNilEmployerQuestionArray) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *OptNilEmployerQuestionArray) SetToNull() {
+	o.Set = true
+	o.Null = true
+	var v []EmployerQuestion
+	o.Value = v
+}
+
+// IsEmpty returns true if the field was omitted from the payload (not Set and not Null).
+func (o OptNilEmployerQuestionArray) IsEmpty() bool {
+	return !o.Set && !o.Null
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptNilEmployerQuestionArray) Get() (v []EmployerQuestion, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptNilEmployerQuestionArray) Or(d []EmployerQuestion) []EmployerQuestion {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -1564,6 +13015,98 @@ func (o OptPeriodDate) Or(d PeriodDate) PeriodDate {
 	return d
 }
 
+// NewOptRejectSubmissionRequest returns new OptRejectSubmissionRequest with value set to v.
+func NewOptRejectSubmissionRequest(v RejectSubmissionRequest) OptRejectSubmissionRequest {
+	return OptRejectSubmissionRequest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptRejectSubmissionRequest is optional RejectSubmissionRequest.
+type OptRejectSubmissionRequest struct {
+	Value RejectSubmissionRequest
+	Set   bool
+}
+
+// IsSet returns true if OptRejectSubmissionRequest was set.
+func (o OptRejectSubmissionRequest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptRejectSubmissionRequest) Reset() {
+	var v RejectSubmissionRequest
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptRejectSubmissionRequest) SetTo(v RejectSubmissionRequest) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptRejectSubmissionRequest) Get() (v RejectSubmissionRequest, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptRejectSubmissionRequest) Or(d RejectSubmissionRequest) RejectSubmissionRequest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptResolveJobReportRequest returns new OptResolveJobReportRequest with value set to v.
+func NewOptResolveJobReportRequest(v ResolveJobReportRequest) OptResolveJobReportRequest {
+	return OptResolveJobReportRequest{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptResolveJobReportRequest is optional ResolveJobReportRequest.
+type OptResolveJobReportRequest struct {
+	Value ResolveJobReportRequest
+	Set   bool
+}
+
+// IsSet returns true if OptResolveJobReportRequest was set.
+func (o OptResolveJobReportRequest) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptResolveJobReportRequest) Reset() {
+	var v ResolveJobReportRequest
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptResolveJobReportRequest) SetTo(v ResolveJobReportRequest) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptResolveJobReportRequest) Get() (v ResolveJobReportRequest, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptResolveJobReportRequest) Or(d ResolveJobReportRequest) ResolveJobReportRequest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -1610,6 +13153,200 @@ func (o OptString) Or(d string) string {
 	return d
 }
 
+// Where a page sits in the whole list.
+// Ref: #/components/schemas/PageMeta
+type PageMeta struct {
+	Total  int64 `json:"total"`
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+}
+
+// GetTotal returns the value of Total.
+func (s *PageMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// GetLimit returns the value of Limit.
+func (s *PageMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *PageMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// SetTotal sets the value of Total.
+func (s *PageMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *PageMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *PageMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// A single item: `{"data": ...}`.
+type PatchCVOK struct {
+	Data CvMeta `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PatchCVOK) GetData() CvMeta {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PatchCVOK) SetData(val CvMeta) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type PauseMentorProfileOK struct {
+	Data MentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PauseMentorProfileOK) GetData() MentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PauseMentorProfileOK) SetData(val MentorshipMentor) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/PendingCompanyRelation
+type PendingCompanyRelation struct {
+	ID              int64     `json:"id"`
+	Kind            string    `json:"kind"`
+	CompanySlug     string    `json:"company_slug"`
+	CompanyName     string    `json:"company_name"`
+	CompanyJobCount int64     `json:"company_job_count"`
+	TargetSlug      string    `json:"target_slug"`
+	TargetName      string    `json:"target_name"`
+	TargetJobCount  int64     `json:"target_job_count"`
+	Note            string    `json:"note"`
+	CreatedAt       time.Time `json:"created_at"`
+	// `pending`, or `approved` for a merge whose job move stopped part-way.
+	Status string `json:"status"`
+}
+
+// GetID returns the value of ID.
+func (s *PendingCompanyRelation) GetID() int64 {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *PendingCompanyRelation) GetKind() string {
+	return s.Kind
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *PendingCompanyRelation) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *PendingCompanyRelation) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetCompanyJobCount returns the value of CompanyJobCount.
+func (s *PendingCompanyRelation) GetCompanyJobCount() int64 {
+	return s.CompanyJobCount
+}
+
+// GetTargetSlug returns the value of TargetSlug.
+func (s *PendingCompanyRelation) GetTargetSlug() string {
+	return s.TargetSlug
+}
+
+// GetTargetName returns the value of TargetName.
+func (s *PendingCompanyRelation) GetTargetName() string {
+	return s.TargetName
+}
+
+// GetTargetJobCount returns the value of TargetJobCount.
+func (s *PendingCompanyRelation) GetTargetJobCount() int64 {
+	return s.TargetJobCount
+}
+
+// GetNote returns the value of Note.
+func (s *PendingCompanyRelation) GetNote() string {
+	return s.Note
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *PendingCompanyRelation) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetStatus returns the value of Status.
+func (s *PendingCompanyRelation) GetStatus() string {
+	return s.Status
+}
+
+// SetID sets the value of ID.
+func (s *PendingCompanyRelation) SetID(val int64) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *PendingCompanyRelation) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *PendingCompanyRelation) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *PendingCompanyRelation) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetCompanyJobCount sets the value of CompanyJobCount.
+func (s *PendingCompanyRelation) SetCompanyJobCount(val int64) {
+	s.CompanyJobCount = val
+}
+
+// SetTargetSlug sets the value of TargetSlug.
+func (s *PendingCompanyRelation) SetTargetSlug(val string) {
+	s.TargetSlug = val
+}
+
+// SetTargetName sets the value of TargetName.
+func (s *PendingCompanyRelation) SetTargetName(val string) {
+	s.TargetName = val
+}
+
+// SetTargetJobCount sets the value of TargetJobCount.
+func (s *PendingCompanyRelation) SetTargetJobCount(val int64) {
+	s.TargetJobCount = val
+}
+
+// SetNote sets the value of Note.
+func (s *PendingCompanyRelation) SetNote(val string) {
+	s.Note = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *PendingCompanyRelation) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetStatus sets the value of Status.
+func (s *PendingCompanyRelation) SetStatus(val string) {
+	s.Status = val
+}
+
 // A year, with a month when the CV gives one.
 // Ref: #/components/schemas/PeriodDate
 type PeriodDate struct {
@@ -1635,6 +13372,78 @@ func (s *PeriodDate) SetYear(val int32) {
 // SetMonth sets the value of Month.
 func (s *PeriodDate) SetMonth(val OptInt32) {
 	s.Month = val
+}
+
+// Usage against a limit for one metered feature today.
+// Ref: #/components/schemas/PlanAllowance
+type PlanAllowance struct {
+	Feature string `json:"feature"`
+	Used    int64  `json:"used"`
+	// Absent for an unlimited caller.
+	Limit     OptInt64  `json:"limit"`
+	Unlimited bool      `json:"unlimited"`
+	Enforced  bool      `json:"enforced"`
+	ResetsAt  time.Time `json:"resets_at"`
+}
+
+// GetFeature returns the value of Feature.
+func (s *PlanAllowance) GetFeature() string {
+	return s.Feature
+}
+
+// GetUsed returns the value of Used.
+func (s *PlanAllowance) GetUsed() int64 {
+	return s.Used
+}
+
+// GetLimit returns the value of Limit.
+func (s *PlanAllowance) GetLimit() OptInt64 {
+	return s.Limit
+}
+
+// GetUnlimited returns the value of Unlimited.
+func (s *PlanAllowance) GetUnlimited() bool {
+	return s.Unlimited
+}
+
+// GetEnforced returns the value of Enforced.
+func (s *PlanAllowance) GetEnforced() bool {
+	return s.Enforced
+}
+
+// GetResetsAt returns the value of ResetsAt.
+func (s *PlanAllowance) GetResetsAt() time.Time {
+	return s.ResetsAt
+}
+
+// SetFeature sets the value of Feature.
+func (s *PlanAllowance) SetFeature(val string) {
+	s.Feature = val
+}
+
+// SetUsed sets the value of Used.
+func (s *PlanAllowance) SetUsed(val int64) {
+	s.Used = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *PlanAllowance) SetLimit(val OptInt64) {
+	s.Limit = val
+}
+
+// SetUnlimited sets the value of Unlimited.
+func (s *PlanAllowance) SetUnlimited(val bool) {
+	s.Unlimited = val
+}
+
+// SetEnforced sets the value of Enforced.
+func (s *PlanAllowance) SetEnforced(val bool) {
+	s.Enforced = val
+}
+
+// SetResetsAt sets the value of ResetsAt.
+func (s *PlanAllowance) SetResetsAt(val time.Time) {
+	s.ResetsAt = val
 }
 
 // Ref: #/components/schemas/PlanFeature
@@ -1683,6 +13492,76 @@ func (s *PlanFeature) SetPro(val PlanTierAllowance) {
 // SetUltra sets the value of Ultra.
 func (s *PlanFeature) SetUltra(val PlanTierAllowance) {
 	s.Ultra = val
+}
+
+// Ref: #/components/schemas/PlanHistoryEntry
+type PlanHistoryEntry struct {
+	Feature   string    `json:"feature"`
+	Day       string    `json:"day"`
+	Kind      string    `json:"kind"`
+	Label     string    `json:"label"`
+	Subtitle  OptString `json:"subtitle"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// GetFeature returns the value of Feature.
+func (s *PlanHistoryEntry) GetFeature() string {
+	return s.Feature
+}
+
+// GetDay returns the value of Day.
+func (s *PlanHistoryEntry) GetDay() string {
+	return s.Day
+}
+
+// GetKind returns the value of Kind.
+func (s *PlanHistoryEntry) GetKind() string {
+	return s.Kind
+}
+
+// GetLabel returns the value of Label.
+func (s *PlanHistoryEntry) GetLabel() string {
+	return s.Label
+}
+
+// GetSubtitle returns the value of Subtitle.
+func (s *PlanHistoryEntry) GetSubtitle() OptString {
+	return s.Subtitle
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *PlanHistoryEntry) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetFeature sets the value of Feature.
+func (s *PlanHistoryEntry) SetFeature(val string) {
+	s.Feature = val
+}
+
+// SetDay sets the value of Day.
+func (s *PlanHistoryEntry) SetDay(val string) {
+	s.Day = val
+}
+
+// SetKind sets the value of Kind.
+func (s *PlanHistoryEntry) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetLabel sets the value of Label.
+func (s *PlanHistoryEntry) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetSubtitle sets the value of Subtitle.
+func (s *PlanHistoryEntry) SetSubtitle(val OptString) {
+	s.Subtitle = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *PlanHistoryEntry) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
 }
 
 // Ref: #/components/schemas/PlanPrice
@@ -1759,6 +13638,68 @@ func (s *PlanPrice) SetTier(val string) {
 	s.Tier = val
 }
 
+// Ref: #/components/schemas/PlanStanding
+type PlanStanding struct {
+	// The tier name: `free`, `pro`, `ultra`.
+	Plan     string    `json:"plan"`
+	ResetsAt time.Time `json:"resets_at"`
+	// When the paid plan lapses, absent on the free plan.
+	ProUntil OptDateTime `json:"pro_until"`
+	// Where the plan was bought: `stripe`, `revenuecat` or `granted`. Absent on the free plan.
+	ProSource  OptString       `json:"pro_source"`
+	Allowances []PlanAllowance `json:"allowances"`
+}
+
+// GetPlan returns the value of Plan.
+func (s *PlanStanding) GetPlan() string {
+	return s.Plan
+}
+
+// GetResetsAt returns the value of ResetsAt.
+func (s *PlanStanding) GetResetsAt() time.Time {
+	return s.ResetsAt
+}
+
+// GetProUntil returns the value of ProUntil.
+func (s *PlanStanding) GetProUntil() OptDateTime {
+	return s.ProUntil
+}
+
+// GetProSource returns the value of ProSource.
+func (s *PlanStanding) GetProSource() OptString {
+	return s.ProSource
+}
+
+// GetAllowances returns the value of Allowances.
+func (s *PlanStanding) GetAllowances() []PlanAllowance {
+	return s.Allowances
+}
+
+// SetPlan sets the value of Plan.
+func (s *PlanStanding) SetPlan(val string) {
+	s.Plan = val
+}
+
+// SetResetsAt sets the value of ResetsAt.
+func (s *PlanStanding) SetResetsAt(val time.Time) {
+	s.ResetsAt = val
+}
+
+// SetProUntil sets the value of ProUntil.
+func (s *PlanStanding) SetProUntil(val OptDateTime) {
+	s.ProUntil = val
+}
+
+// SetProSource sets the value of ProSource.
+func (s *PlanStanding) SetProSource(val OptString) {
+	s.ProSource = val
+}
+
+// SetAllowances sets the value of Allowances.
+func (s *PlanStanding) SetAllowances(val []PlanAllowance) {
+	s.Allowances = val
+}
+
 // What one tier allows for one feature in a UTC day.
 // Ref: #/components/schemas/PlanTierAllowance
 type PlanTierAllowance struct {
@@ -1825,6 +13766,66 @@ func (s *Plans) SetEnforced(val []string) {
 	s.Enforced = val
 }
 
+// A single item: `{"data": ...}`.
+type PostAtsReportOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PostAtsReportOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PostAtsReportOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/PrefillRequest
+type PrefillRequest struct {
+	URL OptString `json:"url"`
+}
+
+// GetURL returns the value of URL.
+func (s *PrefillRequest) GetURL() OptString {
+	return s.URL
+}
+
+// SetURL sets the value of URL.
+func (s *PrefillRequest) SetURL(val OptString) {
+	s.URL = val
+}
+
+// A single item: `{"data": ...}`.
+type PrefillSubmissionOK struct {
+	Data SubmissionPrefill `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PrefillSubmissionOK) GetData() SubmissionPrefill {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PrefillSubmissionOK) SetData(val SubmissionPrefill) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type PreviewPromoCodeOK struct {
+	Data PromoDiscount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PreviewPromoCodeOK) GetData() PromoDiscount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PreviewPromoCodeOK) SetData(val PromoDiscount) {
+	s.Data = val
+}
+
 // Every refusal, whatever its status: `{"error": msg}`. `code` is set only where a client branches on
 // the reason (the auth flows).
 // Ref: #/components/schemas/Problem
@@ -1879,6 +13880,648 @@ func (s *ProblemStatusCode) SetResponse(val Problem) {
 	s.Response = val
 }
 
+// What a person reported about a company's hiring process.
+// Ref: #/components/schemas/ProcessReport
+type ProcessReport struct {
+	Kind string `json:"kind"`
+	// How many people have reported this kind for the company.
+	Count int64 `json:"count"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ProcessReport) GetKind() string {
+	return s.Kind
+}
+
+// GetCount returns the value of Count.
+func (s *ProcessReport) GetCount() int64 {
+	return s.Count
+}
+
+// SetKind sets the value of Kind.
+func (s *ProcessReport) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetCount sets the value of Count.
+func (s *ProcessReport) SetCount(val int64) {
+	s.Count = val
+}
+
+// Ref: #/components/schemas/ProcessReportRequest
+type ProcessReportRequest struct {
+	Kind OptString `json:"kind"`
+}
+
+// GetKind returns the value of Kind.
+func (s *ProcessReportRequest) GetKind() OptString {
+	return s.Kind
+}
+
+// SetKind sets the value of Kind.
+func (s *ProcessReportRequest) SetKind(val OptString) {
+	s.Kind = val
+}
+
+// Ref: #/components/schemas/Profile
+type Profile struct {
+	Specializations   []string `json:"specializations"`
+	Skills            []string `json:"skills"`
+	Seniorities       []string `json:"seniorities"`
+	ExcludedSkills    []string `json:"excluded_skills"`
+	ExcludedSources   []string `json:"excluded_sources"`
+	JobLanguages      []string `json:"job_languages"`
+	ExcludedCompanies []string `json:"excluded_companies"`
+	// What the caller asserted, shaped like LocationPreferences, sent exactly as stored; null when they
+	// set none.
+	LocationPreferences jx.Raw `json:"location_preferences"`
+	// What was derived from their CV; null when there is no current structured CV.
+	DerivedLocation NilDerivedLocation `json:"derived_location"`
+	// The contact-free CV, shaped like ProfileCV, sent exactly as the CV store writes it; null when no
+	// current structure exists.
+	Cv        jx.Raw      `json:"cv"`
+	CreatedAt NilDateTime `json:"created_at"`
+	UpdatedAt NilDateTime `json:"updated_at"`
+}
+
+// GetSpecializations returns the value of Specializations.
+func (s *Profile) GetSpecializations() []string {
+	return s.Specializations
+}
+
+// GetSkills returns the value of Skills.
+func (s *Profile) GetSkills() []string {
+	return s.Skills
+}
+
+// GetSeniorities returns the value of Seniorities.
+func (s *Profile) GetSeniorities() []string {
+	return s.Seniorities
+}
+
+// GetExcludedSkills returns the value of ExcludedSkills.
+func (s *Profile) GetExcludedSkills() []string {
+	return s.ExcludedSkills
+}
+
+// GetExcludedSources returns the value of ExcludedSources.
+func (s *Profile) GetExcludedSources() []string {
+	return s.ExcludedSources
+}
+
+// GetJobLanguages returns the value of JobLanguages.
+func (s *Profile) GetJobLanguages() []string {
+	return s.JobLanguages
+}
+
+// GetExcludedCompanies returns the value of ExcludedCompanies.
+func (s *Profile) GetExcludedCompanies() []string {
+	return s.ExcludedCompanies
+}
+
+// GetLocationPreferences returns the value of LocationPreferences.
+func (s *Profile) GetLocationPreferences() jx.Raw {
+	return s.LocationPreferences
+}
+
+// GetDerivedLocation returns the value of DerivedLocation.
+func (s *Profile) GetDerivedLocation() NilDerivedLocation {
+	return s.DerivedLocation
+}
+
+// GetCv returns the value of Cv.
+func (s *Profile) GetCv() jx.Raw {
+	return s.Cv
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Profile) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *Profile) GetUpdatedAt() NilDateTime {
+	return s.UpdatedAt
+}
+
+// SetSpecializations sets the value of Specializations.
+func (s *Profile) SetSpecializations(val []string) {
+	s.Specializations = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *Profile) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetSeniorities sets the value of Seniorities.
+func (s *Profile) SetSeniorities(val []string) {
+	s.Seniorities = val
+}
+
+// SetExcludedSkills sets the value of ExcludedSkills.
+func (s *Profile) SetExcludedSkills(val []string) {
+	s.ExcludedSkills = val
+}
+
+// SetExcludedSources sets the value of ExcludedSources.
+func (s *Profile) SetExcludedSources(val []string) {
+	s.ExcludedSources = val
+}
+
+// SetJobLanguages sets the value of JobLanguages.
+func (s *Profile) SetJobLanguages(val []string) {
+	s.JobLanguages = val
+}
+
+// SetExcludedCompanies sets the value of ExcludedCompanies.
+func (s *Profile) SetExcludedCompanies(val []string) {
+	s.ExcludedCompanies = val
+}
+
+// SetLocationPreferences sets the value of LocationPreferences.
+func (s *Profile) SetLocationPreferences(val jx.Raw) {
+	s.LocationPreferences = val
+}
+
+// SetDerivedLocation sets the value of DerivedLocation.
+func (s *Profile) SetDerivedLocation(val NilDerivedLocation) {
+	s.DerivedLocation = val
+}
+
+// SetCv sets the value of Cv.
+func (s *Profile) SetCv(val jx.Raw) {
+	s.Cv = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Profile) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *Profile) SetUpdatedAt(val NilDateTime) {
+	s.UpdatedAt = val
+}
+
+// The profile as saved.
+// Ref: #/components/schemas/ProfileUpdate
+type ProfileUpdate struct {
+	Specializations   OptNilStringArray `json:"specializations"`
+	Skills            OptNilStringArray `json:"skills"`
+	Seniorities       OptNilStringArray `json:"seniorities"`
+	ExcludedSkills    OptNilStringArray `json:"excluded_skills"`
+	ExcludedSources   OptNilStringArray `json:"excluded_sources"`
+	JobLanguages      OptNilStringArray `json:"job_languages"`
+	ExcludedCompanies OptNilStringArray `json:"excluded_companies"`
+	// Shaped like LocationPreferences; null or absent keeps none.
+	LocationPreferences jx.Raw `json:"location_preferences"`
+}
+
+// GetSpecializations returns the value of Specializations.
+func (s *ProfileUpdate) GetSpecializations() OptNilStringArray {
+	return s.Specializations
+}
+
+// GetSkills returns the value of Skills.
+func (s *ProfileUpdate) GetSkills() OptNilStringArray {
+	return s.Skills
+}
+
+// GetSeniorities returns the value of Seniorities.
+func (s *ProfileUpdate) GetSeniorities() OptNilStringArray {
+	return s.Seniorities
+}
+
+// GetExcludedSkills returns the value of ExcludedSkills.
+func (s *ProfileUpdate) GetExcludedSkills() OptNilStringArray {
+	return s.ExcludedSkills
+}
+
+// GetExcludedSources returns the value of ExcludedSources.
+func (s *ProfileUpdate) GetExcludedSources() OptNilStringArray {
+	return s.ExcludedSources
+}
+
+// GetJobLanguages returns the value of JobLanguages.
+func (s *ProfileUpdate) GetJobLanguages() OptNilStringArray {
+	return s.JobLanguages
+}
+
+// GetExcludedCompanies returns the value of ExcludedCompanies.
+func (s *ProfileUpdate) GetExcludedCompanies() OptNilStringArray {
+	return s.ExcludedCompanies
+}
+
+// GetLocationPreferences returns the value of LocationPreferences.
+func (s *ProfileUpdate) GetLocationPreferences() jx.Raw {
+	return s.LocationPreferences
+}
+
+// SetSpecializations sets the value of Specializations.
+func (s *ProfileUpdate) SetSpecializations(val OptNilStringArray) {
+	s.Specializations = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *ProfileUpdate) SetSkills(val OptNilStringArray) {
+	s.Skills = val
+}
+
+// SetSeniorities sets the value of Seniorities.
+func (s *ProfileUpdate) SetSeniorities(val OptNilStringArray) {
+	s.Seniorities = val
+}
+
+// SetExcludedSkills sets the value of ExcludedSkills.
+func (s *ProfileUpdate) SetExcludedSkills(val OptNilStringArray) {
+	s.ExcludedSkills = val
+}
+
+// SetExcludedSources sets the value of ExcludedSources.
+func (s *ProfileUpdate) SetExcludedSources(val OptNilStringArray) {
+	s.ExcludedSources = val
+}
+
+// SetJobLanguages sets the value of JobLanguages.
+func (s *ProfileUpdate) SetJobLanguages(val OptNilStringArray) {
+	s.JobLanguages = val
+}
+
+// SetExcludedCompanies sets the value of ExcludedCompanies.
+func (s *ProfileUpdate) SetExcludedCompanies(val OptNilStringArray) {
+	s.ExcludedCompanies = val
+}
+
+// SetLocationPreferences sets the value of LocationPreferences.
+func (s *ProfileUpdate) SetLocationPreferences(val jx.Raw) {
+	s.LocationPreferences = val
+}
+
+// Ref: #/components/schemas/PromoCode
+type PromoCode struct {
+	Code OptString `json:"code"`
+}
+
+// GetCode returns the value of Code.
+func (s *PromoCode) GetCode() OptString {
+	return s.Code
+}
+
+// SetCode sets the value of Code.
+func (s *PromoCode) SetCode(val OptString) {
+	s.Code = val
+}
+
+// Ref: #/components/schemas/PromoDiscount
+type PromoDiscount struct {
+	PercentOff int64 `json:"percent_off"`
+}
+
+// GetPercentOff returns the value of PercentOff.
+func (s *PromoDiscount) GetPercentOff() int64 {
+	return s.PercentOff
+}
+
+// SetPercentOff sets the value of PercentOff.
+func (s *PromoDiscount) SetPercentOff(val int64) {
+	s.PercentOff = val
+}
+
+// A single item: `{"data": ...}`.
+type ProposeCompanyRelationCreated struct {
+	Data CompanyRelationProposal `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ProposeCompanyRelationCreated) GetData() CompanyRelationProposal {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ProposeCompanyRelationCreated) SetData(val CompanyRelationProposal) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/PulseCompetition
+type PulseCompetition struct {
+	Views            int64     `json:"views"`
+	ViewsPrev        int64     `json:"views_prev"`
+	ExposureDays     float64   `json:"exposure_days"`
+	ExposureDaysPrev float64   `json:"exposure_days_prev"`
+	ViewsThrough     NilString `json:"views_through"`
+}
+
+// GetViews returns the value of Views.
+func (s *PulseCompetition) GetViews() int64 {
+	return s.Views
+}
+
+// GetViewsPrev returns the value of ViewsPrev.
+func (s *PulseCompetition) GetViewsPrev() int64 {
+	return s.ViewsPrev
+}
+
+// GetExposureDays returns the value of ExposureDays.
+func (s *PulseCompetition) GetExposureDays() float64 {
+	return s.ExposureDays
+}
+
+// GetExposureDaysPrev returns the value of ExposureDaysPrev.
+func (s *PulseCompetition) GetExposureDaysPrev() float64 {
+	return s.ExposureDaysPrev
+}
+
+// GetViewsThrough returns the value of ViewsThrough.
+func (s *PulseCompetition) GetViewsThrough() NilString {
+	return s.ViewsThrough
+}
+
+// SetViews sets the value of Views.
+func (s *PulseCompetition) SetViews(val int64) {
+	s.Views = val
+}
+
+// SetViewsPrev sets the value of ViewsPrev.
+func (s *PulseCompetition) SetViewsPrev(val int64) {
+	s.ViewsPrev = val
+}
+
+// SetExposureDays sets the value of ExposureDays.
+func (s *PulseCompetition) SetExposureDays(val float64) {
+	s.ExposureDays = val
+}
+
+// SetExposureDaysPrev sets the value of ExposureDaysPrev.
+func (s *PulseCompetition) SetExposureDaysPrev(val float64) {
+	s.ExposureDaysPrev = val
+}
+
+// SetViewsThrough sets the value of ViewsThrough.
+func (s *PulseCompetition) SetViewsThrough(val NilString) {
+	s.ViewsThrough = val
+}
+
+// Ref: #/components/schemas/PulseInflow
+type PulseInflow struct {
+	Count int64 `json:"count"`
+}
+
+// GetCount returns the value of Count.
+func (s *PulseInflow) GetCount() int64 {
+	return s.Count
+}
+
+// SetCount sets the value of Count.
+func (s *PulseInflow) SetCount(val int64) {
+	s.Count = val
+}
+
+// Ref: #/components/schemas/PulseTimeToClose
+type PulseTimeToClose struct {
+	Closed         int64      `json:"closed"`
+	ClosedPrev     int64      `json:"closed_prev"`
+	MedianDays     NilFloat32 `json:"median_days"`
+	MedianDaysPrev NilFloat32 `json:"median_days_prev"`
+}
+
+// GetClosed returns the value of Closed.
+func (s *PulseTimeToClose) GetClosed() int64 {
+	return s.Closed
+}
+
+// GetClosedPrev returns the value of ClosedPrev.
+func (s *PulseTimeToClose) GetClosedPrev() int64 {
+	return s.ClosedPrev
+}
+
+// GetMedianDays returns the value of MedianDays.
+func (s *PulseTimeToClose) GetMedianDays() NilFloat32 {
+	return s.MedianDays
+}
+
+// GetMedianDaysPrev returns the value of MedianDaysPrev.
+func (s *PulseTimeToClose) GetMedianDaysPrev() NilFloat32 {
+	return s.MedianDaysPrev
+}
+
+// SetClosed sets the value of Closed.
+func (s *PulseTimeToClose) SetClosed(val int64) {
+	s.Closed = val
+}
+
+// SetClosedPrev sets the value of ClosedPrev.
+func (s *PulseTimeToClose) SetClosedPrev(val int64) {
+	s.ClosedPrev = val
+}
+
+// SetMedianDays sets the value of MedianDays.
+func (s *PulseTimeToClose) SetMedianDays(val NilFloat32) {
+	s.MedianDays = val
+}
+
+// SetMedianDaysPrev sets the value of MedianDaysPrev.
+func (s *PulseTimeToClose) SetMedianDaysPrev(val NilFloat32) {
+	s.MedianDaysPrev = val
+}
+
+// A single item: `{"data": ...}`.
+type PutProfileOK struct {
+	Data Profile `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PutProfileOK) GetData() Profile {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PutProfileOK) SetData(val Profile) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type PutResumeContactsOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PutResumeContactsOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PutResumeContactsOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ReactivateMentorProfileOK struct {
+	Data MentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ReactivateMentorProfileOK) GetData() MentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ReactivateMentorProfileOK) SetData(val MentorshipMentor) {
+	s.Data = val
+}
+
+// A feed row: the thread plus the subject's display names, empty when the subject no longer exists.
+// Ref: #/components/schemas/RecentThread
+type RecentThread struct {
+	ID             int64     `json:"id"`
+	SubjectType    string    `json:"subject_type"`
+	SubjectSlug    string    `json:"subject_slug"`
+	Title          string    `json:"title"`
+	Body           string    `json:"body"`
+	Author         string    `json:"author"`
+	ReplyCount     int64     `json:"reply_count"`
+	Status         string    `json:"status"`
+	CreatedAt      time.Time `json:"created_at"`
+	SubjectTitle   string    `json:"subject_title"`
+	SubjectCompany string    `json:"subject_company"`
+}
+
+// GetID returns the value of ID.
+func (s *RecentThread) GetID() int64 {
+	return s.ID
+}
+
+// GetSubjectType returns the value of SubjectType.
+func (s *RecentThread) GetSubjectType() string {
+	return s.SubjectType
+}
+
+// GetSubjectSlug returns the value of SubjectSlug.
+func (s *RecentThread) GetSubjectSlug() string {
+	return s.SubjectSlug
+}
+
+// GetTitle returns the value of Title.
+func (s *RecentThread) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *RecentThread) GetBody() string {
+	return s.Body
+}
+
+// GetAuthor returns the value of Author.
+func (s *RecentThread) GetAuthor() string {
+	return s.Author
+}
+
+// GetReplyCount returns the value of ReplyCount.
+func (s *RecentThread) GetReplyCount() int64 {
+	return s.ReplyCount
+}
+
+// GetStatus returns the value of Status.
+func (s *RecentThread) GetStatus() string {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *RecentThread) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetSubjectTitle returns the value of SubjectTitle.
+func (s *RecentThread) GetSubjectTitle() string {
+	return s.SubjectTitle
+}
+
+// GetSubjectCompany returns the value of SubjectCompany.
+func (s *RecentThread) GetSubjectCompany() string {
+	return s.SubjectCompany
+}
+
+// SetID sets the value of ID.
+func (s *RecentThread) SetID(val int64) {
+	s.ID = val
+}
+
+// SetSubjectType sets the value of SubjectType.
+func (s *RecentThread) SetSubjectType(val string) {
+	s.SubjectType = val
+}
+
+// SetSubjectSlug sets the value of SubjectSlug.
+func (s *RecentThread) SetSubjectSlug(val string) {
+	s.SubjectSlug = val
+}
+
+// SetTitle sets the value of Title.
+func (s *RecentThread) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *RecentThread) SetBody(val string) {
+	s.Body = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *RecentThread) SetAuthor(val string) {
+	s.Author = val
+}
+
+// SetReplyCount sets the value of ReplyCount.
+func (s *RecentThread) SetReplyCount(val int64) {
+	s.ReplyCount = val
+}
+
+// SetStatus sets the value of Status.
+func (s *RecentThread) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *RecentThread) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetSubjectTitle sets the value of SubjectTitle.
+func (s *RecentThread) SetSubjectTitle(val string) {
+	s.SubjectTitle = val
+}
+
+// SetSubjectCompany sets the value of SubjectCompany.
+func (s *RecentThread) SetSubjectCompany(val string) {
+	s.SubjectCompany = val
+}
+
+// Ref: #/components/schemas/RecentThreadPage
+type RecentThreadPage struct {
+	Data []RecentThread   `json:"data"`
+	Meta ThreadCursorMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *RecentThreadPage) GetData() []RecentThread {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *RecentThreadPage) GetMeta() ThreadCursorMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *RecentThreadPage) SetData(val []RecentThread) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *RecentThreadPage) SetMeta(val ThreadCursorMeta) {
+	s.Meta = val
+}
+
 // A single item: `{"data": ...}`.
 type RecordDictionaryGapOK struct {
 	Data DictionaryGapRecorded `json:"data"`
@@ -1894,8 +14537,845 @@ func (s *RecordDictionaryGapOK) SetData(val DictionaryGapRecorded) {
 	s.Data = val
 }
 
+// A single item: `{"data": ...}`.
+type RecordViewOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RecordViewOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RecordViewOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type RedeemPromoCodeOK struct {
+	Data PromoDiscount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RedeemPromoCodeOK) GetData() PromoDiscount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RedeemPromoCodeOK) SetData(val PromoDiscount) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/ReferralCVOption
+type ReferralCVOption struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
+// GetID returns the value of ID.
+func (s *ReferralCVOption) GetID() string {
+	return s.ID
+}
+
+// GetTitle returns the value of Title.
+func (s *ReferralCVOption) GetTitle() string {
+	return s.Title
+}
+
+// SetID sets the value of ID.
+func (s *ReferralCVOption) SetID(val string) {
+	s.ID = val
+}
+
+// SetTitle sets the value of Title.
+func (s *ReferralCVOption) SetTitle(val string) {
+	s.Title = val
+}
+
+// Ref: #/components/schemas/ReferralCVOptions
+type ReferralCVOptions struct {
+	Tailored  []ReferralCVOption `json:"tailored"`
+	HasResume bool               `json:"has_resume"`
+}
+
+// GetTailored returns the value of Tailored.
+func (s *ReferralCVOptions) GetTailored() []ReferralCVOption {
+	return s.Tailored
+}
+
+// GetHasResume returns the value of HasResume.
+func (s *ReferralCVOptions) GetHasResume() bool {
+	return s.HasResume
+}
+
+// SetTailored sets the value of Tailored.
+func (s *ReferralCVOptions) SetTailored(val []ReferralCVOption) {
+	s.Tailored = val
+}
+
+// SetHasResume sets the value of HasResume.
+func (s *ReferralCVOptions) SetHasResume(val bool) {
+	s.HasResume = val
+}
+
+// Ref: #/components/schemas/ReferralDecision
+type ReferralDecision struct {
+	Approve OptBool `json:"approve"`
+}
+
+// GetApprove returns the value of Approve.
+func (s *ReferralDecision) GetApprove() OptBool {
+	return s.Approve
+}
+
+// SetApprove sets the value of Approve.
+func (s *ReferralDecision) SetApprove(val OptBool) {
+	s.Approve = val
+}
+
+// What a referrer sees: the seeker's chosen contact and CV, never their user id.
+// Ref: #/components/schemas/ReferralIncomingRequest
+type ReferralIncomingRequest struct {
+	ID              string      `json:"id"`
+	CompanySlug     string      `json:"company_slug"`
+	CompanyName     string      `json:"company_name"`
+	JobID           NilInt64    `json:"job_id"`
+	CvKind          string      `json:"cv_kind"`
+	LinkedinURL     OptString   `json:"linkedin_url"`
+	ContactTelegram OptString   `json:"contact_telegram"`
+	ContactEmail    OptString   `json:"contact_email"`
+	Note            OptString   `json:"note"`
+	Status          string      `json:"status"`
+	CreatedAt       NilDateTime `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *ReferralIncomingRequest) GetID() string {
+	return s.ID
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ReferralIncomingRequest) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *ReferralIncomingRequest) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetJobID returns the value of JobID.
+func (s *ReferralIncomingRequest) GetJobID() NilInt64 {
+	return s.JobID
+}
+
+// GetCvKind returns the value of CvKind.
+func (s *ReferralIncomingRequest) GetCvKind() string {
+	return s.CvKind
+}
+
+// GetLinkedinURL returns the value of LinkedinURL.
+func (s *ReferralIncomingRequest) GetLinkedinURL() OptString {
+	return s.LinkedinURL
+}
+
+// GetContactTelegram returns the value of ContactTelegram.
+func (s *ReferralIncomingRequest) GetContactTelegram() OptString {
+	return s.ContactTelegram
+}
+
+// GetContactEmail returns the value of ContactEmail.
+func (s *ReferralIncomingRequest) GetContactEmail() OptString {
+	return s.ContactEmail
+}
+
+// GetNote returns the value of Note.
+func (s *ReferralIncomingRequest) GetNote() OptString {
+	return s.Note
+}
+
+// GetStatus returns the value of Status.
+func (s *ReferralIncomingRequest) GetStatus() string {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ReferralIncomingRequest) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *ReferralIncomingRequest) SetID(val string) {
+	s.ID = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ReferralIncomingRequest) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *ReferralIncomingRequest) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetJobID sets the value of JobID.
+func (s *ReferralIncomingRequest) SetJobID(val NilInt64) {
+	s.JobID = val
+}
+
+// SetCvKind sets the value of CvKind.
+func (s *ReferralIncomingRequest) SetCvKind(val string) {
+	s.CvKind = val
+}
+
+// SetLinkedinURL sets the value of LinkedinURL.
+func (s *ReferralIncomingRequest) SetLinkedinURL(val OptString) {
+	s.LinkedinURL = val
+}
+
+// SetContactTelegram sets the value of ContactTelegram.
+func (s *ReferralIncomingRequest) SetContactTelegram(val OptString) {
+	s.ContactTelegram = val
+}
+
+// SetContactEmail sets the value of ContactEmail.
+func (s *ReferralIncomingRequest) SetContactEmail(val OptString) {
+	s.ContactEmail = val
+}
+
+// SetNote sets the value of Note.
+func (s *ReferralIncomingRequest) SetNote(val OptString) {
+	s.Note = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ReferralIncomingRequest) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ReferralIncomingRequest) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/ReferralOffer
+type ReferralOffer struct {
+	ID          string      `json:"id"`
+	CompanySlug string      `json:"company_slug"`
+	CompanyName string      `json:"company_name"`
+	LinkedinURL string      `json:"linkedin_url"`
+	Status      string      `json:"status"`
+	DecidedAt   NilDateTime `json:"decided_at"`
+	CreatedAt   NilDateTime `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *ReferralOffer) GetID() string {
+	return s.ID
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ReferralOffer) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *ReferralOffer) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetLinkedinURL returns the value of LinkedinURL.
+func (s *ReferralOffer) GetLinkedinURL() string {
+	return s.LinkedinURL
+}
+
+// GetStatus returns the value of Status.
+func (s *ReferralOffer) GetStatus() string {
+	return s.Status
+}
+
+// GetDecidedAt returns the value of DecidedAt.
+func (s *ReferralOffer) GetDecidedAt() NilDateTime {
+	return s.DecidedAt
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ReferralOffer) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *ReferralOffer) SetID(val string) {
+	s.ID = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ReferralOffer) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *ReferralOffer) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetLinkedinURL sets the value of LinkedinURL.
+func (s *ReferralOffer) SetLinkedinURL(val string) {
+	s.LinkedinURL = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ReferralOffer) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetDecidedAt sets the value of DecidedAt.
+func (s *ReferralOffer) SetDecidedAt(val NilDateTime) {
+	s.DecidedAt = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ReferralOffer) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/ReferralRequestCreate
+type ReferralRequestCreate struct {
+	CompanySlug OptString `json:"company_slug"`
+	// Names the vacancy; an unknown slug is a 404. Wins over `job_id`.
+	JobSlug         OptString    `json:"job_slug"`
+	JobID           OptNilInt64  `json:"job_id"`
+	CvKind          OptString    `json:"cv_kind"`
+	CvID            OptNilString `json:"cv_id"`
+	LinkedinURL     OptString    `json:"linkedin_url"`
+	ContactTelegram OptString    `json:"contact_telegram"`
+	ContactEmail    OptString    `json:"contact_email"`
+	Note            OptString    `json:"note"`
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ReferralRequestCreate) GetCompanySlug() OptString {
+	return s.CompanySlug
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *ReferralRequestCreate) GetJobSlug() OptString {
+	return s.JobSlug
+}
+
+// GetJobID returns the value of JobID.
+func (s *ReferralRequestCreate) GetJobID() OptNilInt64 {
+	return s.JobID
+}
+
+// GetCvKind returns the value of CvKind.
+func (s *ReferralRequestCreate) GetCvKind() OptString {
+	return s.CvKind
+}
+
+// GetCvID returns the value of CvID.
+func (s *ReferralRequestCreate) GetCvID() OptNilString {
+	return s.CvID
+}
+
+// GetLinkedinURL returns the value of LinkedinURL.
+func (s *ReferralRequestCreate) GetLinkedinURL() OptString {
+	return s.LinkedinURL
+}
+
+// GetContactTelegram returns the value of ContactTelegram.
+func (s *ReferralRequestCreate) GetContactTelegram() OptString {
+	return s.ContactTelegram
+}
+
+// GetContactEmail returns the value of ContactEmail.
+func (s *ReferralRequestCreate) GetContactEmail() OptString {
+	return s.ContactEmail
+}
+
+// GetNote returns the value of Note.
+func (s *ReferralRequestCreate) GetNote() OptString {
+	return s.Note
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ReferralRequestCreate) SetCompanySlug(val OptString) {
+	s.CompanySlug = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *ReferralRequestCreate) SetJobSlug(val OptString) {
+	s.JobSlug = val
+}
+
+// SetJobID sets the value of JobID.
+func (s *ReferralRequestCreate) SetJobID(val OptNilInt64) {
+	s.JobID = val
+}
+
+// SetCvKind sets the value of CvKind.
+func (s *ReferralRequestCreate) SetCvKind(val OptString) {
+	s.CvKind = val
+}
+
+// SetCvID sets the value of CvID.
+func (s *ReferralRequestCreate) SetCvID(val OptNilString) {
+	s.CvID = val
+}
+
+// SetLinkedinURL sets the value of LinkedinURL.
+func (s *ReferralRequestCreate) SetLinkedinURL(val OptString) {
+	s.LinkedinURL = val
+}
+
+// SetContactTelegram sets the value of ContactTelegram.
+func (s *ReferralRequestCreate) SetContactTelegram(val OptString) {
+	s.ContactTelegram = val
+}
+
+// SetContactEmail sets the value of ContactEmail.
+func (s *ReferralRequestCreate) SetContactEmail(val OptString) {
+	s.ContactEmail = val
+}
+
+// SetNote sets the value of Note.
+func (s *ReferralRequestCreate) SetNote(val OptString) {
+	s.Note = val
+}
+
+// `status` is "contacted" or "declined".
+// Ref: #/components/schemas/ReferralResolve
+type ReferralResolve struct {
+	Status OptString `json:"status"`
+}
+
+// GetStatus returns the value of Status.
+func (s *ReferralResolve) GetStatus() OptString {
+	return s.Status
+}
+
+// SetStatus sets the value of Status.
+func (s *ReferralResolve) SetStatus(val OptString) {
+	s.Status = val
+}
+
+// A seeker's own request: the target and status, no referrer identity.
+// Ref: #/components/schemas/ReferralSeekerRequest
+type ReferralSeekerRequest struct {
+	ID          string      `json:"id"`
+	CompanySlug string      `json:"company_slug"`
+	CompanyName string      `json:"company_name"`
+	JobID       NilInt64    `json:"job_id"`
+	CvKind      string      `json:"cv_kind"`
+	CvID        NilString   `json:"cv_id"`
+	Status      string      `json:"status"`
+	CreatedAt   NilDateTime `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *ReferralSeekerRequest) GetID() string {
+	return s.ID
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ReferralSeekerRequest) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *ReferralSeekerRequest) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetJobID returns the value of JobID.
+func (s *ReferralSeekerRequest) GetJobID() NilInt64 {
+	return s.JobID
+}
+
+// GetCvKind returns the value of CvKind.
+func (s *ReferralSeekerRequest) GetCvKind() string {
+	return s.CvKind
+}
+
+// GetCvID returns the value of CvID.
+func (s *ReferralSeekerRequest) GetCvID() NilString {
+	return s.CvID
+}
+
+// GetStatus returns the value of Status.
+func (s *ReferralSeekerRequest) GetStatus() string {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ReferralSeekerRequest) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *ReferralSeekerRequest) SetID(val string) {
+	s.ID = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ReferralSeekerRequest) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *ReferralSeekerRequest) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetJobID sets the value of JobID.
+func (s *ReferralSeekerRequest) SetJobID(val NilInt64) {
+	s.JobID = val
+}
+
+// SetCvKind sets the value of CvKind.
+func (s *ReferralSeekerRequest) SetCvKind(val string) {
+	s.CvKind = val
+}
+
+// SetCvID sets the value of CvID.
+func (s *ReferralSeekerRequest) SetCvID(val NilString) {
+	s.CvID = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ReferralSeekerRequest) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ReferralSeekerRequest) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// A single item: `{"data": ...}`.
+type RejectCompanyRelationOK struct {
+	Data CompanyRelationRejection `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RejectCompanyRelationOK) GetData() CompanyRelationRejection {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RejectCompanyRelationOK) SetData(val CompanyRelationRejection) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type RejectEmployerClaimOK struct {
+	Data EmployerRejected `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RejectEmployerClaimOK) GetData() EmployerRejected {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RejectEmployerClaimOK) SetData(val EmployerRejected) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type RejectSubmissionOK struct {
+	Data Submission `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RejectSubmissionOK) GetData() Submission {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RejectSubmissionOK) SetData(val Submission) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/RejectSubmissionRequest
+type RejectSubmissionRequest struct {
+	Reason OptString `json:"reason"`
+	// Also blocks the URL's host and rejects every other pending submission on it.
+	BlockDomain OptBool `json:"block_domain"`
+}
+
+// GetReason returns the value of Reason.
+func (s *RejectSubmissionRequest) GetReason() OptString {
+	return s.Reason
+}
+
+// GetBlockDomain returns the value of BlockDomain.
+func (s *RejectSubmissionRequest) GetBlockDomain() OptBool {
+	return s.BlockDomain
+}
+
+// SetReason sets the value of Reason.
+func (s *RejectSubmissionRequest) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetBlockDomain sets the value of BlockDomain.
+func (s *RejectSubmissionRequest) SetBlockDomain(val OptBool) {
+	s.BlockDomain = val
+}
+
 // RemoveFromWatchlistNoContent is response for RemoveFromWatchlist operation.
 type RemoveFromWatchlistNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type ReopenEmployerVacancyOK struct {
+	Data EmployerClosed `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ReopenEmployerVacancyOK) GetData() EmployerClosed {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ReopenEmployerVacancyOK) SetData(val EmployerClosed) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ReplaceResumeContactsFromCvOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ReplaceResumeContactsFromCvOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ReplaceResumeContactsFromCvOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// ReplaceWeeklyAvailabilityNoContent is response for ReplaceWeeklyAvailability operation.
+type ReplaceWeeklyAvailabilityNoContent struct{}
+
+// ReportCompanyFeedbackNoContent is response for ReportCompanyFeedback operation.
+type ReportCompanyFeedbackNoContent struct{}
+
+// ReportConversationNoContent is response for ReportConversation operation.
+type ReportConversationNoContent struct{}
+
+// A review with what a moderator triages by.
+// Ref: #/components/schemas/ReportedCompanyFeedback
+type ReportedCompanyFeedback struct {
+	ID           int64     `json:"id"`
+	Author       string    `json:"author"`
+	Rating       int64     `json:"rating"`
+	FeedbackType string    `json:"feedback_type"`
+	Body         string    `json:"body"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	// The company's fresh counters, set only on the answer to a write.
+	Company       OptCompanyFeedbackSummary `json:"company"`
+	CompanySlug   string                    `json:"company_slug"`
+	ReportCount   int64                     `json:"report_count"`
+	ReportReasons []string                  `json:"report_reasons"`
+}
+
+// GetID returns the value of ID.
+func (s *ReportedCompanyFeedback) GetID() int64 {
+	return s.ID
+}
+
+// GetAuthor returns the value of Author.
+func (s *ReportedCompanyFeedback) GetAuthor() string {
+	return s.Author
+}
+
+// GetRating returns the value of Rating.
+func (s *ReportedCompanyFeedback) GetRating() int64 {
+	return s.Rating
+}
+
+// GetFeedbackType returns the value of FeedbackType.
+func (s *ReportedCompanyFeedback) GetFeedbackType() string {
+	return s.FeedbackType
+}
+
+// GetBody returns the value of Body.
+func (s *ReportedCompanyFeedback) GetBody() string {
+	return s.Body
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ReportedCompanyFeedback) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *ReportedCompanyFeedback) GetUpdatedAt() time.Time {
+	return s.UpdatedAt
+}
+
+// GetCompany returns the value of Company.
+func (s *ReportedCompanyFeedback) GetCompany() OptCompanyFeedbackSummary {
+	return s.Company
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ReportedCompanyFeedback) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetReportCount returns the value of ReportCount.
+func (s *ReportedCompanyFeedback) GetReportCount() int64 {
+	return s.ReportCount
+}
+
+// GetReportReasons returns the value of ReportReasons.
+func (s *ReportedCompanyFeedback) GetReportReasons() []string {
+	return s.ReportReasons
+}
+
+// SetID sets the value of ID.
+func (s *ReportedCompanyFeedback) SetID(val int64) {
+	s.ID = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *ReportedCompanyFeedback) SetAuthor(val string) {
+	s.Author = val
+}
+
+// SetRating sets the value of Rating.
+func (s *ReportedCompanyFeedback) SetRating(val int64) {
+	s.Rating = val
+}
+
+// SetFeedbackType sets the value of FeedbackType.
+func (s *ReportedCompanyFeedback) SetFeedbackType(val string) {
+	s.FeedbackType = val
+}
+
+// SetBody sets the value of Body.
+func (s *ReportedCompanyFeedback) SetBody(val string) {
+	s.Body = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ReportedCompanyFeedback) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *ReportedCompanyFeedback) SetUpdatedAt(val time.Time) {
+	s.UpdatedAt = val
+}
+
+// SetCompany sets the value of Company.
+func (s *ReportedCompanyFeedback) SetCompany(val OptCompanyFeedbackSummary) {
+	s.Company = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ReportedCompanyFeedback) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetReportCount sets the value of ReportCount.
+func (s *ReportedCompanyFeedback) SetReportCount(val int64) {
+	s.ReportCount = val
+}
+
+// SetReportReasons sets the value of ReportReasons.
+func (s *ReportedCompanyFeedback) SetReportReasons(val []string) {
+	s.ReportReasons = val
+}
+
+// A single item: `{"data": ...}`.
+type ReseedBaseCVOK struct {
+	Data CvRecord `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ReseedBaseCVOK) GetData() CvRecord {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ReseedBaseCVOK) SetData(val CvRecord) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ReseedCVOK struct {
+	Data CvRecord `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ReseedCVOK) GetData() CvRecord {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ReseedCVOK) SetData(val CvRecord) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ResendEmployerClaimCodeOK struct {
+	Data EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ResendEmployerClaimCodeOK) GetData() EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ResendEmployerClaimCodeOK) SetData(val EmployerAccount) {
+	s.Data = val
+}
+
+// ResolveConversationReportNoContent is response for ResolveConversationReport operation.
+type ResolveConversationReportNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type ResolveJobAccepted struct {
+	Data ResolvedJobPage `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ResolveJobAccepted) GetData() ResolvedJobPage {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ResolveJobAccepted) SetData(val ResolvedJobPage) {
+	s.Data = val
+}
+
+func (*ResolveJobAccepted) resolveJobRes() {}
+
+// A single item: `{"data": ...}`.
+type ResolveJobCreated struct {
+	Data ResolvedJobPage `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ResolveJobCreated) GetData() ResolvedJobPage {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ResolveJobCreated) SetData(val ResolvedJobPage) {
+	s.Data = val
+}
+
+func (*ResolveJobCreated) resolveJobRes() {}
 
 // A single item: `{"data": ...}`.
 type ResolveJobDescriptionOK struct {
@@ -1909,6 +15389,118 @@ func (s *ResolveJobDescriptionOK) GetData() ResolvedJob {
 
 // SetData sets the value of Data.
 func (s *ResolveJobDescriptionOK) SetData(val ResolvedJob) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ResolveJobOK struct {
+	Data ResolvedJobPage `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ResolveJobOK) GetData() ResolvedJobPage {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ResolveJobOK) SetData(val ResolvedJobPage) {
+	s.Data = val
+}
+
+func (*ResolveJobOK) resolveJobRes() {}
+
+// A single item: `{"data": ...}`.
+type ResolveJobReportOK struct {
+	Data JobReport `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ResolveJobReportOK) GetData() JobReport {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ResolveJobReportOK) SetData(val JobReport) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/ResolveJobReportRequest
+type ResolveJobReportRequest struct {
+	CloseJob       OptBool   `json:"close_job"`
+	Note           OptString `json:"note"`
+	NotifyReporter OptBool   `json:"notify_reporter"`
+}
+
+// GetCloseJob returns the value of CloseJob.
+func (s *ResolveJobReportRequest) GetCloseJob() OptBool {
+	return s.CloseJob
+}
+
+// GetNote returns the value of Note.
+func (s *ResolveJobReportRequest) GetNote() OptString {
+	return s.Note
+}
+
+// GetNotifyReporter returns the value of NotifyReporter.
+func (s *ResolveJobReportRequest) GetNotifyReporter() OptBool {
+	return s.NotifyReporter
+}
+
+// SetCloseJob sets the value of CloseJob.
+func (s *ResolveJobReportRequest) SetCloseJob(val OptBool) {
+	s.CloseJob = val
+}
+
+// SetNote sets the value of Note.
+func (s *ResolveJobReportRequest) SetNote(val OptString) {
+	s.Note = val
+}
+
+// SetNotifyReporter sets the value of NotifyReporter.
+func (s *ResolveJobReportRequest) SetNotifyReporter(val OptBool) {
+	s.NotifyReporter = val
+}
+
+// Ref: #/components/schemas/ResolveJobRequest
+type ResolveJobRequest struct {
+	// The job page the caller is on; anything not http(s) is a 422.
+	URL OptString `json:"url"`
+	// Where the request came from (`extension`, `cli`, …), for the contribution record.
+	Surface OptString `json:"surface"`
+}
+
+// GetURL returns the value of URL.
+func (s *ResolveJobRequest) GetURL() OptString {
+	return s.URL
+}
+
+// GetSurface returns the value of Surface.
+func (s *ResolveJobRequest) GetSurface() OptString {
+	return s.Surface
+}
+
+// SetURL sets the value of URL.
+func (s *ResolveJobRequest) SetURL(val OptString) {
+	s.URL = val
+}
+
+// SetSurface sets the value of Surface.
+func (s *ResolveJobRequest) SetSurface(val OptString) {
+	s.Surface = val
+}
+
+// A single item: `{"data": ...}`.
+type ResolveReferralRequestOK struct {
+	Data ReferralIncomingRequest `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ResolveReferralRequestOK) GetData() ReferralIncomingRequest {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ResolveReferralRequestOK) SetData(val ReferralIncomingRequest) {
 	s.Data = val
 }
 
@@ -1927,8 +15519,1148 @@ func (s *ResolvedJob) SetJobSlug(val string) {
 	s.JobSlug = val
 }
 
+// Where a job page ended up.
+// Ref: #/components/schemas/ResolvedJobPage
+type ResolvedJobPage struct {
+	// The catalogue job; null while it is still queued.
+	PublicSlug NilString `json:"public_slug"`
+	// `found`, `tracked`, `imported`, `review` or `queued`.
+	Status      string    `json:"status"`
+	CompanySlug OptString `json:"company_slug"`
+}
+
+// GetPublicSlug returns the value of PublicSlug.
+func (s *ResolvedJobPage) GetPublicSlug() NilString {
+	return s.PublicSlug
+}
+
+// GetStatus returns the value of Status.
+func (s *ResolvedJobPage) GetStatus() string {
+	return s.Status
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ResolvedJobPage) GetCompanySlug() OptString {
+	return s.CompanySlug
+}
+
+// SetPublicSlug sets the value of PublicSlug.
+func (s *ResolvedJobPage) SetPublicSlug(val NilString) {
+	s.PublicSlug = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ResolvedJobPage) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ResolvedJobPage) SetCompanySlug(val OptString) {
+	s.CompanySlug = val
+}
+
+// The skill list a coverage reading scores against the market.
+// Ref: #/components/schemas/ResumeCoverageRequest
+type ResumeCoverageRequest struct {
+	// Required and at most 100 once blanks are dropped; anything else is a 400.
+	Skills OptNilStringArray `json:"skills"`
+}
+
+// GetSkills returns the value of Skills.
+func (s *ResumeCoverageRequest) GetSkills() OptNilStringArray {
+	return s.Skills
+}
+
+// SetSkills sets the value of Skills.
+func (s *ResumeCoverageRequest) SetSkills(val OptNilStringArray) {
+	s.Skills = val
+}
+
 // RetractGhostReportNoContent is response for RetractGhostReport operation.
 type RetractGhostReportNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type RetractProcessReportOK struct {
+	Data ProcessReport `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RetractProcessReportOK) GetData() ProcessReport {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RetractProcessReportOK) SetData(val ProcessReport) {
+	s.Data = val
+}
+
+// RetryResumeExtractAccepted is response for RetryResumeExtract operation.
+type RetryResumeExtractAccepted struct{}
+
+// A single item: `{"data": ...}`.
+type ReviewSessionOK struct {
+	Data MentorshipReview `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ReviewSessionOK) GetData() MentorshipReview {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ReviewSessionOK) SetData(val MentorshipReview) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type RevokeEmployerAccountOK struct {
+	Data EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RevokeEmployerAccountOK) GetData() EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RevokeEmployerAccountOK) SetData(val EmployerAccount) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/RoleCountriesAnswer
+type RoleCountriesAnswer struct {
+	Data []RoleCountryCell `json:"data"`
+	Meta RoleCountriesMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *RoleCountriesAnswer) GetData() []RoleCountryCell {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *RoleCountriesAnswer) GetMeta() RoleCountriesMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *RoleCountriesAnswer) SetData(val []RoleCountryCell) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *RoleCountriesAnswer) SetMeta(val RoleCountriesMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/RoleCountriesMeta
+type RoleCountriesMeta struct {
+	Countries []string `json:"countries"`
+}
+
+// GetCountries returns the value of Countries.
+func (s *RoleCountriesMeta) GetCountries() []string {
+	return s.Countries
+}
+
+// SetCountries sets the value of Countries.
+func (s *RoleCountriesMeta) SetCountries(val []string) {
+	s.Countries = val
+}
+
+// Ref: #/components/schemas/RoleCountryCell
+type RoleCountryCell struct {
+	Category string `json:"category"`
+	// Empty for the all-countries column.
+	Country       string `json:"country"`
+	OpenCount     int64  `json:"open_count"`
+	OpenCountPrev int64  `json:"open_count_prev"`
+}
+
+// GetCategory returns the value of Category.
+func (s *RoleCountryCell) GetCategory() string {
+	return s.Category
+}
+
+// GetCountry returns the value of Country.
+func (s *RoleCountryCell) GetCountry() string {
+	return s.Country
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *RoleCountryCell) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// GetOpenCountPrev returns the value of OpenCountPrev.
+func (s *RoleCountryCell) GetOpenCountPrev() int64 {
+	return s.OpenCountPrev
+}
+
+// SetCategory sets the value of Category.
+func (s *RoleCountryCell) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetCountry sets the value of Country.
+func (s *RoleCountryCell) SetCountry(val string) {
+	s.Country = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *RoleCountryCell) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// SetOpenCountPrev sets the value of OpenCountPrev.
+func (s *RoleCountryCell) SetOpenCountPrev(val int64) {
+	s.OpenCountPrev = val
+}
+
+// Ref: #/components/schemas/RoleInsight
+type RoleInsight struct {
+	Category  string `json:"category"`
+	Seniority string `json:"seniority"`
+	OpenCount int64  `json:"open_count"`
+	Growth    int64  `json:"growth"`
+	// Only when a single role was named.
+	SampleSize OptInt64 `json:"sample_size"`
+	// Only when a single role was named; an empty list is a real answer.
+	Skills []RoleSkill `json:"skills"`
+	// The signed-in caller's own standing against `skills`; shaped like a job match.
+	Coverage jx.Raw `json:"coverage"`
+}
+
+// GetCategory returns the value of Category.
+func (s *RoleInsight) GetCategory() string {
+	return s.Category
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *RoleInsight) GetSeniority() string {
+	return s.Seniority
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *RoleInsight) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// GetGrowth returns the value of Growth.
+func (s *RoleInsight) GetGrowth() int64 {
+	return s.Growth
+}
+
+// GetSampleSize returns the value of SampleSize.
+func (s *RoleInsight) GetSampleSize() OptInt64 {
+	return s.SampleSize
+}
+
+// GetSkills returns the value of Skills.
+func (s *RoleInsight) GetSkills() []RoleSkill {
+	return s.Skills
+}
+
+// GetCoverage returns the value of Coverage.
+func (s *RoleInsight) GetCoverage() jx.Raw {
+	return s.Coverage
+}
+
+// SetCategory sets the value of Category.
+func (s *RoleInsight) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *RoleInsight) SetSeniority(val string) {
+	s.Seniority = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *RoleInsight) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// SetGrowth sets the value of Growth.
+func (s *RoleInsight) SetGrowth(val int64) {
+	s.Growth = val
+}
+
+// SetSampleSize sets the value of SampleSize.
+func (s *RoleInsight) SetSampleSize(val OptInt64) {
+	s.SampleSize = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *RoleInsight) SetSkills(val []RoleSkill) {
+	s.Skills = val
+}
+
+// SetCoverage sets the value of Coverage.
+func (s *RoleInsight) SetCoverage(val jx.Raw) {
+	s.Coverage = val
+}
+
+// Ref: #/components/schemas/RolePulse
+type RolePulse struct {
+	Category    string           `json:"category"`
+	OpenCount   int64            `json:"open_count"`
+	Competition PulseCompetition `json:"competition"`
+	TimeToClose PulseTimeToClose `json:"time_to_close"`
+	Inflow      PulseInflow      `json:"inflow"`
+}
+
+// GetCategory returns the value of Category.
+func (s *RolePulse) GetCategory() string {
+	return s.Category
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *RolePulse) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// GetCompetition returns the value of Competition.
+func (s *RolePulse) GetCompetition() PulseCompetition {
+	return s.Competition
+}
+
+// GetTimeToClose returns the value of TimeToClose.
+func (s *RolePulse) GetTimeToClose() PulseTimeToClose {
+	return s.TimeToClose
+}
+
+// GetInflow returns the value of Inflow.
+func (s *RolePulse) GetInflow() PulseInflow {
+	return s.Inflow
+}
+
+// SetCategory sets the value of Category.
+func (s *RolePulse) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *RolePulse) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// SetCompetition sets the value of Competition.
+func (s *RolePulse) SetCompetition(val PulseCompetition) {
+	s.Competition = val
+}
+
+// SetTimeToClose sets the value of TimeToClose.
+func (s *RolePulse) SetTimeToClose(val PulseTimeToClose) {
+	s.TimeToClose = val
+}
+
+// SetInflow sets the value of Inflow.
+func (s *RolePulse) SetInflow(val PulseInflow) {
+	s.Inflow = val
+}
+
+// Ref: #/components/schemas/RolePulseAnswer
+type RolePulseAnswer struct {
+	Data RolePulse    `json:"data"`
+	Meta CategoryMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *RolePulseAnswer) GetData() RolePulse {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *RolePulseAnswer) GetMeta() CategoryMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *RolePulseAnswer) SetData(val RolePulse) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *RolePulseAnswer) SetMeta(val CategoryMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/RoleSkill
+type RoleSkill struct {
+	Skill     string  `json:"skill"`
+	OpenCount int64   `json:"open_count"`
+	Share     float64 `json:"share"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *RoleSkill) GetSkill() string {
+	return s.Skill
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *RoleSkill) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// GetShare returns the value of Share.
+func (s *RoleSkill) GetShare() float64 {
+	return s.Share
+}
+
+// SetSkill sets the value of Skill.
+func (s *RoleSkill) SetSkill(val string) {
+	s.Skill = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *RoleSkill) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// SetShare sets the value of Share.
+func (s *RoleSkill) SetShare(val float64) {
+	s.Share = val
+}
+
+// Ref: #/components/schemas/RolesAnswer
+type RolesAnswer struct {
+	Data []RoleInsight `json:"data"`
+	Meta RolesMeta     `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *RolesAnswer) GetData() []RoleInsight {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *RolesAnswer) GetMeta() RolesMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *RolesAnswer) SetData(val []RoleInsight) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *RolesAnswer) SetMeta(val RolesMeta) {
+	s.Meta = val
+}
+
+// RolesAnswerHeaders wraps RolesAnswer with response headers.
+type RolesAnswerHeaders struct {
+	CacheControl OptString
+	Response     RolesAnswer
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *RolesAnswerHeaders) GetCacheControl() OptString {
+	return s.CacheControl
+}
+
+// GetResponse returns the value of Response.
+func (s *RolesAnswerHeaders) GetResponse() RolesAnswer {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *RolesAnswerHeaders) SetCacheControl(val OptString) {
+	s.CacheControl = val
+}
+
+// SetResponse sets the value of Response.
+func (s *RolesAnswerHeaders) SetResponse(val RolesAnswer) {
+	s.Response = val
+}
+
+// Ref: #/components/schemas/RolesMeta
+type RolesMeta struct {
+	Country   string `json:"country"`
+	Category  string `json:"category"`
+	Seniority string `json:"seniority"`
+	Sort      string `json:"sort"`
+	Limit     int64  `json:"limit"`
+	// Present, and false, only for a single role.
+	SkillsGeographyScoped OptBool `json:"skills_geography_scoped"`
+}
+
+// GetCountry returns the value of Country.
+func (s *RolesMeta) GetCountry() string {
+	return s.Country
+}
+
+// GetCategory returns the value of Category.
+func (s *RolesMeta) GetCategory() string {
+	return s.Category
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *RolesMeta) GetSeniority() string {
+	return s.Seniority
+}
+
+// GetSort returns the value of Sort.
+func (s *RolesMeta) GetSort() string {
+	return s.Sort
+}
+
+// GetLimit returns the value of Limit.
+func (s *RolesMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetSkillsGeographyScoped returns the value of SkillsGeographyScoped.
+func (s *RolesMeta) GetSkillsGeographyScoped() OptBool {
+	return s.SkillsGeographyScoped
+}
+
+// SetCountry sets the value of Country.
+func (s *RolesMeta) SetCountry(val string) {
+	s.Country = val
+}
+
+// SetCategory sets the value of Category.
+func (s *RolesMeta) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *RolesMeta) SetSeniority(val string) {
+	s.Seniority = val
+}
+
+// SetSort sets the value of Sort.
+func (s *RolesMeta) SetSort(val string) {
+	s.Sort = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *RolesMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetSkillsGeographyScoped sets the value of SkillsGeographyScoped.
+func (s *RolesMeta) SetSkillsGeographyScoped(val OptBool) {
+	s.SkillsGeographyScoped = val
+}
+
+// Ref: #/components/schemas/SalaryAnswer
+type SalaryAnswer struct {
+	Data []SalaryBand `json:"data"`
+	Meta SalaryMeta   `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *SalaryAnswer) GetData() []SalaryBand {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *SalaryAnswer) GetMeta() SalaryMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *SalaryAnswer) SetData(val []SalaryBand) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *SalaryAnswer) SetMeta(val SalaryMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/SalaryBand
+type SalaryBand struct {
+	Seniority  string `json:"seniority"`
+	Currency   string `json:"currency"`
+	Period     string `json:"period"`
+	SampleSize int64  `json:"sample_size"`
+	P25        int64  `json:"p25"`
+	P50        int64  `json:"p50"`
+	P75        int64  `json:"p75"`
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *SalaryBand) GetSeniority() string {
+	return s.Seniority
+}
+
+// GetCurrency returns the value of Currency.
+func (s *SalaryBand) GetCurrency() string {
+	return s.Currency
+}
+
+// GetPeriod returns the value of Period.
+func (s *SalaryBand) GetPeriod() string {
+	return s.Period
+}
+
+// GetSampleSize returns the value of SampleSize.
+func (s *SalaryBand) GetSampleSize() int64 {
+	return s.SampleSize
+}
+
+// GetP25 returns the value of P25.
+func (s *SalaryBand) GetP25() int64 {
+	return s.P25
+}
+
+// GetP50 returns the value of P50.
+func (s *SalaryBand) GetP50() int64 {
+	return s.P50
+}
+
+// GetP75 returns the value of P75.
+func (s *SalaryBand) GetP75() int64 {
+	return s.P75
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *SalaryBand) SetSeniority(val string) {
+	s.Seniority = val
+}
+
+// SetCurrency sets the value of Currency.
+func (s *SalaryBand) SetCurrency(val string) {
+	s.Currency = val
+}
+
+// SetPeriod sets the value of Period.
+func (s *SalaryBand) SetPeriod(val string) {
+	s.Period = val
+}
+
+// SetSampleSize sets the value of SampleSize.
+func (s *SalaryBand) SetSampleSize(val int64) {
+	s.SampleSize = val
+}
+
+// SetP25 sets the value of P25.
+func (s *SalaryBand) SetP25(val int64) {
+	s.P25 = val
+}
+
+// SetP50 sets the value of P50.
+func (s *SalaryBand) SetP50(val int64) {
+	s.P50 = val
+}
+
+// SetP75 sets the value of P75.
+func (s *SalaryBand) SetP75(val int64) {
+	s.P75 = val
+}
+
+// Ref: #/components/schemas/SalaryHistoryAnswer
+type SalaryHistoryAnswer struct {
+	Data []SalaryMonth `json:"data"`
+	Meta CategoryMeta  `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *SalaryHistoryAnswer) GetData() []SalaryMonth {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *SalaryHistoryAnswer) GetMeta() CategoryMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *SalaryHistoryAnswer) SetData(val []SalaryMonth) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *SalaryHistoryAnswer) SetMeta(val CategoryMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/SalaryMeta
+type SalaryMeta struct {
+	Category  string `json:"category"`
+	Seniority string `json:"seniority"`
+	Country   string `json:"country"`
+	// "seniority" when every seniority's bands are returned.
+	Breakdown OptString `json:"breakdown"`
+}
+
+// GetCategory returns the value of Category.
+func (s *SalaryMeta) GetCategory() string {
+	return s.Category
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *SalaryMeta) GetSeniority() string {
+	return s.Seniority
+}
+
+// GetCountry returns the value of Country.
+func (s *SalaryMeta) GetCountry() string {
+	return s.Country
+}
+
+// GetBreakdown returns the value of Breakdown.
+func (s *SalaryMeta) GetBreakdown() OptString {
+	return s.Breakdown
+}
+
+// SetCategory sets the value of Category.
+func (s *SalaryMeta) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *SalaryMeta) SetSeniority(val string) {
+	s.Seniority = val
+}
+
+// SetCountry sets the value of Country.
+func (s *SalaryMeta) SetCountry(val string) {
+	s.Country = val
+}
+
+// SetBreakdown sets the value of Breakdown.
+func (s *SalaryMeta) SetBreakdown(val OptString) {
+	s.Breakdown = val
+}
+
+// Ref: #/components/schemas/SalaryMonth
+type SalaryMonth struct {
+	Currency string `json:"currency"`
+	Period   string `json:"period"`
+	// YYYY-MM.
+	Month      string `json:"month"`
+	SampleSize int64  `json:"sample_size"`
+	P25        int64  `json:"p25"`
+	P50        int64  `json:"p50"`
+	P75        int64  `json:"p75"`
+}
+
+// GetCurrency returns the value of Currency.
+func (s *SalaryMonth) GetCurrency() string {
+	return s.Currency
+}
+
+// GetPeriod returns the value of Period.
+func (s *SalaryMonth) GetPeriod() string {
+	return s.Period
+}
+
+// GetMonth returns the value of Month.
+func (s *SalaryMonth) GetMonth() string {
+	return s.Month
+}
+
+// GetSampleSize returns the value of SampleSize.
+func (s *SalaryMonth) GetSampleSize() int64 {
+	return s.SampleSize
+}
+
+// GetP25 returns the value of P25.
+func (s *SalaryMonth) GetP25() int64 {
+	return s.P25
+}
+
+// GetP50 returns the value of P50.
+func (s *SalaryMonth) GetP50() int64 {
+	return s.P50
+}
+
+// GetP75 returns the value of P75.
+func (s *SalaryMonth) GetP75() int64 {
+	return s.P75
+}
+
+// SetCurrency sets the value of Currency.
+func (s *SalaryMonth) SetCurrency(val string) {
+	s.Currency = val
+}
+
+// SetPeriod sets the value of Period.
+func (s *SalaryMonth) SetPeriod(val string) {
+	s.Period = val
+}
+
+// SetMonth sets the value of Month.
+func (s *SalaryMonth) SetMonth(val string) {
+	s.Month = val
+}
+
+// SetSampleSize sets the value of SampleSize.
+func (s *SalaryMonth) SetSampleSize(val int64) {
+	s.SampleSize = val
+}
+
+// SetP25 sets the value of P25.
+func (s *SalaryMonth) SetP25(val int64) {
+	s.P25 = val
+}
+
+// SetP50 sets the value of P50.
+func (s *SalaryMonth) SetP50(val int64) {
+	s.P50 = val
+}
+
+// SetP75 sets the value of P75.
+func (s *SalaryMonth) SetP75(val int64) {
+	s.P75 = val
+}
+
+// Ref: #/components/schemas/SaveBankedAnswer
+type SaveBankedAnswer struct {
+	Question OptString `json:"question"`
+	Answer   OptString `json:"answer"`
+}
+
+// GetQuestion returns the value of Question.
+func (s *SaveBankedAnswer) GetQuestion() OptString {
+	return s.Question
+}
+
+// GetAnswer returns the value of Answer.
+func (s *SaveBankedAnswer) GetAnswer() OptString {
+	return s.Answer
+}
+
+// SetQuestion sets the value of Question.
+func (s *SaveBankedAnswer) SetQuestion(val OptString) {
+	s.Question = val
+}
+
+// SetAnswer sets the value of Answer.
+func (s *SaveBankedAnswer) SetAnswer(val OptString) {
+	s.Answer = val
+}
+
+// A single item: `{"data": ...}`.
+type SaveBankedAnswerOK struct {
+	Data Saved `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SaveBankedAnswerOK) GetData() Saved {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SaveBankedAnswerOK) SetData(val Saved) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type SaveJobOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SaveJobOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SaveJobOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/Saved
+type Saved struct {
+	Saved bool `json:"saved"`
+}
+
+// GetSaved returns the value of Saved.
+func (s *Saved) GetSaved() bool {
+	return s.Saved
+}
+
+// SetSaved sets the value of Saved.
+func (s *Saved) SetSaved(val bool) {
+	s.Saved = val
+}
+
+// A named filter snapshot. `query` is the canonical search query string the SPA replays.
+// Ref: #/components/schemas/SavedSearch
+type SavedSearch struct {
+	ID                 int64       `json:"id"`
+	Name               string      `json:"name"`
+	Query              string      `json:"query"`
+	DerivedFromProfile bool        `json:"derived_from_profile"`
+	CreatedAt          NilDateTime `json:"created_at"`
+	UpdatedAt          NilDateTime `json:"updated_at"`
+}
+
+// GetID returns the value of ID.
+func (s *SavedSearch) GetID() int64 {
+	return s.ID
+}
+
+// GetName returns the value of Name.
+func (s *SavedSearch) GetName() string {
+	return s.Name
+}
+
+// GetQuery returns the value of Query.
+func (s *SavedSearch) GetQuery() string {
+	return s.Query
+}
+
+// GetDerivedFromProfile returns the value of DerivedFromProfile.
+func (s *SavedSearch) GetDerivedFromProfile() bool {
+	return s.DerivedFromProfile
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *SavedSearch) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// GetUpdatedAt returns the value of UpdatedAt.
+func (s *SavedSearch) GetUpdatedAt() NilDateTime {
+	return s.UpdatedAt
+}
+
+// SetID sets the value of ID.
+func (s *SavedSearch) SetID(val int64) {
+	s.ID = val
+}
+
+// SetName sets the value of Name.
+func (s *SavedSearch) SetName(val string) {
+	s.Name = val
+}
+
+// SetQuery sets the value of Query.
+func (s *SavedSearch) SetQuery(val string) {
+	s.Query = val
+}
+
+// SetDerivedFromProfile sets the value of DerivedFromProfile.
+func (s *SavedSearch) SetDerivedFromProfile(val bool) {
+	s.DerivedFromProfile = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *SavedSearch) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// SetUpdatedAt sets the value of UpdatedAt.
+func (s *SavedSearch) SetUpdatedAt(val NilDateTime) {
+	s.UpdatedAt = val
+}
+
+// An empty name is refused with a 400, like an out-of-range one.
+// Ref: #/components/schemas/SavedSearchCreate
+type SavedSearchCreate struct {
+	Name OptString `json:"name"`
+	// Empty is the valid "show all" snapshot.
+	Query              OptString `json:"query"`
+	DerivedFromProfile OptBool   `json:"derived_from_profile"`
+}
+
+// GetName returns the value of Name.
+func (s *SavedSearchCreate) GetName() OptString {
+	return s.Name
+}
+
+// GetQuery returns the value of Query.
+func (s *SavedSearchCreate) GetQuery() OptString {
+	return s.Query
+}
+
+// GetDerivedFromProfile returns the value of DerivedFromProfile.
+func (s *SavedSearchCreate) GetDerivedFromProfile() OptBool {
+	return s.DerivedFromProfile
+}
+
+// SetName sets the value of Name.
+func (s *SavedSearchCreate) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetQuery sets the value of Query.
+func (s *SavedSearchCreate) SetQuery(val OptString) {
+	s.Query = val
+}
+
+// SetDerivedFromProfile sets the value of DerivedFromProfile.
+func (s *SavedSearchCreate) SetDerivedFromProfile(val OptBool) {
+	s.DerivedFromProfile = val
+}
+
+// The saved searches, most recently updated first.
+// Ref: #/components/schemas/SavedSearchList
+type SavedSearchList struct {
+	Data []SavedSearch `json:"data"`
+	Meta AlertListMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *SavedSearchList) GetData() []SavedSearch {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *SavedSearchList) GetMeta() AlertListMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *SavedSearchList) SetData(val []SavedSearch) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *SavedSearchList) SetMeta(val AlertListMeta) {
+	s.Meta = val
+}
+
+// A partial update: an absent or null field is kept; an empty query is a real "show all".
+// Ref: #/components/schemas/SavedSearchUpdate
+type SavedSearchUpdate struct {
+	Name  OptNilString `json:"name"`
+	Query OptNilString `json:"query"`
+}
+
+// GetName returns the value of Name.
+func (s *SavedSearchUpdate) GetName() OptNilString {
+	return s.Name
+}
+
+// GetQuery returns the value of Query.
+func (s *SavedSearchUpdate) GetQuery() OptNilString {
+	return s.Query
+}
+
+// SetName sets the value of Name.
+func (s *SavedSearchUpdate) SetName(val OptNilString) {
+	s.Name = val
+}
+
+// SetQuery sets the value of Query.
+func (s *SavedSearchUpdate) SetQuery(val OptNilString) {
+	s.Query = val
+}
+
+// One arranged meeting. Unlike an event it can move or be called off.
+// Ref: #/components/schemas/ScheduledInterview
+type ScheduledInterview struct {
+	ID            int64     `json:"id"`
+	ApplicationID int64     `json:"application_id"`
+	StartsAt      time.Time `json:"starts_at"`
+	// Absent for an all-day entry.
+	EndsAt  OptDateTime `json:"ends_at"`
+	Title   OptString   `json:"title"`
+	JoinURL OptString   `json:"join_url"`
+	// Suggested, confirmed or cancelled. A cancelled meeting is served.
+	Status      string    `json:"status"`
+	CompanySlug string    `json:"company_slug"`
+	RoleTitle   OptString `json:"role_title"`
+	JobSlug     OptString `json:"job_slug"`
+}
+
+// GetID returns the value of ID.
+func (s *ScheduledInterview) GetID() int64 {
+	return s.ID
+}
+
+// GetApplicationID returns the value of ApplicationID.
+func (s *ScheduledInterview) GetApplicationID() int64 {
+	return s.ApplicationID
+}
+
+// GetStartsAt returns the value of StartsAt.
+func (s *ScheduledInterview) GetStartsAt() time.Time {
+	return s.StartsAt
+}
+
+// GetEndsAt returns the value of EndsAt.
+func (s *ScheduledInterview) GetEndsAt() OptDateTime {
+	return s.EndsAt
+}
+
+// GetTitle returns the value of Title.
+func (s *ScheduledInterview) GetTitle() OptString {
+	return s.Title
+}
+
+// GetJoinURL returns the value of JoinURL.
+func (s *ScheduledInterview) GetJoinURL() OptString {
+	return s.JoinURL
+}
+
+// GetStatus returns the value of Status.
+func (s *ScheduledInterview) GetStatus() string {
+	return s.Status
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *ScheduledInterview) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetRoleTitle returns the value of RoleTitle.
+func (s *ScheduledInterview) GetRoleTitle() OptString {
+	return s.RoleTitle
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *ScheduledInterview) GetJobSlug() OptString {
+	return s.JobSlug
+}
+
+// SetID sets the value of ID.
+func (s *ScheduledInterview) SetID(val int64) {
+	s.ID = val
+}
+
+// SetApplicationID sets the value of ApplicationID.
+func (s *ScheduledInterview) SetApplicationID(val int64) {
+	s.ApplicationID = val
+}
+
+// SetStartsAt sets the value of StartsAt.
+func (s *ScheduledInterview) SetStartsAt(val time.Time) {
+	s.StartsAt = val
+}
+
+// SetEndsAt sets the value of EndsAt.
+func (s *ScheduledInterview) SetEndsAt(val OptDateTime) {
+	s.EndsAt = val
+}
+
+// SetTitle sets the value of Title.
+func (s *ScheduledInterview) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetJoinURL sets the value of JoinURL.
+func (s *ScheduledInterview) SetJoinURL(val OptString) {
+	s.JoinURL = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ScheduledInterview) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *ScheduledInterview) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetRoleTitle sets the value of RoleTitle.
+func (s *ScheduledInterview) SetRoleTitle(val OptString) {
+	s.RoleTitle = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *ScheduledInterview) SetJobSlug(val OptString) {
+	s.JobSlug = val
+}
 
 // Answers an application form asks for, saved once and reused. Each field is optional.
 // Ref: #/components/schemas/ScreeningAnswers
@@ -2171,6 +16903,36 @@ func (s *SearchCitiesOK) SetData(val []CityMatch) {
 }
 
 // A single item: `{"data": ...}`.
+type SendConversationMessageCreated struct {
+	Data ConversationMessage `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SendConversationMessageCreated) GetData() ConversationMessage {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SendConversationMessageCreated) SetData(val ConversationMessage) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type SendDirectApplyCreated struct {
+	Data DirectApplySent `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SendDirectApplyCreated) GetData() DirectApplySent {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SendDirectApplyCreated) SetData(val DirectApplySent) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type SetAgentPermissionsOK struct {
 	Data AgentPermissions `json:"data"`
 }
@@ -2182,6 +16944,57 @@ func (s *SetAgentPermissionsOK) GetData() AgentPermissions {
 
 // SetData sets the value of Data.
 func (s *SetAgentPermissionsOK) SetData(val AgentPermissions) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type SetCVAppearanceDefaultsOK struct {
+	Data CvAppearanceDefaultsResult `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SetCVAppearanceDefaultsOK) GetData() CvAppearanceDefaultsResult {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SetCVAppearanceDefaultsOK) SetData(val CvAppearanceDefaultsResult) {
+	s.Data = val
+}
+
+// SetCVSessionNoContent is response for SetCVSession operation.
+type SetCVSessionNoContent struct{}
+
+// SetCVTemplateNoContent is response for SetCVTemplate operation.
+type SetCVTemplateNoContent struct{}
+
+// A single item: `{"data": ...}`.
+type SetCVTracerLinksOK struct {
+	Data CvTracerLinksState `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SetCVTracerLinksOK) GetData() CvTracerLinksState {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SetCVTracerLinksOK) SetData(val CvTracerLinksState) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type SetSubscriptionActiveOK struct {
+	Data Subscription `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SetSubscriptionActiveOK) GetData() Subscription {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SetSubscriptionActiveOK) SetData(val Subscription) {
 	s.Data = val
 }
 
@@ -2198,6 +17011,1490 @@ func (s *SetTalentNetworkVisibilityOK) GetData() TalentNetworkMembership {
 // SetData sets the value of Data.
 func (s *SetTalentNetworkVisibilityOK) SetData(val TalentNetworkMembership) {
 	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type SimilarJobsOK struct {
+	Data []jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SimilarJobsOK) GetData() []jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SimilarJobsOK) SetData(val []jx.Raw) {
+	s.Data = val
+}
+
+// The site's own verdict, independent of the ingest fleet's `overall`.
+// Ref: #/components/schemas/SiteHealth
+type SiteHealth struct {
+	// Operational, degraded or down.
+	Status string `json:"status"`
+	// "up" or "down".
+	Database string `json:"database"`
+	// Fraction of 5xx responses over the trailing `window_minutes`, from the process's own traffic.
+	ErrorRate float64 `json:"error_rate"`
+	// Fraction of the database pool held at once, 0..1. Reported, never judged: it says what the error
+	// rate cannot, that requests are unable to start.
+	PoolPressure  float64            `json:"pool_pressure"`
+	WindowMinutes int64              `json:"window_minutes"`
+	History       []SiteHistoryEntry `json:"history"`
+}
+
+// GetStatus returns the value of Status.
+func (s *SiteHealth) GetStatus() string {
+	return s.Status
+}
+
+// GetDatabase returns the value of Database.
+func (s *SiteHealth) GetDatabase() string {
+	return s.Database
+}
+
+// GetErrorRate returns the value of ErrorRate.
+func (s *SiteHealth) GetErrorRate() float64 {
+	return s.ErrorRate
+}
+
+// GetPoolPressure returns the value of PoolPressure.
+func (s *SiteHealth) GetPoolPressure() float64 {
+	return s.PoolPressure
+}
+
+// GetWindowMinutes returns the value of WindowMinutes.
+func (s *SiteHealth) GetWindowMinutes() int64 {
+	return s.WindowMinutes
+}
+
+// GetHistory returns the value of History.
+func (s *SiteHealth) GetHistory() []SiteHistoryEntry {
+	return s.History
+}
+
+// SetStatus sets the value of Status.
+func (s *SiteHealth) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetDatabase sets the value of Database.
+func (s *SiteHealth) SetDatabase(val string) {
+	s.Database = val
+}
+
+// SetErrorRate sets the value of ErrorRate.
+func (s *SiteHealth) SetErrorRate(val float64) {
+	s.ErrorRate = val
+}
+
+// SetPoolPressure sets the value of PoolPressure.
+func (s *SiteHealth) SetPoolPressure(val float64) {
+	s.PoolPressure = val
+}
+
+// SetWindowMinutes sets the value of WindowMinutes.
+func (s *SiteHealth) SetWindowMinutes(val int64) {
+	s.WindowMinutes = val
+}
+
+// SetHistory sets the value of History.
+func (s *SiteHealth) SetHistory(val []SiteHistoryEntry) {
+	s.History = val
+}
+
+// Ref: #/components/schemas/SiteHistoryEntry
+type SiteHistoryEntry struct {
+	Day    string `json:"day"`
+	Status string `json:"status"`
+}
+
+// GetDay returns the value of Day.
+func (s *SiteHistoryEntry) GetDay() string {
+	return s.Day
+}
+
+// GetStatus returns the value of Status.
+func (s *SiteHistoryEntry) GetStatus() string {
+	return s.Status
+}
+
+// SetDay sets the value of Day.
+func (s *SiteHistoryEntry) SetDay(val string) {
+	s.Day = val
+}
+
+// SetStatus sets the value of Status.
+func (s *SiteHistoryEntry) SetStatus(val string) {
+	s.Status = val
+}
+
+// Ref: #/components/schemas/SkillInsight
+type SkillInsight struct {
+	Skill     string `json:"skill"`
+	OpenCount int64  `json:"open_count"`
+	Growth    int64  `json:"growth"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *SkillInsight) GetSkill() string {
+	return s.Skill
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *SkillInsight) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// GetGrowth returns the value of Growth.
+func (s *SkillInsight) GetGrowth() int64 {
+	return s.Growth
+}
+
+// SetSkill sets the value of Skill.
+func (s *SkillInsight) SetSkill(val string) {
+	s.Skill = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *SkillInsight) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// SetGrowth sets the value of Growth.
+func (s *SkillInsight) SetGrowth(val int64) {
+	s.Growth = val
+}
+
+// Ref: #/components/schemas/SkillNeighbour
+type SkillNeighbour struct {
+	Skill string `json:"skill"`
+	Count int64  `json:"count"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *SkillNeighbour) GetSkill() string {
+	return s.Skill
+}
+
+// GetCount returns the value of Count.
+func (s *SkillNeighbour) GetCount() int64 {
+	return s.Count
+}
+
+// SetSkill sets the value of Skill.
+func (s *SkillNeighbour) SetSkill(val string) {
+	s.Skill = val
+}
+
+// SetCount sets the value of Count.
+func (s *SkillNeighbour) SetCount(val int64) {
+	s.Count = val
+}
+
+// Ref: #/components/schemas/SkillNeighbours
+type SkillNeighbours struct {
+	Data []SkillNeighbour    `json:"data"`
+	Meta SkillNeighboursMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *SkillNeighbours) GetData() []SkillNeighbour {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *SkillNeighbours) GetMeta() SkillNeighboursMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *SkillNeighbours) SetData(val []SkillNeighbour) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *SkillNeighbours) SetMeta(val SkillNeighboursMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/SkillNeighboursMeta
+type SkillNeighboursMeta struct {
+	Skill string `json:"skill"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *SkillNeighboursMeta) GetSkill() string {
+	return s.Skill
+}
+
+// SetSkill sets the value of Skill.
+func (s *SkillNeighboursMeta) SetSkill(val string) {
+	s.Skill = val
+}
+
+// How demand for one of the caller's skills moved.
+// Ref: #/components/schemas/SkillPulse
+type SkillPulse struct {
+	Skill     string `json:"skill"`
+	OpenCount int64  `json:"open_count"`
+	// Percent change from the first to the latest week; null without two weeks to compare.
+	ChangePct NilFloat64 `json:"change_pct"`
+	// Oldest first.
+	Series []SkillPulsePoint `json:"series"`
+}
+
+// GetSkill returns the value of Skill.
+func (s *SkillPulse) GetSkill() string {
+	return s.Skill
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *SkillPulse) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// GetChangePct returns the value of ChangePct.
+func (s *SkillPulse) GetChangePct() NilFloat64 {
+	return s.ChangePct
+}
+
+// GetSeries returns the value of Series.
+func (s *SkillPulse) GetSeries() []SkillPulsePoint {
+	return s.Series
+}
+
+// SetSkill sets the value of Skill.
+func (s *SkillPulse) SetSkill(val string) {
+	s.Skill = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *SkillPulse) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// SetChangePct sets the value of ChangePct.
+func (s *SkillPulse) SetChangePct(val NilFloat64) {
+	s.ChangePct = val
+}
+
+// SetSeries sets the value of Series.
+func (s *SkillPulse) SetSeries(val []SkillPulsePoint) {
+	s.Series = val
+}
+
+// Ref: #/components/schemas/SkillPulsePoint
+type SkillPulsePoint struct {
+	// The ISO week's Monday, YYYY-MM-DD.
+	WeekStart string `json:"week_start"`
+	OpenCount int64  `json:"open_count"`
+}
+
+// GetWeekStart returns the value of WeekStart.
+func (s *SkillPulsePoint) GetWeekStart() string {
+	return s.WeekStart
+}
+
+// GetOpenCount returns the value of OpenCount.
+func (s *SkillPulsePoint) GetOpenCount() int64 {
+	return s.OpenCount
+}
+
+// SetWeekStart sets the value of WeekStart.
+func (s *SkillPulsePoint) SetWeekStart(val string) {
+	s.WeekStart = val
+}
+
+// SetOpenCount sets the value of OpenCount.
+func (s *SkillPulsePoint) SetOpenCount(val int64) {
+	s.OpenCount = val
+}
+
+// Ref: #/components/schemas/SkillsAnswer
+type SkillsAnswer struct {
+	Data []SkillInsight `json:"data"`
+	Meta SkillsMeta     `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *SkillsAnswer) GetData() []SkillInsight {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *SkillsAnswer) GetMeta() SkillsMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *SkillsAnswer) SetData(val []SkillInsight) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *SkillsAnswer) SetMeta(val SkillsMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/SkillsMeta
+type SkillsMeta struct {
+	Category string `json:"category"`
+	Country  string `json:"country"`
+	Sort     string `json:"sort"`
+	Limit    int64  `json:"limit"`
+}
+
+// GetCategory returns the value of Category.
+func (s *SkillsMeta) GetCategory() string {
+	return s.Category
+}
+
+// GetCountry returns the value of Country.
+func (s *SkillsMeta) GetCountry() string {
+	return s.Country
+}
+
+// GetSort returns the value of Sort.
+func (s *SkillsMeta) GetSort() string {
+	return s.Sort
+}
+
+// GetLimit returns the value of Limit.
+func (s *SkillsMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// SetCategory sets the value of Category.
+func (s *SkillsMeta) SetCategory(val string) {
+	s.Category = val
+}
+
+// SetCountry sets the value of Country.
+func (s *SkillsMeta) SetCountry(val string) {
+	s.Country = val
+}
+
+// SetSort sets the value of Sort.
+func (s *SkillsMeta) SetSort(val string) {
+	s.Sort = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *SkillsMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// Ref: #/components/schemas/SourceEntry
+type SourceEntry struct {
+	Source string `json:"source"`
+	Kind   string `json:"kind"`
+	// Whether the source is a crawl adapter at all.
+	Adapter bool `json:"adapter"`
+	// Null until a snapshot has been taken for this source.
+	Jobs NilSourceJobs `json:"jobs"`
+	// Null when no board health record exists.
+	Health NilSourceHealth `json:"health"`
+}
+
+// GetSource returns the value of Source.
+func (s *SourceEntry) GetSource() string {
+	return s.Source
+}
+
+// GetKind returns the value of Kind.
+func (s *SourceEntry) GetKind() string {
+	return s.Kind
+}
+
+// GetAdapter returns the value of Adapter.
+func (s *SourceEntry) GetAdapter() bool {
+	return s.Adapter
+}
+
+// GetJobs returns the value of Jobs.
+func (s *SourceEntry) GetJobs() NilSourceJobs {
+	return s.Jobs
+}
+
+// GetHealth returns the value of Health.
+func (s *SourceEntry) GetHealth() NilSourceHealth {
+	return s.Health
+}
+
+// SetSource sets the value of Source.
+func (s *SourceEntry) SetSource(val string) {
+	s.Source = val
+}
+
+// SetKind sets the value of Kind.
+func (s *SourceEntry) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetAdapter sets the value of Adapter.
+func (s *SourceEntry) SetAdapter(val bool) {
+	s.Adapter = val
+}
+
+// SetJobs sets the value of Jobs.
+func (s *SourceEntry) SetJobs(val NilSourceJobs) {
+	s.Jobs = val
+}
+
+// SetHealth sets the value of Health.
+func (s *SourceEntry) SetHealth(val NilSourceHealth) {
+	s.Health = val
+}
+
+// Ref: #/components/schemas/SourceHealth
+type SourceHealth struct {
+	Status        string    `json:"status"`
+	TotalBoards   int64     `json:"total_boards"`
+	HealthyBoards int64     `json:"healthy_boards"`
+	CooledBoards  int64     `json:"cooled_boards"`
+	LastRun       NilString `json:"last_run"`
+	LastSuccess   NilString `json:"last_success"`
+	IngestedTotal int64     `json:"ingested_total"`
+}
+
+// GetStatus returns the value of Status.
+func (s *SourceHealth) GetStatus() string {
+	return s.Status
+}
+
+// GetTotalBoards returns the value of TotalBoards.
+func (s *SourceHealth) GetTotalBoards() int64 {
+	return s.TotalBoards
+}
+
+// GetHealthyBoards returns the value of HealthyBoards.
+func (s *SourceHealth) GetHealthyBoards() int64 {
+	return s.HealthyBoards
+}
+
+// GetCooledBoards returns the value of CooledBoards.
+func (s *SourceHealth) GetCooledBoards() int64 {
+	return s.CooledBoards
+}
+
+// GetLastRun returns the value of LastRun.
+func (s *SourceHealth) GetLastRun() NilString {
+	return s.LastRun
+}
+
+// GetLastSuccess returns the value of LastSuccess.
+func (s *SourceHealth) GetLastSuccess() NilString {
+	return s.LastSuccess
+}
+
+// GetIngestedTotal returns the value of IngestedTotal.
+func (s *SourceHealth) GetIngestedTotal() int64 {
+	return s.IngestedTotal
+}
+
+// SetStatus sets the value of Status.
+func (s *SourceHealth) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetTotalBoards sets the value of TotalBoards.
+func (s *SourceHealth) SetTotalBoards(val int64) {
+	s.TotalBoards = val
+}
+
+// SetHealthyBoards sets the value of HealthyBoards.
+func (s *SourceHealth) SetHealthyBoards(val int64) {
+	s.HealthyBoards = val
+}
+
+// SetCooledBoards sets the value of CooledBoards.
+func (s *SourceHealth) SetCooledBoards(val int64) {
+	s.CooledBoards = val
+}
+
+// SetLastRun sets the value of LastRun.
+func (s *SourceHealth) SetLastRun(val NilString) {
+	s.LastRun = val
+}
+
+// SetLastSuccess sets the value of LastSuccess.
+func (s *SourceHealth) SetLastSuccess(val NilString) {
+	s.LastSuccess = val
+}
+
+// SetIngestedTotal sets the value of IngestedTotal.
+func (s *SourceHealth) SetIngestedTotal(val int64) {
+	s.IngestedTotal = val
+}
+
+// Ref: #/components/schemas/SourceJobs
+type SourceJobs struct {
+	Open int64 `json:"open"`
+	// Null when the search index could not be measured.
+	Browsable NilInt64 `json:"browsable"`
+	// Aggregators only.
+	AtsMatched   OptInt64 `json:"ats_matched"`
+	AtsUnmatched OptInt64 `json:"ats_unmatched"`
+	MeasuredAt   string   `json:"measured_at"`
+}
+
+// GetOpen returns the value of Open.
+func (s *SourceJobs) GetOpen() int64 {
+	return s.Open
+}
+
+// GetBrowsable returns the value of Browsable.
+func (s *SourceJobs) GetBrowsable() NilInt64 {
+	return s.Browsable
+}
+
+// GetAtsMatched returns the value of AtsMatched.
+func (s *SourceJobs) GetAtsMatched() OptInt64 {
+	return s.AtsMatched
+}
+
+// GetAtsUnmatched returns the value of AtsUnmatched.
+func (s *SourceJobs) GetAtsUnmatched() OptInt64 {
+	return s.AtsUnmatched
+}
+
+// GetMeasuredAt returns the value of MeasuredAt.
+func (s *SourceJobs) GetMeasuredAt() string {
+	return s.MeasuredAt
+}
+
+// SetOpen sets the value of Open.
+func (s *SourceJobs) SetOpen(val int64) {
+	s.Open = val
+}
+
+// SetBrowsable sets the value of Browsable.
+func (s *SourceJobs) SetBrowsable(val NilInt64) {
+	s.Browsable = val
+}
+
+// SetAtsMatched sets the value of AtsMatched.
+func (s *SourceJobs) SetAtsMatched(val OptInt64) {
+	s.AtsMatched = val
+}
+
+// SetAtsUnmatched sets the value of AtsUnmatched.
+func (s *SourceJobs) SetAtsUnmatched(val OptInt64) {
+	s.AtsUnmatched = val
+}
+
+// SetMeasuredAt sets the value of MeasuredAt.
+func (s *SourceJobs) SetMeasuredAt(val string) {
+	s.MeasuredAt = val
+}
+
+// A single item: `{"data": ...}`.
+type StartBaseSessionOK struct {
+	Data CvBaseSession `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *StartBaseSessionOK) GetData() CvBaseSession {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *StartBaseSessionOK) SetData(val CvBaseSession) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type StartTailorSessionCreated struct {
+	Data CvTailorSession `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *StartTailorSessionCreated) GetData() CvTailorSession {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *StartTailorSessionCreated) SetData(val CvTailorSession) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type StatsFacetsOK struct {
+	Data FacetStats `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *StatsFacetsOK) GetData() FacetStats {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *StatsFacetsOK) SetData(val FacetStats) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/StatusProvider
+type StatusProvider struct {
+	Provider      string    `json:"provider"`
+	Kind          string    `json:"kind"`
+	Status        string    `json:"status"`
+	TotalBoards   int64     `json:"total_boards"`
+	HealthyBoards int64     `json:"healthy_boards"`
+	CooledBoards  int64     `json:"cooled_boards"`
+	LastRun       NilString `json:"last_run"`
+	LastSuccess   NilString `json:"last_success"`
+	IngestedTotal int64     `json:"ingested_total"`
+}
+
+// GetProvider returns the value of Provider.
+func (s *StatusProvider) GetProvider() string {
+	return s.Provider
+}
+
+// GetKind returns the value of Kind.
+func (s *StatusProvider) GetKind() string {
+	return s.Kind
+}
+
+// GetStatus returns the value of Status.
+func (s *StatusProvider) GetStatus() string {
+	return s.Status
+}
+
+// GetTotalBoards returns the value of TotalBoards.
+func (s *StatusProvider) GetTotalBoards() int64 {
+	return s.TotalBoards
+}
+
+// GetHealthyBoards returns the value of HealthyBoards.
+func (s *StatusProvider) GetHealthyBoards() int64 {
+	return s.HealthyBoards
+}
+
+// GetCooledBoards returns the value of CooledBoards.
+func (s *StatusProvider) GetCooledBoards() int64 {
+	return s.CooledBoards
+}
+
+// GetLastRun returns the value of LastRun.
+func (s *StatusProvider) GetLastRun() NilString {
+	return s.LastRun
+}
+
+// GetLastSuccess returns the value of LastSuccess.
+func (s *StatusProvider) GetLastSuccess() NilString {
+	return s.LastSuccess
+}
+
+// GetIngestedTotal returns the value of IngestedTotal.
+func (s *StatusProvider) GetIngestedTotal() int64 {
+	return s.IngestedTotal
+}
+
+// SetProvider sets the value of Provider.
+func (s *StatusProvider) SetProvider(val string) {
+	s.Provider = val
+}
+
+// SetKind sets the value of Kind.
+func (s *StatusProvider) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetStatus sets the value of Status.
+func (s *StatusProvider) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetTotalBoards sets the value of TotalBoards.
+func (s *StatusProvider) SetTotalBoards(val int64) {
+	s.TotalBoards = val
+}
+
+// SetHealthyBoards sets the value of HealthyBoards.
+func (s *StatusProvider) SetHealthyBoards(val int64) {
+	s.HealthyBoards = val
+}
+
+// SetCooledBoards sets the value of CooledBoards.
+func (s *StatusProvider) SetCooledBoards(val int64) {
+	s.CooledBoards = val
+}
+
+// SetLastRun sets the value of LastRun.
+func (s *StatusProvider) SetLastRun(val NilString) {
+	s.LastRun = val
+}
+
+// SetLastSuccess sets the value of LastSuccess.
+func (s *StatusProvider) SetLastSuccess(val NilString) {
+	s.LastSuccess = val
+}
+
+// SetIngestedTotal sets the value of IngestedTotal.
+func (s *StatusProvider) SetIngestedTotal(val int64) {
+	s.IngestedTotal = val
+}
+
+// A submission as the API shows it.
+// Ref: #/components/schemas/Submission
+type Submission struct {
+	ID          int64     `json:"id"`
+	URL         string    `json:"url"`
+	Source      OptString `json:"source"`
+	Title       string    `json:"title"`
+	Company     string    `json:"company"`
+	Location    OptString `json:"location"`
+	Remote      bool      `json:"remote"`
+	Description OptString `json:"description"`
+	// RFC 3339.
+	PostedAt OptString `json:"posted_at"`
+	// Pending, approved or rejected.
+	Status       string    `json:"status"`
+	ReviewReason OptString `json:"review_reason"`
+	ReviewedAt   OptString `json:"reviewed_at"`
+	CreatedAt    NilString `json:"created_at"`
+	// Moderator queue only.
+	SubmitterEmail OptString `json:"submitter_email"`
+	// The minted vacancy's slug; on an approved submission in the caller's own list only.
+	JobSlug        OptString `json:"job_slug"`
+	Skills         []string  `json:"skills"`
+	Regions        []string  `json:"regions"`
+	Cities         []string  `json:"cities"`
+	WorkMode       OptString `json:"work_mode"`
+	EmploymentType OptString `json:"employment_type"`
+	Seniority      OptString `json:"seniority"`
+	SalaryMin      OptInt64  `json:"salary_min"`
+	SalaryMax      OptInt64  `json:"salary_max"`
+	SalaryCurrency OptString `json:"salary_currency"`
+	SalaryPeriod   OptString `json:"salary_period"`
+}
+
+// GetID returns the value of ID.
+func (s *Submission) GetID() int64 {
+	return s.ID
+}
+
+// GetURL returns the value of URL.
+func (s *Submission) GetURL() string {
+	return s.URL
+}
+
+// GetSource returns the value of Source.
+func (s *Submission) GetSource() OptString {
+	return s.Source
+}
+
+// GetTitle returns the value of Title.
+func (s *Submission) GetTitle() string {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *Submission) GetCompany() string {
+	return s.Company
+}
+
+// GetLocation returns the value of Location.
+func (s *Submission) GetLocation() OptString {
+	return s.Location
+}
+
+// GetRemote returns the value of Remote.
+func (s *Submission) GetRemote() bool {
+	return s.Remote
+}
+
+// GetDescription returns the value of Description.
+func (s *Submission) GetDescription() OptString {
+	return s.Description
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *Submission) GetPostedAt() OptString {
+	return s.PostedAt
+}
+
+// GetStatus returns the value of Status.
+func (s *Submission) GetStatus() string {
+	return s.Status
+}
+
+// GetReviewReason returns the value of ReviewReason.
+func (s *Submission) GetReviewReason() OptString {
+	return s.ReviewReason
+}
+
+// GetReviewedAt returns the value of ReviewedAt.
+func (s *Submission) GetReviewedAt() OptString {
+	return s.ReviewedAt
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Submission) GetCreatedAt() NilString {
+	return s.CreatedAt
+}
+
+// GetSubmitterEmail returns the value of SubmitterEmail.
+func (s *Submission) GetSubmitterEmail() OptString {
+	return s.SubmitterEmail
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *Submission) GetJobSlug() OptString {
+	return s.JobSlug
+}
+
+// GetSkills returns the value of Skills.
+func (s *Submission) GetSkills() []string {
+	return s.Skills
+}
+
+// GetRegions returns the value of Regions.
+func (s *Submission) GetRegions() []string {
+	return s.Regions
+}
+
+// GetCities returns the value of Cities.
+func (s *Submission) GetCities() []string {
+	return s.Cities
+}
+
+// GetWorkMode returns the value of WorkMode.
+func (s *Submission) GetWorkMode() OptString {
+	return s.WorkMode
+}
+
+// GetEmploymentType returns the value of EmploymentType.
+func (s *Submission) GetEmploymentType() OptString {
+	return s.EmploymentType
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *Submission) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetSalaryMin returns the value of SalaryMin.
+func (s *Submission) GetSalaryMin() OptInt64 {
+	return s.SalaryMin
+}
+
+// GetSalaryMax returns the value of SalaryMax.
+func (s *Submission) GetSalaryMax() OptInt64 {
+	return s.SalaryMax
+}
+
+// GetSalaryCurrency returns the value of SalaryCurrency.
+func (s *Submission) GetSalaryCurrency() OptString {
+	return s.SalaryCurrency
+}
+
+// GetSalaryPeriod returns the value of SalaryPeriod.
+func (s *Submission) GetSalaryPeriod() OptString {
+	return s.SalaryPeriod
+}
+
+// SetID sets the value of ID.
+func (s *Submission) SetID(val int64) {
+	s.ID = val
+}
+
+// SetURL sets the value of URL.
+func (s *Submission) SetURL(val string) {
+	s.URL = val
+}
+
+// SetSource sets the value of Source.
+func (s *Submission) SetSource(val OptString) {
+	s.Source = val
+}
+
+// SetTitle sets the value of Title.
+func (s *Submission) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *Submission) SetCompany(val string) {
+	s.Company = val
+}
+
+// SetLocation sets the value of Location.
+func (s *Submission) SetLocation(val OptString) {
+	s.Location = val
+}
+
+// SetRemote sets the value of Remote.
+func (s *Submission) SetRemote(val bool) {
+	s.Remote = val
+}
+
+// SetDescription sets the value of Description.
+func (s *Submission) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *Submission) SetPostedAt(val OptString) {
+	s.PostedAt = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Submission) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetReviewReason sets the value of ReviewReason.
+func (s *Submission) SetReviewReason(val OptString) {
+	s.ReviewReason = val
+}
+
+// SetReviewedAt sets the value of ReviewedAt.
+func (s *Submission) SetReviewedAt(val OptString) {
+	s.ReviewedAt = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Submission) SetCreatedAt(val NilString) {
+	s.CreatedAt = val
+}
+
+// SetSubmitterEmail sets the value of SubmitterEmail.
+func (s *Submission) SetSubmitterEmail(val OptString) {
+	s.SubmitterEmail = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *Submission) SetJobSlug(val OptString) {
+	s.JobSlug = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *Submission) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetRegions sets the value of Regions.
+func (s *Submission) SetRegions(val []string) {
+	s.Regions = val
+}
+
+// SetCities sets the value of Cities.
+func (s *Submission) SetCities(val []string) {
+	s.Cities = val
+}
+
+// SetWorkMode sets the value of WorkMode.
+func (s *Submission) SetWorkMode(val OptString) {
+	s.WorkMode = val
+}
+
+// SetEmploymentType sets the value of EmploymentType.
+func (s *Submission) SetEmploymentType(val OptString) {
+	s.EmploymentType = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *Submission) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetSalaryMin sets the value of SalaryMin.
+func (s *Submission) SetSalaryMin(val OptInt64) {
+	s.SalaryMin = val
+}
+
+// SetSalaryMax sets the value of SalaryMax.
+func (s *Submission) SetSalaryMax(val OptInt64) {
+	s.SalaryMax = val
+}
+
+// SetSalaryCurrency sets the value of SalaryCurrency.
+func (s *Submission) SetSalaryCurrency(val OptString) {
+	s.SalaryCurrency = val
+}
+
+// SetSalaryPeriod sets the value of SalaryPeriod.
+func (s *Submission) SetSalaryPeriod(val OptString) {
+	s.SalaryPeriod = val
+}
+
+// What could be parsed from the URL. Empty when it is not recognised.
+// Ref: #/components/schemas/SubmissionPrefill
+type SubmissionPrefill struct {
+	Title          OptString `json:"title"`
+	Company        OptString `json:"company"`
+	Location       OptString `json:"location"`
+	Description    OptString `json:"description"`
+	WorkMode       OptString `json:"work_mode"`
+	EmploymentType OptString `json:"employment_type"`
+	Seniority      OptString `json:"seniority"`
+	Skills         []string  `json:"skills"`
+	Source         OptString `json:"source"`
+	// Set, with every other field empty, when the catalogue already carries the vacancy.
+	ExistingJobSlug OptString `json:"existing_job_slug"`
+}
+
+// GetTitle returns the value of Title.
+func (s *SubmissionPrefill) GetTitle() OptString {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *SubmissionPrefill) GetCompany() OptString {
+	return s.Company
+}
+
+// GetLocation returns the value of Location.
+func (s *SubmissionPrefill) GetLocation() OptString {
+	return s.Location
+}
+
+// GetDescription returns the value of Description.
+func (s *SubmissionPrefill) GetDescription() OptString {
+	return s.Description
+}
+
+// GetWorkMode returns the value of WorkMode.
+func (s *SubmissionPrefill) GetWorkMode() OptString {
+	return s.WorkMode
+}
+
+// GetEmploymentType returns the value of EmploymentType.
+func (s *SubmissionPrefill) GetEmploymentType() OptString {
+	return s.EmploymentType
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *SubmissionPrefill) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetSkills returns the value of Skills.
+func (s *SubmissionPrefill) GetSkills() []string {
+	return s.Skills
+}
+
+// GetSource returns the value of Source.
+func (s *SubmissionPrefill) GetSource() OptString {
+	return s.Source
+}
+
+// GetExistingJobSlug returns the value of ExistingJobSlug.
+func (s *SubmissionPrefill) GetExistingJobSlug() OptString {
+	return s.ExistingJobSlug
+}
+
+// SetTitle sets the value of Title.
+func (s *SubmissionPrefill) SetTitle(val OptString) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *SubmissionPrefill) SetCompany(val OptString) {
+	s.Company = val
+}
+
+// SetLocation sets the value of Location.
+func (s *SubmissionPrefill) SetLocation(val OptString) {
+	s.Location = val
+}
+
+// SetDescription sets the value of Description.
+func (s *SubmissionPrefill) SetDescription(val OptString) {
+	s.Description = val
+}
+
+// SetWorkMode sets the value of WorkMode.
+func (s *SubmissionPrefill) SetWorkMode(val OptString) {
+	s.WorkMode = val
+}
+
+// SetEmploymentType sets the value of EmploymentType.
+func (s *SubmissionPrefill) SetEmploymentType(val OptString) {
+	s.EmploymentType = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *SubmissionPrefill) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *SubmissionPrefill) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetSource sets the value of Source.
+func (s *SubmissionPrefill) SetSource(val OptString) {
+	s.Source = val
+}
+
+// SetExistingJobSlug sets the value of ExistingJobSlug.
+func (s *SubmissionPrefill) SetExistingJobSlug(val OptString) {
+	s.ExistingJobSlug = val
+}
+
+// A vacancy to submit. url, title and company are required; the service refuses a body without them
+// with a 400.
+// Ref: #/components/schemas/SubmissionRequest
+type SubmissionRequest struct {
+	URL         OptNilString `json:"url"`
+	Source      OptNilString `json:"source"`
+	Title       OptNilString `json:"title"`
+	Company     OptNilString `json:"company"`
+	Location    OptNilString `json:"location"`
+	Remote      OptNilBool   `json:"remote"`
+	Description OptNilString `json:"description"`
+	// RFC 3339.
+	PostedAt       OptNilString      `json:"posted_at"`
+	Skills         OptNilStringArray `json:"skills"`
+	Regions        OptNilStringArray `json:"regions"`
+	Cities         OptNilStringArray `json:"cities"`
+	WorkMode       OptNilString      `json:"work_mode"`
+	EmploymentType OptNilString      `json:"employment_type"`
+	Seniority      OptNilString      `json:"seniority"`
+	SalaryMin      OptNilInt64       `json:"salary_min"`
+	SalaryMax      OptNilInt64       `json:"salary_max"`
+	SalaryCurrency OptNilString      `json:"salary_currency"`
+	SalaryPeriod   OptNilString      `json:"salary_period"`
+}
+
+// GetURL returns the value of URL.
+func (s *SubmissionRequest) GetURL() OptNilString {
+	return s.URL
+}
+
+// GetSource returns the value of Source.
+func (s *SubmissionRequest) GetSource() OptNilString {
+	return s.Source
+}
+
+// GetTitle returns the value of Title.
+func (s *SubmissionRequest) GetTitle() OptNilString {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *SubmissionRequest) GetCompany() OptNilString {
+	return s.Company
+}
+
+// GetLocation returns the value of Location.
+func (s *SubmissionRequest) GetLocation() OptNilString {
+	return s.Location
+}
+
+// GetRemote returns the value of Remote.
+func (s *SubmissionRequest) GetRemote() OptNilBool {
+	return s.Remote
+}
+
+// GetDescription returns the value of Description.
+func (s *SubmissionRequest) GetDescription() OptNilString {
+	return s.Description
+}
+
+// GetPostedAt returns the value of PostedAt.
+func (s *SubmissionRequest) GetPostedAt() OptNilString {
+	return s.PostedAt
+}
+
+// GetSkills returns the value of Skills.
+func (s *SubmissionRequest) GetSkills() OptNilStringArray {
+	return s.Skills
+}
+
+// GetRegions returns the value of Regions.
+func (s *SubmissionRequest) GetRegions() OptNilStringArray {
+	return s.Regions
+}
+
+// GetCities returns the value of Cities.
+func (s *SubmissionRequest) GetCities() OptNilStringArray {
+	return s.Cities
+}
+
+// GetWorkMode returns the value of WorkMode.
+func (s *SubmissionRequest) GetWorkMode() OptNilString {
+	return s.WorkMode
+}
+
+// GetEmploymentType returns the value of EmploymentType.
+func (s *SubmissionRequest) GetEmploymentType() OptNilString {
+	return s.EmploymentType
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *SubmissionRequest) GetSeniority() OptNilString {
+	return s.Seniority
+}
+
+// GetSalaryMin returns the value of SalaryMin.
+func (s *SubmissionRequest) GetSalaryMin() OptNilInt64 {
+	return s.SalaryMin
+}
+
+// GetSalaryMax returns the value of SalaryMax.
+func (s *SubmissionRequest) GetSalaryMax() OptNilInt64 {
+	return s.SalaryMax
+}
+
+// GetSalaryCurrency returns the value of SalaryCurrency.
+func (s *SubmissionRequest) GetSalaryCurrency() OptNilString {
+	return s.SalaryCurrency
+}
+
+// GetSalaryPeriod returns the value of SalaryPeriod.
+func (s *SubmissionRequest) GetSalaryPeriod() OptNilString {
+	return s.SalaryPeriod
+}
+
+// SetURL sets the value of URL.
+func (s *SubmissionRequest) SetURL(val OptNilString) {
+	s.URL = val
+}
+
+// SetSource sets the value of Source.
+func (s *SubmissionRequest) SetSource(val OptNilString) {
+	s.Source = val
+}
+
+// SetTitle sets the value of Title.
+func (s *SubmissionRequest) SetTitle(val OptNilString) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *SubmissionRequest) SetCompany(val OptNilString) {
+	s.Company = val
+}
+
+// SetLocation sets the value of Location.
+func (s *SubmissionRequest) SetLocation(val OptNilString) {
+	s.Location = val
+}
+
+// SetRemote sets the value of Remote.
+func (s *SubmissionRequest) SetRemote(val OptNilBool) {
+	s.Remote = val
+}
+
+// SetDescription sets the value of Description.
+func (s *SubmissionRequest) SetDescription(val OptNilString) {
+	s.Description = val
+}
+
+// SetPostedAt sets the value of PostedAt.
+func (s *SubmissionRequest) SetPostedAt(val OptNilString) {
+	s.PostedAt = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *SubmissionRequest) SetSkills(val OptNilStringArray) {
+	s.Skills = val
+}
+
+// SetRegions sets the value of Regions.
+func (s *SubmissionRequest) SetRegions(val OptNilStringArray) {
+	s.Regions = val
+}
+
+// SetCities sets the value of Cities.
+func (s *SubmissionRequest) SetCities(val OptNilStringArray) {
+	s.Cities = val
+}
+
+// SetWorkMode sets the value of WorkMode.
+func (s *SubmissionRequest) SetWorkMode(val OptNilString) {
+	s.WorkMode = val
+}
+
+// SetEmploymentType sets the value of EmploymentType.
+func (s *SubmissionRequest) SetEmploymentType(val OptNilString) {
+	s.EmploymentType = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *SubmissionRequest) SetSeniority(val OptNilString) {
+	s.Seniority = val
+}
+
+// SetSalaryMin sets the value of SalaryMin.
+func (s *SubmissionRequest) SetSalaryMin(val OptNilInt64) {
+	s.SalaryMin = val
+}
+
+// SetSalaryMax sets the value of SalaryMax.
+func (s *SubmissionRequest) SetSalaryMax(val OptNilInt64) {
+	s.SalaryMax = val
+}
+
+// SetSalaryCurrency sets the value of SalaryCurrency.
+func (s *SubmissionRequest) SetSalaryCurrency(val OptNilString) {
+	s.SalaryCurrency = val
+}
+
+// SetSalaryPeriod sets the value of SalaryPeriod.
+func (s *SubmissionRequest) SetSalaryPeriod(val OptNilString) {
+	s.SalaryPeriod = val
+}
+
+// A single item: `{"data": ...}`.
+type SubmitMentorProfileCreated struct {
+	Data MentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SubmitMentorProfileCreated) GetData() MentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SubmitMentorProfileCreated) SetData(val MentorshipMentor) {
+	s.Data = val
+}
+
+// One alert on a saved search. `saved_search_name` is sent on the list only.
+// Ref: #/components/schemas/Subscription
+type Subscription struct {
+	ID              int64       `json:"id"`
+	SavedSearchID   int64       `json:"saved_search_id"`
+	SavedSearchName OptString   `json:"saved_search_name"`
+	Channel         string      `json:"channel"`
+	Active          bool        `json:"active"`
+	CreatedAt       NilDateTime `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *Subscription) GetID() int64 {
+	return s.ID
+}
+
+// GetSavedSearchID returns the value of SavedSearchID.
+func (s *Subscription) GetSavedSearchID() int64 {
+	return s.SavedSearchID
+}
+
+// GetSavedSearchName returns the value of SavedSearchName.
+func (s *Subscription) GetSavedSearchName() OptString {
+	return s.SavedSearchName
+}
+
+// GetChannel returns the value of Channel.
+func (s *Subscription) GetChannel() string {
+	return s.Channel
+}
+
+// GetActive returns the value of Active.
+func (s *Subscription) GetActive() bool {
+	return s.Active
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Subscription) GetCreatedAt() NilDateTime {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Subscription) SetID(val int64) {
+	s.ID = val
+}
+
+// SetSavedSearchID sets the value of SavedSearchID.
+func (s *Subscription) SetSavedSearchID(val int64) {
+	s.SavedSearchID = val
+}
+
+// SetSavedSearchName sets the value of SavedSearchName.
+func (s *Subscription) SetSavedSearchName(val OptString) {
+	s.SavedSearchName = val
+}
+
+// SetChannel sets the value of Channel.
+func (s *Subscription) SetChannel(val string) {
+	s.Channel = val
+}
+
+// SetActive sets the value of Active.
+func (s *Subscription) SetActive(val bool) {
+	s.Active = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Subscription) SetCreatedAt(val NilDateTime) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/SubscriptionActive
+type SubscriptionActive struct {
+	Active OptBool `json:"active"`
+}
+
+// GetActive returns the value of Active.
+func (s *SubscriptionActive) GetActive() OptBool {
+	return s.Active
+}
+
+// SetActive sets the value of Active.
+func (s *SubscriptionActive) SetActive(val OptBool) {
+	s.Active = val
+}
+
+// Ref: #/components/schemas/SubscriptionCreate
+type SubscriptionCreate struct {
+	SavedSearchID OptInt64 `json:"saved_search_id"`
+	// Defaults to telegram when empty.
+	Channel OptString `json:"channel"`
+}
+
+// GetSavedSearchID returns the value of SavedSearchID.
+func (s *SubscriptionCreate) GetSavedSearchID() OptInt64 {
+	return s.SavedSearchID
+}
+
+// GetChannel returns the value of Channel.
+func (s *SubscriptionCreate) GetChannel() OptString {
+	return s.Channel
+}
+
+// SetSavedSearchID sets the value of SavedSearchID.
+func (s *SubscriptionCreate) SetSavedSearchID(val OptInt64) {
+	s.SavedSearchID = val
+}
+
+// SetChannel sets the value of Channel.
+func (s *SubscriptionCreate) SetChannel(val OptString) {
+	s.Channel = val
+}
+
+// Ref: #/components/schemas/SubscriptionList
+type SubscriptionList struct {
+	Data []Subscription `json:"data"`
+	Meta AlertListMeta  `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *SubscriptionList) GetData() []Subscription {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *SubscriptionList) GetMeta() AlertListMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *SubscriptionList) SetData(val []Subscription) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *SubscriptionList) SetMeta(val AlertListMeta) {
+	s.Meta = val
 }
 
 // Ref: #/components/schemas/SuggestMeta
@@ -2444,6 +18741,38 @@ func (s *SurveyResponses) SetCurrentIncomeCurrency(val OptNilString) {
 func (s *SurveyResponses) SetCurrentIncomePeriod(val OptNilString) {
 	s.CurrentIncomePeriod = val
 }
+
+// A single item: `{"data": ...}`.
+type SyncBillingStoreOK struct {
+	Data BillingStoreSync `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SyncBillingStoreOK) GetData() BillingStoreSync {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SyncBillingStoreOK) SetData(val BillingStoreSync) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type TailorCVCreated struct {
+	Data CvTailorResult `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *TailorCVCreated) GetData() CvTailorResult {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *TailorCVCreated) SetData(val CvTailorResult) {
+	s.Data = val
+}
+
+func (*TailorCVCreated) tailorCVRes() {}
 
 // The anonymised card: only what a dictionary can vouch for.
 // Ref: #/components/schemas/TalentCard
@@ -2865,6 +19194,1088 @@ func (s *TalentRole) SetStack(val []string) {
 	s.Stack = val
 }
 
+// The author is the persona handle, "AI" for a system reply or "[deleted]" once the account is gone.
+// Ref: #/components/schemas/Thread
+type Thread struct {
+	ID          int64     `json:"id"`
+	SubjectType string    `json:"subject_type"`
+	SubjectSlug string    `json:"subject_slug"`
+	Title       string    `json:"title"`
+	Body        string    `json:"body"`
+	Author      string    `json:"author"`
+	ReplyCount  int64     `json:"reply_count"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *Thread) GetID() int64 {
+	return s.ID
+}
+
+// GetSubjectType returns the value of SubjectType.
+func (s *Thread) GetSubjectType() string {
+	return s.SubjectType
+}
+
+// GetSubjectSlug returns the value of SubjectSlug.
+func (s *Thread) GetSubjectSlug() string {
+	return s.SubjectSlug
+}
+
+// GetTitle returns the value of Title.
+func (s *Thread) GetTitle() string {
+	return s.Title
+}
+
+// GetBody returns the value of Body.
+func (s *Thread) GetBody() string {
+	return s.Body
+}
+
+// GetAuthor returns the value of Author.
+func (s *Thread) GetAuthor() string {
+	return s.Author
+}
+
+// GetReplyCount returns the value of ReplyCount.
+func (s *Thread) GetReplyCount() int64 {
+	return s.ReplyCount
+}
+
+// GetStatus returns the value of Status.
+func (s *Thread) GetStatus() string {
+	return s.Status
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *Thread) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *Thread) SetID(val int64) {
+	s.ID = val
+}
+
+// SetSubjectType sets the value of SubjectType.
+func (s *Thread) SetSubjectType(val string) {
+	s.SubjectType = val
+}
+
+// SetSubjectSlug sets the value of SubjectSlug.
+func (s *Thread) SetSubjectSlug(val string) {
+	s.SubjectSlug = val
+}
+
+// SetTitle sets the value of Title.
+func (s *Thread) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetBody sets the value of Body.
+func (s *Thread) SetBody(val string) {
+	s.Body = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *Thread) SetAuthor(val string) {
+	s.Author = val
+}
+
+// SetReplyCount sets the value of ReplyCount.
+func (s *Thread) SetReplyCount(val int64) {
+	s.ReplyCount = val
+}
+
+// SetStatus sets the value of Status.
+func (s *Thread) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *Thread) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/ThreadClosed
+type ThreadClosed struct {
+	ID     int64  `json:"id"`
+	Status string `json:"status"`
+}
+
+// GetID returns the value of ID.
+func (s *ThreadClosed) GetID() int64 {
+	return s.ID
+}
+
+// GetStatus returns the value of Status.
+func (s *ThreadClosed) GetStatus() string {
+	return s.Status
+}
+
+// SetID sets the value of ID.
+func (s *ThreadClosed) SetID(val int64) {
+	s.ID = val
+}
+
+// SetStatus sets the value of Status.
+func (s *ThreadClosed) SetStatus(val string) {
+	s.Status = val
+}
+
+// Ref: #/components/schemas/ThreadCount
+type ThreadCount struct {
+	Count int64 `json:"count"`
+}
+
+// GetCount returns the value of Count.
+func (s *ThreadCount) GetCount() int64 {
+	return s.Count
+}
+
+// SetCount sets the value of Count.
+func (s *ThreadCount) SetCount(val int64) {
+	s.Count = val
+}
+
+// `next_cursor` is set only when the page came back full; a partial page is the last.
+// Ref: #/components/schemas/ThreadCursorMeta
+type ThreadCursorMeta struct {
+	NextCursor OptString `json:"next_cursor"`
+}
+
+// GetNextCursor returns the value of NextCursor.
+func (s *ThreadCursorMeta) GetNextCursor() OptString {
+	return s.NextCursor
+}
+
+// SetNextCursor sets the value of NextCursor.
+func (s *ThreadCursorMeta) SetNextCursor(val OptString) {
+	s.NextCursor = val
+}
+
+// Ref: #/components/schemas/ThreadDetailPage
+type ThreadDetailPage struct {
+	Data ThreadWithReplies `json:"data"`
+	Meta ThreadCursorMeta  `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *ThreadDetailPage) GetData() ThreadWithReplies {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *ThreadDetailPage) GetMeta() ThreadCursorMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *ThreadDetailPage) SetData(val ThreadWithReplies) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *ThreadDetailPage) SetMeta(val ThreadCursorMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/ThreadPage
+type ThreadPage struct {
+	Data []Thread         `json:"data"`
+	Meta ThreadCursorMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *ThreadPage) GetData() []Thread {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *ThreadPage) GetMeta() ThreadCursorMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *ThreadPage) SetData(val []Thread) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *ThreadPage) SetMeta(val ThreadCursorMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/ThreadReply
+type ThreadReply struct {
+	ID        int64     `json:"id"`
+	ThreadID  int64     `json:"thread_id"`
+	ParentID  int64     `json:"parent_id"`
+	Author    string    `json:"author"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// GetID returns the value of ID.
+func (s *ThreadReply) GetID() int64 {
+	return s.ID
+}
+
+// GetThreadID returns the value of ThreadID.
+func (s *ThreadReply) GetThreadID() int64 {
+	return s.ThreadID
+}
+
+// GetParentID returns the value of ParentID.
+func (s *ThreadReply) GetParentID() int64 {
+	return s.ParentID
+}
+
+// GetAuthor returns the value of Author.
+func (s *ThreadReply) GetAuthor() string {
+	return s.Author
+}
+
+// GetBody returns the value of Body.
+func (s *ThreadReply) GetBody() string {
+	return s.Body
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ThreadReply) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetID sets the value of ID.
+func (s *ThreadReply) SetID(val int64) {
+	s.ID = val
+}
+
+// SetThreadID sets the value of ThreadID.
+func (s *ThreadReply) SetThreadID(val int64) {
+	s.ThreadID = val
+}
+
+// SetParentID sets the value of ParentID.
+func (s *ThreadReply) SetParentID(val int64) {
+	s.ParentID = val
+}
+
+// SetAuthor sets the value of Author.
+func (s *ThreadReply) SetAuthor(val string) {
+	s.Author = val
+}
+
+// SetBody sets the value of Body.
+func (s *ThreadReply) SetBody(val string) {
+	s.Body = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ThreadReply) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/ThreadWithReplies
+type ThreadWithReplies struct {
+	Thread  Thread        `json:"thread"`
+	Replies []ThreadReply `json:"replies"`
+}
+
+// GetThread returns the value of Thread.
+func (s *ThreadWithReplies) GetThread() Thread {
+	return s.Thread
+}
+
+// GetReplies returns the value of Replies.
+func (s *ThreadWithReplies) GetReplies() []ThreadReply {
+	return s.Replies
+}
+
+// SetThread sets the value of Thread.
+func (s *ThreadWithReplies) SetThread(val Thread) {
+	s.Thread = val
+}
+
+// SetReplies sets the value of Replies.
+func (s *ThreadWithReplies) SetReplies(val []ThreadReply) {
+	s.Replies = val
+}
+
+// One ledger event. An event happened and cannot change.
+// Ref: #/components/schemas/TimelineEvent
+type TimelineEvent struct {
+	ID     int64     `json:"id"`
+	Kind   string    `json:"kind"`
+	Signal OptString `json:"signal"`
+	Source string    `json:"source"`
+	// The server's verdict on whether somebody other than the candidate set the date.
+	Observed bool `json:"observed"`
+	// An instant, not a day: which day it falls on depends on the reader's clock.
+	OccurredAt    time.Time `json:"occurred_at"`
+	CompanySlug   string    `json:"company_slug"`
+	RoleTitle     OptString `json:"role_title"`
+	ApplicationID OptInt64  `json:"application_id"`
+	JobSlug       OptString `json:"job_slug"`
+	EmailID       OptInt64  `json:"email_id"`
+	EmailSubject  OptString `json:"email_subject"`
+}
+
+// GetID returns the value of ID.
+func (s *TimelineEvent) GetID() int64 {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *TimelineEvent) GetKind() string {
+	return s.Kind
+}
+
+// GetSignal returns the value of Signal.
+func (s *TimelineEvent) GetSignal() OptString {
+	return s.Signal
+}
+
+// GetSource returns the value of Source.
+func (s *TimelineEvent) GetSource() string {
+	return s.Source
+}
+
+// GetObserved returns the value of Observed.
+func (s *TimelineEvent) GetObserved() bool {
+	return s.Observed
+}
+
+// GetOccurredAt returns the value of OccurredAt.
+func (s *TimelineEvent) GetOccurredAt() time.Time {
+	return s.OccurredAt
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *TimelineEvent) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetRoleTitle returns the value of RoleTitle.
+func (s *TimelineEvent) GetRoleTitle() OptString {
+	return s.RoleTitle
+}
+
+// GetApplicationID returns the value of ApplicationID.
+func (s *TimelineEvent) GetApplicationID() OptInt64 {
+	return s.ApplicationID
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *TimelineEvent) GetJobSlug() OptString {
+	return s.JobSlug
+}
+
+// GetEmailID returns the value of EmailID.
+func (s *TimelineEvent) GetEmailID() OptInt64 {
+	return s.EmailID
+}
+
+// GetEmailSubject returns the value of EmailSubject.
+func (s *TimelineEvent) GetEmailSubject() OptString {
+	return s.EmailSubject
+}
+
+// SetID sets the value of ID.
+func (s *TimelineEvent) SetID(val int64) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *TimelineEvent) SetKind(val string) {
+	s.Kind = val
+}
+
+// SetSignal sets the value of Signal.
+func (s *TimelineEvent) SetSignal(val OptString) {
+	s.Signal = val
+}
+
+// SetSource sets the value of Source.
+func (s *TimelineEvent) SetSource(val string) {
+	s.Source = val
+}
+
+// SetObserved sets the value of Observed.
+func (s *TimelineEvent) SetObserved(val bool) {
+	s.Observed = val
+}
+
+// SetOccurredAt sets the value of OccurredAt.
+func (s *TimelineEvent) SetOccurredAt(val time.Time) {
+	s.OccurredAt = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *TimelineEvent) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetRoleTitle sets the value of RoleTitle.
+func (s *TimelineEvent) SetRoleTitle(val OptString) {
+	s.RoleTitle = val
+}
+
+// SetApplicationID sets the value of ApplicationID.
+func (s *TimelineEvent) SetApplicationID(val OptInt64) {
+	s.ApplicationID = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *TimelineEvent) SetJobSlug(val OptString) {
+	s.JobSlug = val
+}
+
+// SetEmailID sets the value of EmailID.
+func (s *TimelineEvent) SetEmailID(val OptInt64) {
+	s.EmailID = val
+}
+
+// SetEmailSubject sets the value of EmailSubject.
+func (s *TimelineEvent) SetEmailSubject(val OptString) {
+	s.EmailSubject = val
+}
+
+// Ref: #/components/schemas/TimelineMeta
+type TimelineMeta struct {
+	From  time.Time `json:"from"`
+	To    time.Time `json:"to"`
+	Count int64     `json:"count"`
+}
+
+// GetFrom returns the value of From.
+func (s *TimelineMeta) GetFrom() time.Time {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *TimelineMeta) GetTo() time.Time {
+	return s.To
+}
+
+// GetCount returns the value of Count.
+func (s *TimelineMeta) GetCount() int64 {
+	return s.Count
+}
+
+// SetFrom sets the value of From.
+func (s *TimelineMeta) SetFrom(val time.Time) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *TimelineMeta) SetTo(val time.Time) {
+	s.To = val
+}
+
+// SetCount sets the value of Count.
+func (s *TimelineMeta) SetCount(val int64) {
+	s.Count = val
+}
+
+// A single item: `{"data": ...}`.
+type TrackApplicationOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *TrackApplicationOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *TrackApplicationOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// At least one of the two is required. A field left out or null keeps the stored value.
+// Ref: #/components/schemas/TrackJob
+type TrackJob struct {
+	Stage OptNilString `json:"stage"`
+	Notes OptNilString `json:"notes"`
+}
+
+// GetStage returns the value of Stage.
+func (s *TrackJob) GetStage() OptNilString {
+	return s.Stage
+}
+
+// GetNotes returns the value of Notes.
+func (s *TrackJob) GetNotes() OptNilString {
+	return s.Notes
+}
+
+// SetStage sets the value of Stage.
+func (s *TrackJob) SetStage(val OptNilString) {
+	s.Stage = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *TrackJob) SetNotes(val OptNilString) {
+	s.Notes = val
+}
+
+// A single item: `{"data": ...}`.
+type TrackJobOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *TrackJobOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *TrackJobOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/TrackedJob
+type TrackedJob struct {
+	AddedToBoardAt NilDateTime `json:"added_to_board_at"`
+	// Addresses the row: the posting's slug, or `a<id>` for an application whose posting is gone.
+	ID          string `json:"id"`
+	CompanySlug string `json:"company_slug"`
+	RoleTitle   string `json:"role_title"`
+	// The job in the shared wire shape; null once the catalogue has removed the posting.
+	Job        jx.Raw      `json:"job"`
+	ViewedAt   NilDateTime `json:"viewed_at"`
+	SavedAt    NilDateTime `json:"saved_at"`
+	AppliedAt  NilDateTime `json:"applied_at"`
+	Stage      NilString   `json:"stage"`
+	Notes      NilString   `json:"notes"`
+	EmailCount int64       `json:"email_count"`
+	// The silence fields are null together on any row that is not awaiting a reply.
+	LastActivityAt NilDateTime `json:"last_activity_at"`
+	DaysSilent     NilInt64    `json:"days_silent"`
+	SilenceState   NilString   `json:"silence_state"`
+	FollowedUpAt   NilDateTime `json:"followed_up_at"`
+	CvOpenedAt     NilDateTime `json:"cv_opened_at"`
+	// The status of this job's live auto-apply attempt; absent when it has none.
+	AutoApplyStatus OptString `json:"auto_apply_status"`
+}
+
+// GetAddedToBoardAt returns the value of AddedToBoardAt.
+func (s *TrackedJob) GetAddedToBoardAt() NilDateTime {
+	return s.AddedToBoardAt
+}
+
+// GetID returns the value of ID.
+func (s *TrackedJob) GetID() string {
+	return s.ID
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *TrackedJob) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetRoleTitle returns the value of RoleTitle.
+func (s *TrackedJob) GetRoleTitle() string {
+	return s.RoleTitle
+}
+
+// GetJob returns the value of Job.
+func (s *TrackedJob) GetJob() jx.Raw {
+	return s.Job
+}
+
+// GetViewedAt returns the value of ViewedAt.
+func (s *TrackedJob) GetViewedAt() NilDateTime {
+	return s.ViewedAt
+}
+
+// GetSavedAt returns the value of SavedAt.
+func (s *TrackedJob) GetSavedAt() NilDateTime {
+	return s.SavedAt
+}
+
+// GetAppliedAt returns the value of AppliedAt.
+func (s *TrackedJob) GetAppliedAt() NilDateTime {
+	return s.AppliedAt
+}
+
+// GetStage returns the value of Stage.
+func (s *TrackedJob) GetStage() NilString {
+	return s.Stage
+}
+
+// GetNotes returns the value of Notes.
+func (s *TrackedJob) GetNotes() NilString {
+	return s.Notes
+}
+
+// GetEmailCount returns the value of EmailCount.
+func (s *TrackedJob) GetEmailCount() int64 {
+	return s.EmailCount
+}
+
+// GetLastActivityAt returns the value of LastActivityAt.
+func (s *TrackedJob) GetLastActivityAt() NilDateTime {
+	return s.LastActivityAt
+}
+
+// GetDaysSilent returns the value of DaysSilent.
+func (s *TrackedJob) GetDaysSilent() NilInt64 {
+	return s.DaysSilent
+}
+
+// GetSilenceState returns the value of SilenceState.
+func (s *TrackedJob) GetSilenceState() NilString {
+	return s.SilenceState
+}
+
+// GetFollowedUpAt returns the value of FollowedUpAt.
+func (s *TrackedJob) GetFollowedUpAt() NilDateTime {
+	return s.FollowedUpAt
+}
+
+// GetCvOpenedAt returns the value of CvOpenedAt.
+func (s *TrackedJob) GetCvOpenedAt() NilDateTime {
+	return s.CvOpenedAt
+}
+
+// GetAutoApplyStatus returns the value of AutoApplyStatus.
+func (s *TrackedJob) GetAutoApplyStatus() OptString {
+	return s.AutoApplyStatus
+}
+
+// SetAddedToBoardAt sets the value of AddedToBoardAt.
+func (s *TrackedJob) SetAddedToBoardAt(val NilDateTime) {
+	s.AddedToBoardAt = val
+}
+
+// SetID sets the value of ID.
+func (s *TrackedJob) SetID(val string) {
+	s.ID = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *TrackedJob) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetRoleTitle sets the value of RoleTitle.
+func (s *TrackedJob) SetRoleTitle(val string) {
+	s.RoleTitle = val
+}
+
+// SetJob sets the value of Job.
+func (s *TrackedJob) SetJob(val jx.Raw) {
+	s.Job = val
+}
+
+// SetViewedAt sets the value of ViewedAt.
+func (s *TrackedJob) SetViewedAt(val NilDateTime) {
+	s.ViewedAt = val
+}
+
+// SetSavedAt sets the value of SavedAt.
+func (s *TrackedJob) SetSavedAt(val NilDateTime) {
+	s.SavedAt = val
+}
+
+// SetAppliedAt sets the value of AppliedAt.
+func (s *TrackedJob) SetAppliedAt(val NilDateTime) {
+	s.AppliedAt = val
+}
+
+// SetStage sets the value of Stage.
+func (s *TrackedJob) SetStage(val NilString) {
+	s.Stage = val
+}
+
+// SetNotes sets the value of Notes.
+func (s *TrackedJob) SetNotes(val NilString) {
+	s.Notes = val
+}
+
+// SetEmailCount sets the value of EmailCount.
+func (s *TrackedJob) SetEmailCount(val int64) {
+	s.EmailCount = val
+}
+
+// SetLastActivityAt sets the value of LastActivityAt.
+func (s *TrackedJob) SetLastActivityAt(val NilDateTime) {
+	s.LastActivityAt = val
+}
+
+// SetDaysSilent sets the value of DaysSilent.
+func (s *TrackedJob) SetDaysSilent(val NilInt64) {
+	s.DaysSilent = val
+}
+
+// SetSilenceState sets the value of SilenceState.
+func (s *TrackedJob) SetSilenceState(val NilString) {
+	s.SilenceState = val
+}
+
+// SetFollowedUpAt sets the value of FollowedUpAt.
+func (s *TrackedJob) SetFollowedUpAt(val NilDateTime) {
+	s.FollowedUpAt = val
+}
+
+// SetCvOpenedAt sets the value of CvOpenedAt.
+func (s *TrackedJob) SetCvOpenedAt(val NilDateTime) {
+	s.CvOpenedAt = val
+}
+
+// SetAutoApplyStatus sets the value of AutoApplyStatus.
+func (s *TrackedJob) SetAutoApplyStatus(val OptString) {
+	s.AutoApplyStatus = val
+}
+
+// Ref: #/components/schemas/TrackedJobPage
+type TrackedJobPage struct {
+	Data []TrackedJob `json:"data"`
+	Meta TrackingMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *TrackedJobPage) GetData() []TrackedJob {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *TrackedJobPage) GetMeta() TrackingMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *TrackedJobPage) SetData(val []TrackedJob) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *TrackedJobPage) SetMeta(val TrackingMeta) {
+	s.Meta = val
+}
+
+// Rows per tab.
+// Ref: #/components/schemas/TrackingCounts
+type TrackingCounts struct {
+	All       int64 `json:"all"`
+	Viewed    int64 `json:"viewed"`
+	Saved     int64 `json:"saved"`
+	Applied   int64 `json:"applied"`
+	Board     int64 `json:"board"`
+	Dismissed int64 `json:"dismissed"`
+}
+
+// GetAll returns the value of All.
+func (s *TrackingCounts) GetAll() int64 {
+	return s.All
+}
+
+// GetViewed returns the value of Viewed.
+func (s *TrackingCounts) GetViewed() int64 {
+	return s.Viewed
+}
+
+// GetSaved returns the value of Saved.
+func (s *TrackingCounts) GetSaved() int64 {
+	return s.Saved
+}
+
+// GetApplied returns the value of Applied.
+func (s *TrackingCounts) GetApplied() int64 {
+	return s.Applied
+}
+
+// GetBoard returns the value of Board.
+func (s *TrackingCounts) GetBoard() int64 {
+	return s.Board
+}
+
+// GetDismissed returns the value of Dismissed.
+func (s *TrackingCounts) GetDismissed() int64 {
+	return s.Dismissed
+}
+
+// SetAll sets the value of All.
+func (s *TrackingCounts) SetAll(val int64) {
+	s.All = val
+}
+
+// SetViewed sets the value of Viewed.
+func (s *TrackingCounts) SetViewed(val int64) {
+	s.Viewed = val
+}
+
+// SetSaved sets the value of Saved.
+func (s *TrackingCounts) SetSaved(val int64) {
+	s.Saved = val
+}
+
+// SetApplied sets the value of Applied.
+func (s *TrackingCounts) SetApplied(val int64) {
+	s.Applied = val
+}
+
+// SetBoard sets the value of Board.
+func (s *TrackingCounts) SetBoard(val int64) {
+	s.Board = val
+}
+
+// SetDismissed sets the value of Dismissed.
+func (s *TrackingCounts) SetDismissed(val int64) {
+	s.Dismissed = val
+}
+
+// Ref: #/components/schemas/TrackingMeta
+type TrackingMeta struct {
+	Total  int64          `json:"total"`
+	Limit  int64          `json:"limit"`
+	Offset int64          `json:"offset"`
+	Counts TrackingCounts `json:"counts"`
+}
+
+// GetTotal returns the value of Total.
+func (s *TrackingMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// GetLimit returns the value of Limit.
+func (s *TrackingMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *TrackingMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// GetCounts returns the value of Counts.
+func (s *TrackingMeta) GetCounts() TrackingCounts {
+	return s.Counts
+}
+
+// SetTotal sets the value of Total.
+func (s *TrackingMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *TrackingMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *TrackingMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// SetCounts sets the value of Counts.
+func (s *TrackingMeta) SetCounts(val TrackingCounts) {
+	s.Counts = val
+}
+
+// The application count and the count at each stage, zero included.
+// Ref: #/components/schemas/TrackingPipeline
+type TrackingPipeline struct {
+	Applications int64                  `json:"applications"`
+	Stages       TrackingPipelineStages `json:"stages"`
+	// The reply-rate benchmark, only when it clears its sample gate.
+	ReplyRate jx.Raw `json:"reply_rate"`
+}
+
+// GetApplications returns the value of Applications.
+func (s *TrackingPipeline) GetApplications() int64 {
+	return s.Applications
+}
+
+// GetStages returns the value of Stages.
+func (s *TrackingPipeline) GetStages() TrackingPipelineStages {
+	return s.Stages
+}
+
+// GetReplyRate returns the value of ReplyRate.
+func (s *TrackingPipeline) GetReplyRate() jx.Raw {
+	return s.ReplyRate
+}
+
+// SetApplications sets the value of Applications.
+func (s *TrackingPipeline) SetApplications(val int64) {
+	s.Applications = val
+}
+
+// SetStages sets the value of Stages.
+func (s *TrackingPipeline) SetStages(val TrackingPipelineStages) {
+	s.Stages = val
+}
+
+// SetReplyRate sets the value of ReplyRate.
+func (s *TrackingPipeline) SetReplyRate(val jx.Raw) {
+	s.ReplyRate = val
+}
+
+// A single item: `{"data": ...}`.
+type TrackingPipelineOK struct {
+	Data TrackingPipeline `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *TrackingPipelineOK) GetData() TrackingPipeline {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *TrackingPipelineOK) SetData(val TrackingPipeline) {
+	s.Data = val
+}
+
+type TrackingPipelineStages map[string]int64
+
+func (s *TrackingPipelineStages) init() TrackingPipelineStages {
+	m := *s
+	if m == nil {
+		m = map[string]int64{}
+		*s = m
+	}
+	return m
+}
+
+// A single item: `{"data": ...}`.
+type UnbanUserOK struct {
+	Data ModeratedUser `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UnbanUserOK) GetData() ModeratedUser {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UnbanUserOK) SetData(val ModeratedUser) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UndismissJobOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UndismissJobOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UndismissJobOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UndoCVRevisionBatchOK struct {
+	Data CvMeta `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UndoCVRevisionBatchOK) GetData() CvMeta {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UndoCVRevisionBatchOK) SetData(val CvMeta) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UndoCVRevisionOK struct {
+	Data CvRevisionUndo `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UndoCVRevisionOK) GetData() CvRevisionUndo {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UndoCVRevisionOK) SetData(val CvRevisionUndo) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UnsaveJobOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UnsaveJobOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UnsaveJobOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UntrackApplicationOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UntrackApplicationOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UntrackApplicationOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UntrackOK struct {
+	Data Interaction `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UntrackOK) GetData() Interaction {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UntrackOK) SetData(val Interaction) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateAtomOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateAtomOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateAtomOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateCVOK struct {
+	Data CvMeta `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateCVOK) GetData() CvMeta {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateCVOK) SetData(val CvMeta) {
+	s.Data = val
+}
+
 // A single item: `{"data": ...}`.
 type UpdateEmailPrefsOK struct {
 	Data EmailPrefs `json:"data"`
@@ -2881,6 +20292,81 @@ func (s *UpdateEmailPrefsOK) SetData(val EmailPrefs) {
 }
 
 // A single item: `{"data": ...}`.
+type UpdateEmployerCompanyOK struct {
+	Data EmployerCompany `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateEmployerCompanyOK) GetData() EmployerCompany {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateEmployerCompanyOK) SetData(val EmployerCompany) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateEmployerVacancyOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateEmployerVacancyOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateEmployerVacancyOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateEmploymentOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateEmploymentOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateEmploymentOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateJobOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateJobOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateJobOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateMentorProfileOK struct {
+	Data MentorshipMentor `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateMentorProfileOK) GetData() MentorshipMentor {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateMentorProfileOK) SetData(val MentorshipMentor) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type UpdateMyEmailGroupsOK struct {
 	Data EmailPrefs `json:"data"`
 }
@@ -2892,6 +20378,36 @@ func (s *UpdateMyEmailGroupsOK) GetData() EmailPrefs {
 
 // SetData sets the value of Data.
 func (s *UpdateMyEmailGroupsOK) SetData(val EmailPrefs) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateNotificationSettingsOK struct {
+	Data NotificationSettings `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateNotificationSettingsOK) GetData() NotificationSettings {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateNotificationSettingsOK) SetData(val NotificationSettings) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpdateSavedSearchOK struct {
+	Data SavedSearch `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpdateSavedSearchOK) GetData() SavedSearch {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpdateSavedSearchOK) SetData(val SavedSearch) {
 	s.Data = val
 }
 
@@ -2922,6 +20438,21 @@ func (s *UpdateSurveyOK) GetData() SurveyResponses {
 
 // SetData sets the value of Data.
 func (s *UpdateSurveyOK) SetData(val SurveyResponses) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type UpsertCompanyFeedbackCreated struct {
+	Data CompanyFeedback `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UpsertCompanyFeedbackCreated) GetData() CompanyFeedback {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UpsertCompanyFeedbackCreated) SetData(val CompanyFeedback) {
 	s.Data = val
 }
 
@@ -2984,6 +20515,106 @@ func (s *Usage) SetPeriod(val string) {
 // SetResetsAt sets the value of ResetsAt.
 func (s *Usage) SetResetsAt(val time.Time) {
 	s.ResetsAt = val
+}
+
+// A single item: `{"data": ...}`.
+type UserGrowthOK struct {
+	Data []GrowthPoint `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *UserGrowthOK) GetData() []GrowthPoint {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *UserGrowthOK) SetData(val []GrowthPoint) {
+	s.Data = val
+}
+
+// Ref: #/components/schemas/VelocityAnswer
+type VelocityAnswer struct {
+	Data []ActivityPoint `json:"data"`
+	Meta VelocityMeta    `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *VelocityAnswer) GetData() []ActivityPoint {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *VelocityAnswer) GetMeta() VelocityMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *VelocityAnswer) SetData(val []ActivityPoint) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *VelocityAnswer) SetMeta(val VelocityMeta) {
+	s.Meta = val
+}
+
+// Ref: #/components/schemas/VelocityMeta
+type VelocityMeta struct {
+	Granularity string `json:"granularity"`
+	From        string `json:"from"`
+	To          string `json:"to"`
+	FacetKind   string `json:"facet_kind"`
+	FacetValue  string `json:"facet_value"`
+}
+
+// GetGranularity returns the value of Granularity.
+func (s *VelocityMeta) GetGranularity() string {
+	return s.Granularity
+}
+
+// GetFrom returns the value of From.
+func (s *VelocityMeta) GetFrom() string {
+	return s.From
+}
+
+// GetTo returns the value of To.
+func (s *VelocityMeta) GetTo() string {
+	return s.To
+}
+
+// GetFacetKind returns the value of FacetKind.
+func (s *VelocityMeta) GetFacetKind() string {
+	return s.FacetKind
+}
+
+// GetFacetValue returns the value of FacetValue.
+func (s *VelocityMeta) GetFacetValue() string {
+	return s.FacetValue
+}
+
+// SetGranularity sets the value of Granularity.
+func (s *VelocityMeta) SetGranularity(val string) {
+	s.Granularity = val
+}
+
+// SetFrom sets the value of From.
+func (s *VelocityMeta) SetFrom(val string) {
+	s.From = val
+}
+
+// SetTo sets the value of To.
+func (s *VelocityMeta) SetTo(val string) {
+	s.To = val
+}
+
+// SetFacetKind sets the value of FacetKind.
+func (s *VelocityMeta) SetFacetKind(val string) {
+	s.FacetKind = val
+}
+
+// SetFacetValue sets the value of FacetValue.
+func (s *VelocityMeta) SetFacetValue(val string) {
+	s.FacetValue = val
 }
 
 // A single item: `{"data": ...}`.
@@ -3277,3 +20908,9 @@ func (s *WatchlistPageHeaders) SetCacheControl(val string) {
 func (s *WatchlistPageHeaders) SetResponse(val WatchlistPage) {
 	s.Response = val
 }
+
+// WithdrawMentorProfileNoContent is response for WithdrawMentorProfile operation.
+type WithdrawMentorProfileNoContent struct{}
+
+// WithdrawReferralOfferNoContent is response for WithdrawReferralOffer operation.
+type WithdrawReferralOfferNoContent struct{}

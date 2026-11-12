@@ -26,6 +26,9 @@ A migrated route is still a Fiber route: it keeps its middleware chain and ends 
 `contract` handler, which runs the generated server through the net/http adaptor.
 - The caller's id comes from `auth.UserIDFromContext(ctx)`: Fiber Locals are fasthttp
   user values, and the adaptor passes the RequestCtx on as the request context.
+- Middleware that marks Fiber's user context (`mw.paidAI` → `plan.WithPaidAI`, the trace
+  span) reaches the handler's `ctx`: the wrapper merges `c.UserContext()` into it. Do not
+  re-mark inside a handler.
 - Return errors as before (`fiber.NewError`, domain errors); `NewError` renders them
   through `classify`, and faults are reported with the Fiber route's attributes.
 - Lists are `List<T>` and a single item that reads query params is `DataWithIgnored<T>`
@@ -42,5 +45,14 @@ A migrated route is still a Fiber route: it keeps its middleware chain and ends 
 - A patch field that was a Go pointer is `field?: T | null` in TypeSpec: absent and `null`
   both keep the stored value, as `json.Unmarshal` into a pointer did. `ptrOf` / `optNil`
   in `contract.go` convert between the generated `OptNil*` and the domain pointer.
+- Timestamps keep their fraction (RFC3339Nano, as `encoding/json` wrote them):
+  `make api-contract` runs `scripts/openapi-time-format.mjs`, which gives every date-time
+  ogen's `x-ogen-time-format`. Without it ogen writes whole seconds.
 - A binary answer (an image) works: `@body photo: bytes` with a fixed `contentType`.
 - Streams (SSE), websockets and redirects stay hand-written Fiber.
+- Shared mapping helpers live in `handler/contract.go` and nowhere else; reuse them, and put
+  a new one there rather than in a group's file (groups moved in parallel wrote the same
+  helper twice and broke the build when they met). Present: `optString`, `nilIfEmpty`,
+  `ptrOf`, `intPtrOf`, `optNil`, `optNilInt`, `nilString`, `nilDateTime`, `contractQuery`,
+  `contractIgnoredParams`, `contractIgnoredValues`; in `helpers.go` `requireUserIDFromContext`, `contractPathID`; in
+  `handler.go` `contractPageBounded`, `contractPageWindowed`.

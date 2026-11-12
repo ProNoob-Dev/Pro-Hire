@@ -80,8 +80,10 @@ func newBuddyEnv(t *testing.T, names ...string) *buddyEnv {
 	// leave and block tests read to see that the other participant was told.
 	mocks := buddy.NewMockService(svc, repo, buddy.NewMockMailNotifier(queries, nil, "", ""))
 	env.buddies = newBuddyHandlers(svc, mocks)
-	env.buddies.register(env.app.Group("/api/v1"), mw)
-	newConversationHandlers(msg, mocks).register(env.app.Group("/api/v1"), mw)
+	conversations := newConversationHandlers(msg, mocks)
+	contract := newContract(contractHandlers{buddyHandlers: env.buddies, conversationHandlers: conversations})
+	env.buddies.register(env.app.Group("/api/v1"), mw, contract)
+	conversations.register(env.app.Group("/api/v1"), mw, contract)
 	return env
 }
 
