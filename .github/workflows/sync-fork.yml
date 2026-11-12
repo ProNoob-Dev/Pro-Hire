@@ -1,0 +1,29 @@
+name: Sync fork with upstream
+
+# Keeps this fork in step with strelov1/freehire automatically.
+# Runs once a day and can also be started by hand from the Actions tab.
+# If the fork has its own commits, upstream is merged in (your changes are
+# kept). If upstream and your changes conflict, the run fails and the
+# conflict needs a manual resolve — nothing is ever force-pushed.
+# Note: GitHub pauses scheduled runs on repos with no activity for 60 days;
+# any push to the repo wakes the schedule back up.
+
+on:
+  schedule:
+    - cron: "30 0 * * *" # 00:30 UTC = 06:00 IST, daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync main with upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${{ github.repository }}/merge-upstream" \
+            -f branch=main \
+            --jq '{message: .message, merge_type: .merge_type}'
