@@ -5,7 +5,12 @@ using Http;
 namespace Freehire;
 
 model AgentPermissions {
-  /** Whether an agent acting for the account may submit applications. Absent reads as false. */
+  /** Whether an agent acting for the account may submit applications. */
+  agents_may_apply: boolean;
+}
+
+model AgentPermissionsUpdate {
+  /** Absent reads as false. */
   agents_may_apply?: boolean;
 }
 
@@ -22,6 +27,7 @@ model Usage {
 }
 
 /** Readable with a session or an API key. */
+@useAuth(SessionOrKey)
 @tag("Account")
 @route("/me/agent-permissions")
 @get
@@ -31,9 +37,28 @@ op getAgentPermissions(): Data<AgentPermissions> | Problem;
 @tag("Account")
 @route("/me/agent-permissions")
 @put
-op setAgentPermissions(@body body: AgentPermissions): Data<AgentPermissions> | Problem;
+op setAgentPermissions(@body body: AgentPermissionsUpdate): Data<AgentPermissions> | Problem;
 
-/** With a session or an API key. Zeroes when the gateway cannot be read. */
+// With a session or an API key. Zeroes when the gateway cannot be read.
+/**
+ * Counts and token usage, not cost — the gateway’s dollar figure is a list price against
+ * a mixed upstream pool, not what you pay; what you spend is a plan allowance, reported
+ * by `/me/plan` over this same day. Never fails for a reason you could act on: no usage
+ * yet, or an unreachable gateway, both answer 200 with zeroes.
+ */
+@summary("Your AI request activity today.")
+@useAuth(SessionOrKey)
+@opExample(#{
+  returnType: #{
+    data: #{
+      requests: 42,
+      failed: 1,
+      tokens: 118000,
+      period: "2026-08-31",
+      resets_at: utcDateTime.fromISO("2026-09-01T00:00:00Z"),
+    },
+  },
+})
 @tag("Account")
 @route("/me/usage")
 @get
@@ -63,7 +88,38 @@ model MarketPulseMeta {
   week_start: string;
 }
 
-/** Demand for the caller's profile skills, week by week. Session cookie only. */
+// Demand for the caller's profile skills, week by week. Session cookie only.
+/**
+ * One entry per profile skill seen in at least one open job; a skill never seen is
+ * omitted rather than reported with a zero. `change_pct` is `null` with fewer than two
+ * snapshots, or when the earliest snapshot’s count was zero. A profile with no skills yet
+ * answers an empty `data` array, not an error.
+ */
+@summary("Weekly demand trend for your profile skills.")
+@opExample(#{
+  returnType: #{
+    data: #[
+      #{
+        skill: "go",
+        open_count: 640,
+        change_pct: 12.5,
+        series: #[
+          #{
+            week_start: "2026-07-06",
+            open_count: 570,
+          },
+          #{
+            week_start: "2026-08-10",
+            open_count: 640,
+          },
+        ],
+      },
+    ],
+    meta: #{
+      week_start: "2026-08-10",
+    },
+  },
+})
 @tag("Account")
 @route("/me/market-pulse")
 @get
@@ -119,6 +175,7 @@ model MentorProfileSuggestions {
   company_slug?: string;
 }
 
+@useAuth(SessionOrKey)
 @tag("Mentorship")
 @route("/me/mentorship/profile/suggestions")
 @get

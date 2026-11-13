@@ -15,17 +15,6 @@ import (
 // catalogue's and not OJCP's.
 const Version = "1.0"
 
-// serverInstructions describes capabilities and result semantics shared across tools.
-// The packaged find-tech-jobs skill carries the optional search workflow; initialization
-// does not prescribe a call sequence, shortlist size or how the client presents results.
-// Keep this introduction within the 512-character budget enforced by the tests.
-const serverInstructions = "freehire provides anonymous, read-only access to aggregated job postings. " +
-	"search_jobs/get_job: postings; check_jobs_open: open status; similar_jobs: related postings; " +
-	"search_companies/get_company: employers; salary_stats/job_market_stats: pay and demand; " +
-	"list_filter_values: supported filters. Results include source boards and employer links " +
-	"where available. Geography filters form a union. ignored_params identifies unrecognized filter values." +
-	" Search sees the start of a description; get_job has the rest."
-
 // Tool names. Unlike the OJCP transport's, they feed no manifest — there is nothing here
 // that ADVERTISES a tool separately from registering it, so they are constants only because
 // the tests name them, not because a second list needs keeping in step.
@@ -47,52 +36,19 @@ const (
 	toolFilterValues = "list_filter_values"
 )
 
-// readOnly is every tool's annotation block, written once.
+// ReadOnly is every tool's annotation block, written once.
 //
 // All four read, none writes, and all reach a catalogue that changes outside the
 // conversation. Incorrect annotation of exactly these hints is a named rejection reason in
 // OpenAI's submission guidelines, so sharing one value is not merely tidy: it removes the
 // copy-paste from which a write tool would inherit a read-only claim.
-func readOnly() *mcp.ToolAnnotations {
+func ReadOnly() *mcp.ToolAnnotations {
 	destructive, openWorld := false, true
 	return &mcp.ToolAnnotations{
 		ReadOnlyHint:    true,
 		DestructiveHint: &destructive,
 		OpenWorldHint:   &openWorld,
 	}
-}
-
-// Handler builds the HTTP handler serving these tools over MCP's streamable transport.
-// Mount it with Fiber's adaptor at the path the app declares as its MCP endpoint.
-//
-// STATELESS, and that is the whole reason this surface works at all for the caller it was
-// built for. Measured from a packet capture of OpenAI's app scanner (2026-09-18): it sends
-// one request — `server/discover`, declaring protocol version 2026-07-28 — and stops. That
-// is the SEP-2575 lifecycle, where the version and client identity ride in `_meta` on every
-// request instead of being established once.
-//
-// The session-based transport cannot serve that lifecycle, and the SDK says so beside its
-// own code: it filters 2026-07-28 out of the versions it advertises. The result was a
-// `server/discover` answer marked complete that omitted the very version the caller had
-// just declared — reported by the portal as "MCP server/discover response was inconsistent",
-// which it was.
-//
-// Stateless costs this surface nothing it uses. Every tool is a read: a request in, an
-// answer out, no server-to-client call, nothing to remember between requests. What it gives
-// up is the GET event stream and DELETE (405 in this mode), neither of which any tool here
-// has ever needed. The handshake lifecycle still works, so clients that send `initialize`
-// are unaffected — see discovery_test.go, which holds both lifecycles to that promise.
-//
-// origin is the site's own address, which the server's icons and website link are built
-// from.
-func Handler(r Reader, origin string) http.Handler {
-	return mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
-		return newServer(r, origin)
-	}, &mcp.StreamableHTTPOptions{Stateless: true})
-}
-
-func newServer(r Reader, origin string) *mcp.Server {
-	return newCatalogueServer(forAnonymous(r), origin, serverInstructions, "public", signedOutNext(origin))
 }
 
 func newCatalogueServer(r Reader, origin, instructions, surface string, next nextHints) *mcp.Server {
@@ -125,7 +81,7 @@ func newCatalogueServer(r Reader, origin, instructions, surface string, next nex
 			"few results come back, loosen one constraint at a time and say which. Present " +
 			"results as a table of title, company, location, posted date and link (the employer's " +
 			"posting and ours), naming the source.",
-		Annotations: readOnly(),
+		Annotations: ReadOnly(),
 		Meta:        rendersInWidget(),
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in SearchInput) (*mcp.CallToolResult, SearchJobsResult, error) {
 		out, err := r.SearchJobs(ctx, in)
@@ -144,7 +100,7 @@ func newCatalogueServer(r Reader, origin, instructions, surface string, next nex
 			"applications, and whether the posting still looks live — when it was last seen " +
 			"open, a reality class, and any observed signs that it is not being filled. A closed " +
 			"posting carries closed_at.",
-		Annotations: readOnly(),
+		Annotations: ReadOnly(),
 		Meta:        rendersInWidget(),
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in JobDetailInput) (*mcp.CallToolResult, JobResult, error) {
 		out, err := r.JobDetail(ctx, in.Slug)
@@ -160,7 +116,7 @@ func newCatalogueServer(r Reader, origin, instructions, surface string, next nex
 		Description: "Read what freehire holds about one employer by the slug a result " +
 			"carries: what they do, which industries they are in, where they are based, and how " +
 			"many postings they have open.",
-		Annotations: readOnly(),
+		Annotations: ReadOnly(),
 	}, func(ctx context.Context, _ *mcp.CallToolRequest, in CompanyDetailInput) (*mcp.CallToolResult, CompanyResult, error) {
 		return toolResult(r.CompanyDetail(ctx, in.Slug))
 	})
@@ -241,4 +197,15 @@ func publicErrorCode(err error) string {
 		return "invalid_request"
 	}
 	return observability.ErrorCode(err)
+}
+
+// StatelessHandler serves a freshly built MCP server per request over the streamable
+// transport. Stateless because a stateful session derives its tool contexts from the
+// `initialize` request, whose fasthttp RequestCtx the Fiber adaptor recycles once that
+// request ends: a later call would read another request's user values, and agent view
+// counts would be attributed to the wrong request or lost. Every tool here is a request in,
+// an answer out, so statelessness costs nothing.
+func StatelessHandler(newServer func() *mcp.Server) http.Handler {
+	return mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return newServer() },
+		&mcp.StreamableHTTPOptions{Stateless: true})
 }

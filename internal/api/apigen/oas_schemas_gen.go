@@ -163,6 +163,7 @@ func (s *AccountAttributionResult) SetGa4Sent(val bool) {
 
 // Ref: #/components/schemas/AccountLanguageUpdate
 type AccountLanguageUpdate struct {
+	// Supported language code. (e.g. `en`).
 	Language OptString `json:"language"`
 }
 
@@ -238,6 +239,7 @@ func (s *AccountOauthGrant) SetLastUsedAt(val NilDateTime) {
 
 // Ref: #/components/schemas/AccountTimezoneUpdate
 type AccountTimezoneUpdate struct {
+	// IANA timezone name. (e.g. `Europe/Berlin`).
 	Timezone OptString `json:"timezone"`
 	// Leave a timezone that is already set alone.
 	OnlyIfUnset OptBool `json:"only_if_unset"`
@@ -610,17 +612,33 @@ func (s *AgentJobSearchPageHeaders) SetResponse(val AgentJobSearchPage) {
 
 // Ref: #/components/schemas/AgentPermissions
 type AgentPermissions struct {
-	// Whether an agent acting for the account may submit applications. Absent reads as false.
-	AgentsMayApply OptBool `json:"agents_may_apply"`
+	// Whether an agent acting for the account may submit applications.
+	AgentsMayApply bool `json:"agents_may_apply"`
 }
 
 // GetAgentsMayApply returns the value of AgentsMayApply.
-func (s *AgentPermissions) GetAgentsMayApply() OptBool {
+func (s *AgentPermissions) GetAgentsMayApply() bool {
 	return s.AgentsMayApply
 }
 
 // SetAgentsMayApply sets the value of AgentsMayApply.
-func (s *AgentPermissions) SetAgentsMayApply(val OptBool) {
+func (s *AgentPermissions) SetAgentsMayApply(val bool) {
+	s.AgentsMayApply = val
+}
+
+// Ref: #/components/schemas/AgentPermissionsUpdate
+type AgentPermissionsUpdate struct {
+	// Absent reads as false.
+	AgentsMayApply OptBool `json:"agents_may_apply"`
+}
+
+// GetAgentsMayApply returns the value of AgentsMayApply.
+func (s *AgentPermissionsUpdate) GetAgentsMayApply() OptBool {
+	return s.AgentsMayApply
+}
+
+// SetAgentsMayApply sets the value of AgentsMayApply.
+func (s *AgentPermissionsUpdate) SetAgentsMayApply(val OptBool) {
 	s.AgentsMayApply = val
 }
 
@@ -1290,7 +1308,9 @@ func (s *AssistantVoiceToken) SetCallsURL(val string) {
 
 // Ref: #/components/schemas/AssistantVoiceTurn
 type AssistantVoiceTurn struct {
-	Role    OptString `json:"role"`
+	// `user` or `assistant`. (e.g. `user`).
+	Role OptString `json:"role"`
+	// The transcribed/spoken text.
 	Content OptString `json:"content"`
 }
 
@@ -1316,6 +1336,7 @@ func (s *AssistantVoiceTurn) SetContent(val OptString) {
 
 // Ref: #/components/schemas/AuthCode
 type AuthCode struct {
+	// The six-digit code mailed to your address. (e.g. `123456`).
 	Code OptString `json:"code"`
 }
 
@@ -1346,6 +1367,7 @@ func (s *AuthEmailChange) SetEmail(val OptString) {
 
 // Ref: #/components/schemas/AuthPasswordForgot
 type AuthPasswordForgot struct {
+	// Account email. (e.g. `me@example.com`).
 	Email OptString `json:"email"`
 }
 
@@ -1361,8 +1383,11 @@ func (s *AuthPasswordForgot) SetEmail(val OptString) {
 
 // Ref: #/components/schemas/AuthPasswordReset
 type AuthPasswordReset struct {
-	Email    OptString `json:"email"`
-	Code     OptString `json:"code"`
+	// Account email. (e.g. `me@example.com`).
+	Email OptString `json:"email"`
+	// The mailed reset code. (e.g. `123456`).
+	Code OptString `json:"code"`
+	// New password.
 	Password OptString `json:"password"`
 }
 
@@ -1428,8 +1453,8 @@ type AuthUser struct {
 	Language string    `json:"language"`
 	// Null for an account that never finished (or declined) the onboarding wizard.
 	OnboardingCompletedAt NilDateTime `json:"onboarding_completed_at"`
-	// The resolved plan: `free`, `pro` or `ultra`.
-	Tier string `json:"tier"`
+	// The resolved plan.
+	Tier AuthUserTier `json:"tier"`
 	// Whether the account holds a live API key or MCP grant.
 	AgentConnected bool `json:"agent_connected"`
 }
@@ -1485,7 +1510,7 @@ func (s *AuthUser) GetOnboardingCompletedAt() NilDateTime {
 }
 
 // GetTier returns the value of Tier.
-func (s *AuthUser) GetTier() string {
+func (s *AuthUser) GetTier() AuthUserTier {
 	return s.Tier
 }
 
@@ -1545,13 +1570,62 @@ func (s *AuthUser) SetOnboardingCompletedAt(val NilDateTime) {
 }
 
 // SetTier sets the value of Tier.
-func (s *AuthUser) SetTier(val string) {
+func (s *AuthUser) SetTier(val AuthUserTier) {
 	s.Tier = val
 }
 
 // SetAgentConnected sets the value of AgentConnected.
 func (s *AuthUser) SetAgentConnected(val bool) {
 	s.AgentConnected = val
+}
+
+// Ref: #/components/schemas/AuthUserTier
+type AuthUserTier string
+
+const (
+	AuthUserTierFree  AuthUserTier = "free"
+	AuthUserTierPro   AuthUserTier = "pro"
+	AuthUserTierUltra AuthUserTier = "ultra"
+)
+
+// AllValues returns all AuthUserTier values.
+func (AuthUserTier) AllValues() []AuthUserTier {
+	return []AuthUserTier{
+		AuthUserTierFree,
+		AuthUserTierPro,
+		AuthUserTierUltra,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AuthUserTier) MarshalText() ([]byte, error) {
+	switch s {
+	case AuthUserTierFree:
+		return []byte(s), nil
+	case AuthUserTierPro:
+		return []byte(s), nil
+	case AuthUserTierUltra:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AuthUserTier) UnmarshalText(data []byte) error {
+	switch AuthUserTier(data) {
+	case AuthUserTierFree:
+		*s = AuthUserTierFree
+		return nil
+	case AuthUserTierPro:
+		*s = AuthUserTierPro
+		return nil
+	case AuthUserTierUltra:
+		*s = AuthUserTierUltra
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/AutoApplyCancelled
@@ -1584,6 +1658,61 @@ func (s *AutoApplyDecision) SetDecision(val string) {
 	s.Decision = val
 }
 
+// One resolved question and answer in an auto-apply answer preview.
+// Ref: #/components/schemas/AutoApplyPreviewField
+type AutoApplyPreviewField struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+// GetLabel returns the value of Label.
+func (s *AutoApplyPreviewField) GetLabel() string {
+	return s.Label
+}
+
+// GetValue returns the value of Value.
+func (s *AutoApplyPreviewField) GetValue() string {
+	return s.Value
+}
+
+// SetLabel sets the value of Label.
+func (s *AutoApplyPreviewField) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetValue sets the value of Value.
+func (s *AutoApplyPreviewField) SetValue(val string) {
+	s.Value = val
+}
+
+// A required question the preview has no answer for yet.
+// Ref: #/components/schemas/AutoApplyPreviewPending
+type AutoApplyPreviewPending struct {
+	Label string `json:"label"`
+	// Whether the real submission will fill it in on its own.
+	WillDraftAtSubmission bool `json:"will_draft_at_submission"`
+}
+
+// GetLabel returns the value of Label.
+func (s *AutoApplyPreviewPending) GetLabel() string {
+	return s.Label
+}
+
+// GetWillDraftAtSubmission returns the value of WillDraftAtSubmission.
+func (s *AutoApplyPreviewPending) GetWillDraftAtSubmission() bool {
+	return s.WillDraftAtSubmission
+}
+
+// SetLabel sets the value of Label.
+func (s *AutoApplyPreviewPending) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetWillDraftAtSubmission sets the value of WillDraftAtSubmission.
+func (s *AutoApplyPreviewPending) SetWillDraftAtSubmission(val bool) {
+	s.WillDraftAtSubmission = val
+}
+
 // Ref: #/components/schemas/AutoApplyQueued
 type AutoApplyQueued struct {
 	Status string `json:"status"`
@@ -1597,6 +1726,33 @@ func (s *AutoApplyQueued) GetStatus() string {
 // SetStatus sets the value of Status.
 func (s *AutoApplyQueued) SetStatus(val string) {
 	s.Status = val
+}
+
+// What an unattended submission would send, computed once before review.
+// Ref: #/components/schemas/AutoApplyResolvedPreview
+type AutoApplyResolvedPreview struct {
+	Fields  []AutoApplyPreviewField   `json:"fields"`
+	Pending []AutoApplyPreviewPending `json:"pending"`
+}
+
+// GetFields returns the value of Fields.
+func (s *AutoApplyResolvedPreview) GetFields() []AutoApplyPreviewField {
+	return s.Fields
+}
+
+// GetPending returns the value of Pending.
+func (s *AutoApplyResolvedPreview) GetPending() []AutoApplyPreviewPending {
+	return s.Pending
+}
+
+// SetFields sets the value of Fields.
+func (s *AutoApplyResolvedPreview) SetFields(val []AutoApplyPreviewField) {
+	s.Fields = val
+}
+
+// SetPending sets the value of Pending.
+func (s *AutoApplyResolvedPreview) SetPending(val []AutoApplyPreviewPending) {
+	s.Pending = val
 }
 
 // Ref: #/components/schemas/AutoApplyRetried
@@ -1614,6 +1770,70 @@ func (s *AutoApplyRetried) SetRetried(val bool) {
 	s.Retried = val
 }
 
+// The live auto-apply attempt of one job, as the application drawer reads it.
+// Ref: #/components/schemas/AutoApplyReviewInfo
+type AutoApplyReviewInfo struct {
+	Status AutoApplyReviewStatus `json:"status"`
+	// Addresses the attempt for the review call.
+	QueueID int64 `json:"queue_id"`
+	// Only when `status` is `pending_review`.
+	ResolvedPreview OptAutoApplyResolvedPreview `json:"resolved_preview"`
+	// Only when `status` is `blocked`.
+	Unmapped []AutoApplyUnmappedField `json:"unmapped"`
+	// Only on a `failed` attempt the employer may already hold; such an attempt is never retried.
+	MayHaveReachedEmployer OptBool `json:"may_have_reached_employer"`
+}
+
+// GetStatus returns the value of Status.
+func (s *AutoApplyReviewInfo) GetStatus() AutoApplyReviewStatus {
+	return s.Status
+}
+
+// GetQueueID returns the value of QueueID.
+func (s *AutoApplyReviewInfo) GetQueueID() int64 {
+	return s.QueueID
+}
+
+// GetResolvedPreview returns the value of ResolvedPreview.
+func (s *AutoApplyReviewInfo) GetResolvedPreview() OptAutoApplyResolvedPreview {
+	return s.ResolvedPreview
+}
+
+// GetUnmapped returns the value of Unmapped.
+func (s *AutoApplyReviewInfo) GetUnmapped() []AutoApplyUnmappedField {
+	return s.Unmapped
+}
+
+// GetMayHaveReachedEmployer returns the value of MayHaveReachedEmployer.
+func (s *AutoApplyReviewInfo) GetMayHaveReachedEmployer() OptBool {
+	return s.MayHaveReachedEmployer
+}
+
+// SetStatus sets the value of Status.
+func (s *AutoApplyReviewInfo) SetStatus(val AutoApplyReviewStatus) {
+	s.Status = val
+}
+
+// SetQueueID sets the value of QueueID.
+func (s *AutoApplyReviewInfo) SetQueueID(val int64) {
+	s.QueueID = val
+}
+
+// SetResolvedPreview sets the value of ResolvedPreview.
+func (s *AutoApplyReviewInfo) SetResolvedPreview(val OptAutoApplyResolvedPreview) {
+	s.ResolvedPreview = val
+}
+
+// SetUnmapped sets the value of Unmapped.
+func (s *AutoApplyReviewInfo) SetUnmapped(val []AutoApplyUnmappedField) {
+	s.Unmapped = val
+}
+
+// SetMayHaveReachedEmployer sets the value of MayHaveReachedEmployer.
+func (s *AutoApplyReviewInfo) SetMayHaveReachedEmployer(val OptBool) {
+	s.MayHaveReachedEmployer = val
+}
+
 // Ref: #/components/schemas/AutoApplyReviewRequest
 type AutoApplyReviewRequest struct {
 	// `approved` or `declined`.
@@ -1628,6 +1848,133 @@ func (s *AutoApplyReviewRequest) GetDecision() OptString {
 // SetDecision sets the value of Decision.
 func (s *AutoApplyReviewRequest) SetDecision(val OptString) {
 	s.Decision = val
+}
+
+// The candidate-facing status of a live auto-apply attempt (autoapply.Status).
+// Ref: #/components/schemas/AutoApplyReviewStatus
+type AutoApplyReviewStatus string
+
+const (
+	AutoApplyReviewStatusTailoring     AutoApplyReviewStatus = "tailoring"
+	AutoApplyReviewStatusPendingReview AutoApplyReviewStatus = "pending_review"
+	AutoApplyReviewStatusApproved      AutoApplyReviewStatus = "approved"
+	AutoApplyReviewStatusBlocked       AutoApplyReviewStatus = "blocked"
+	AutoApplyReviewStatusDeclined      AutoApplyReviewStatus = "declined"
+	AutoApplyReviewStatusFailed        AutoApplyReviewStatus = "failed"
+	AutoApplyReviewStatusTailorFailed  AutoApplyReviewStatus = "tailor_failed"
+)
+
+// AllValues returns all AutoApplyReviewStatus values.
+func (AutoApplyReviewStatus) AllValues() []AutoApplyReviewStatus {
+	return []AutoApplyReviewStatus{
+		AutoApplyReviewStatusTailoring,
+		AutoApplyReviewStatusPendingReview,
+		AutoApplyReviewStatusApproved,
+		AutoApplyReviewStatusBlocked,
+		AutoApplyReviewStatusDeclined,
+		AutoApplyReviewStatusFailed,
+		AutoApplyReviewStatusTailorFailed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AutoApplyReviewStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case AutoApplyReviewStatusTailoring:
+		return []byte(s), nil
+	case AutoApplyReviewStatusPendingReview:
+		return []byte(s), nil
+	case AutoApplyReviewStatusApproved:
+		return []byte(s), nil
+	case AutoApplyReviewStatusBlocked:
+		return []byte(s), nil
+	case AutoApplyReviewStatusDeclined:
+		return []byte(s), nil
+	case AutoApplyReviewStatusFailed:
+		return []byte(s), nil
+	case AutoApplyReviewStatusTailorFailed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AutoApplyReviewStatus) UnmarshalText(data []byte) error {
+	switch AutoApplyReviewStatus(data) {
+	case AutoApplyReviewStatusTailoring:
+		*s = AutoApplyReviewStatusTailoring
+		return nil
+	case AutoApplyReviewStatusPendingReview:
+		*s = AutoApplyReviewStatusPendingReview
+		return nil
+	case AutoApplyReviewStatusApproved:
+		*s = AutoApplyReviewStatusApproved
+		return nil
+	case AutoApplyReviewStatusBlocked:
+		*s = AutoApplyReviewStatusBlocked
+		return nil
+	case AutoApplyReviewStatusDeclined:
+		*s = AutoApplyReviewStatusDeclined
+		return nil
+	case AutoApplyReviewStatusFailed:
+		*s = AutoApplyReviewStatusFailed
+		return nil
+	case AutoApplyReviewStatusTailorFailed:
+		*s = AutoApplyReviewStatusTailorFailed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// A question the attempt could not answer. The attempt's internal error text is never here.
+// Ref: #/components/schemas/AutoApplyUnmappedField
+type AutoApplyUnmappedField struct {
+	ID       string `json:"id"`
+	Label    string `json:"label"`
+	Required bool   `json:"required"`
+	Reason   string `json:"reason"`
+}
+
+// GetID returns the value of ID.
+func (s *AutoApplyUnmappedField) GetID() string {
+	return s.ID
+}
+
+// GetLabel returns the value of Label.
+func (s *AutoApplyUnmappedField) GetLabel() string {
+	return s.Label
+}
+
+// GetRequired returns the value of Required.
+func (s *AutoApplyUnmappedField) GetRequired() bool {
+	return s.Required
+}
+
+// GetReason returns the value of Reason.
+func (s *AutoApplyUnmappedField) GetReason() string {
+	return s.Reason
+}
+
+// SetID sets the value of ID.
+func (s *AutoApplyUnmappedField) SetID(val string) {
+	s.ID = val
+}
+
+// SetLabel sets the value of Label.
+func (s *AutoApplyUnmappedField) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetRequired sets the value of Required.
+func (s *AutoApplyUnmappedField) SetRequired(val bool) {
+	s.Required = val
+}
+
+// SetReason sets the value of Reason.
+func (s *AutoApplyUnmappedField) SetReason(val string) {
+	s.Reason = val
 }
 
 // Ref: #/components/schemas/BanRequest
@@ -4450,6 +4797,7 @@ func (s *CompanyFeedbackPage) SetMeta(val PageMeta) {
 
 // Ref: #/components/schemas/CompanyFeedbackReportRequest
 type CompanyFeedbackReportRequest struct {
+	// Report reason code. (e.g. `spam`).
 	Reason OptString `json:"reason"`
 }
 
@@ -4466,9 +4814,11 @@ func (s *CompanyFeedbackReportRequest) SetReason(val OptString) {
 // Ref: #/components/schemas/CompanyFeedbackRequest
 type CompanyFeedbackRequest struct {
 	// 1 to 5.
-	Rating       OptInt64  `json:"rating"`
+	Rating OptInt64 `json:"rating"`
+	// Review category, e.g. `interview`, `culture`, `compensation`. (e.g. `interview`).
 	FeedbackType OptString `json:"feedback_type"`
-	Body         OptString `json:"body"`
+	// Free-text review. (e.g. `Fast process, clear communication.`).
+	Body OptString `json:"body"`
 }
 
 // GetRating returns the value of Rating.
@@ -4588,6 +4938,124 @@ func (s *CompanyInsight) SetGrowth30d(val int64) {
 	s.Growth30d = val
 }
 
+// A row of the catalogue: the company, its open-job count and a few company-info facts for the card.
+// Ref: #/components/schemas/CompanyListItem
+type CompanyListItem struct {
+	Slug       string    `json:"slug"`
+	Name       string    `json:"name"`
+	JobCount   int64     `json:"job_count"`
+	Tagline    NilString `json:"tagline"`
+	Industries []string  `json:"industries"`
+	HqCountry  NilString `json:"hq_country"`
+	// Curated company tags; the catalogue card renders the backer marks from these.
+	Collections   []string `json:"collections"`
+	FeedbackCount int64    `json:"feedback_count"`
+	// Null until a review counts.
+	FeedbackRatingAvg NilFloat32 `json:"feedback_rating_avg"`
+	// How many people reported an AI interviewer. Absent at zero, so a badge never shows a bare 0.
+	AiInterviewReports OptInt64 `json:"ai_interview_reports"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *CompanyListItem) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *CompanyListItem) GetName() string {
+	return s.Name
+}
+
+// GetJobCount returns the value of JobCount.
+func (s *CompanyListItem) GetJobCount() int64 {
+	return s.JobCount
+}
+
+// GetTagline returns the value of Tagline.
+func (s *CompanyListItem) GetTagline() NilString {
+	return s.Tagline
+}
+
+// GetIndustries returns the value of Industries.
+func (s *CompanyListItem) GetIndustries() []string {
+	return s.Industries
+}
+
+// GetHqCountry returns the value of HqCountry.
+func (s *CompanyListItem) GetHqCountry() NilString {
+	return s.HqCountry
+}
+
+// GetCollections returns the value of Collections.
+func (s *CompanyListItem) GetCollections() []string {
+	return s.Collections
+}
+
+// GetFeedbackCount returns the value of FeedbackCount.
+func (s *CompanyListItem) GetFeedbackCount() int64 {
+	return s.FeedbackCount
+}
+
+// GetFeedbackRatingAvg returns the value of FeedbackRatingAvg.
+func (s *CompanyListItem) GetFeedbackRatingAvg() NilFloat32 {
+	return s.FeedbackRatingAvg
+}
+
+// GetAiInterviewReports returns the value of AiInterviewReports.
+func (s *CompanyListItem) GetAiInterviewReports() OptInt64 {
+	return s.AiInterviewReports
+}
+
+// SetSlug sets the value of Slug.
+func (s *CompanyListItem) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *CompanyListItem) SetName(val string) {
+	s.Name = val
+}
+
+// SetJobCount sets the value of JobCount.
+func (s *CompanyListItem) SetJobCount(val int64) {
+	s.JobCount = val
+}
+
+// SetTagline sets the value of Tagline.
+func (s *CompanyListItem) SetTagline(val NilString) {
+	s.Tagline = val
+}
+
+// SetIndustries sets the value of Industries.
+func (s *CompanyListItem) SetIndustries(val []string) {
+	s.Industries = val
+}
+
+// SetHqCountry sets the value of HqCountry.
+func (s *CompanyListItem) SetHqCountry(val NilString) {
+	s.HqCountry = val
+}
+
+// SetCollections sets the value of Collections.
+func (s *CompanyListItem) SetCollections(val []string) {
+	s.Collections = val
+}
+
+// SetFeedbackCount sets the value of FeedbackCount.
+func (s *CompanyListItem) SetFeedbackCount(val int64) {
+	s.FeedbackCount = val
+}
+
+// SetFeedbackRatingAvg sets the value of FeedbackRatingAvg.
+func (s *CompanyListItem) SetFeedbackRatingAvg(val NilFloat32) {
+	s.FeedbackRatingAvg = val
+}
+
+// SetAiInterviewReports sets the value of AiInterviewReports.
+func (s *CompanyListItem) SetAiInterviewReports(val OptInt64) {
+	s.AiInterviewReports = val
+}
+
 // Ref: #/components/schemas/CompanyRelationApproval
 type CompanyRelationApproval struct {
 	Kind string `json:"kind"`
@@ -4613,6 +5081,49 @@ func (s *CompanyRelationApproval) SetKind(val string) {
 // SetMovedJobs sets the value of MovedJobs.
 func (s *CompanyRelationApproval) SetMovedJobs(val int64) {
 	s.MovedJobs = val
+}
+
+// `same`: one employer under two names; `subsidiary`: the page's company is owned by the target.
+// Ref: #/components/schemas/CompanyRelationKind
+type CompanyRelationKind string
+
+const (
+	CompanyRelationKindSame       CompanyRelationKind = "same"
+	CompanyRelationKindSubsidiary CompanyRelationKind = "subsidiary"
+)
+
+// AllValues returns all CompanyRelationKind values.
+func (CompanyRelationKind) AllValues() []CompanyRelationKind {
+	return []CompanyRelationKind{
+		CompanyRelationKindSame,
+		CompanyRelationKindSubsidiary,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s CompanyRelationKind) MarshalText() ([]byte, error) {
+	switch s {
+	case CompanyRelationKindSame:
+		return []byte(s), nil
+	case CompanyRelationKindSubsidiary:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *CompanyRelationKind) UnmarshalText(data []byte) error {
+	switch CompanyRelationKind(data) {
+	case CompanyRelationKindSame:
+		*s = CompanyRelationKindSame
+		return nil
+	case CompanyRelationKindSubsidiary:
+		*s = CompanyRelationKindSubsidiary
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/CompanyRelationProposal
@@ -4854,13 +5365,13 @@ func (s *ConfirmEmployerClaimOK) SetData(val EmployerAccount) {
 // A job page the caller sent in, and what became of it.
 // Ref: #/components/schemas/Contribution
 type Contribution struct {
-	ID        int64       `json:"id"`
-	URL       string      `json:"url"`
-	Source    string      `json:"source"`
-	Board     string      `json:"board"`
-	Status    string      `json:"status"`
-	Surface   string      `json:"surface"`
-	CreatedAt NilDateTime `json:"created_at"`
+	ID        int64              `json:"id"`
+	URL       string             `json:"url"`
+	Source    string             `json:"source"`
+	Board     string             `json:"board"`
+	Status    ContributionStatus `json:"status"`
+	Surface   string             `json:"surface"`
+	CreatedAt NilDateTime        `json:"created_at"`
 }
 
 // GetID returns the value of ID.
@@ -4884,7 +5395,7 @@ func (s *Contribution) GetBoard() string {
 }
 
 // GetStatus returns the value of Status.
-func (s *Contribution) GetStatus() string {
+func (s *Contribution) GetStatus() ContributionStatus {
 	return s.Status
 }
 
@@ -4919,7 +5430,7 @@ func (s *Contribution) SetBoard(val string) {
 }
 
 // SetStatus sets the value of Status.
-func (s *Contribution) SetStatus(val string) {
+func (s *Contribution) SetStatus(val ContributionStatus) {
 	s.Status = val
 }
 
@@ -4931,6 +5442,72 @@ func (s *Contribution) SetSurface(val string) {
 // SetCreatedAt sets the value of CreatedAt.
 func (s *Contribution) SetCreatedAt(val NilDateTime) {
 	s.CreatedAt = val
+}
+
+// `pending`: recorded, not yet proven by a crawl; `active`: its first crawl succeeded; `rejected` and
+// `retired`: a curator turned it down or removed it; `review`: an unrecognised link awaiting manual
+// triage.
+// Ref: #/components/schemas/ContributionStatus
+type ContributionStatus string
+
+const (
+	ContributionStatusPending  ContributionStatus = "pending"
+	ContributionStatusActive   ContributionStatus = "active"
+	ContributionStatusRejected ContributionStatus = "rejected"
+	ContributionStatusRetired  ContributionStatus = "retired"
+	ContributionStatusReview   ContributionStatus = "review"
+)
+
+// AllValues returns all ContributionStatus values.
+func (ContributionStatus) AllValues() []ContributionStatus {
+	return []ContributionStatus{
+		ContributionStatusPending,
+		ContributionStatusActive,
+		ContributionStatusRejected,
+		ContributionStatusRetired,
+		ContributionStatusReview,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ContributionStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ContributionStatusPending:
+		return []byte(s), nil
+	case ContributionStatusActive:
+		return []byte(s), nil
+	case ContributionStatusRejected:
+		return []byte(s), nil
+	case ContributionStatusRetired:
+		return []byte(s), nil
+	case ContributionStatusReview:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ContributionStatus) UnmarshalText(data []byte) error {
+	switch ContributionStatus(data) {
+	case ContributionStatusPending:
+		*s = ContributionStatusPending
+		return nil
+	case ContributionStatusActive:
+		*s = ContributionStatusActive
+		return nil
+	case ContributionStatusRejected:
+		*s = ContributionStatusRejected
+		return nil
+	case ContributionStatusRetired:
+		*s = ContributionStatusRetired
+		return nil
+	case ContributionStatusReview:
+		*s = ContributionStatusReview
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // `unread` and `last_message_at` mean something on the list only; elsewhere they are 0 and null.
@@ -5760,6 +6337,7 @@ func (s *CreateReplyCreated) SetData(val ThreadReply) {
 
 // Ref: #/components/schemas/CreateReplyRequest
 type CreateReplyRequest struct {
+	// Your reply.
 	Body OptString `json:"body"`
 	// Nests the reply under another reply; 0 or omitted is top-level.
 	ParentReplyID OptInt64 `json:"parent_reply_id"`
@@ -5883,8 +6461,10 @@ func (s *CreateThreadCreated) SetData(val Thread) {
 type CreateThreadRequest struct {
 	SubjectType OptString `json:"subject_type"`
 	SubjectSlug OptString `json:"subject_slug"`
-	Title       OptString `json:"title"`
-	Body        OptString `json:"body"`
+	// Thread title.
+	Title OptString `json:"title"`
+	// Opening post.
+	Body OptString `json:"body"`
 }
 
 // GetSubjectType returns the value of SubjectType.
@@ -6222,6 +6802,7 @@ func (s *CvCoverLetter) SetModel(val OptString) {
 
 // Ref: #/components/schemas/CvCreate
 type CvCreate struct {
+	// Label; up to 200 characters.
 	Title OptString `json:"title"`
 	// Empty falls back to the caller's saved default, then to the system one.
 	TemplateID OptString `json:"template_id"`
@@ -6533,6 +7114,7 @@ func (s *CvRevisionUndo) SetRevision(val jx.Raw) {
 
 // Ref: #/components/schemas/CvSessionBinding
 type CvSessionBinding struct {
+	// The agent session to bind.
 	SessionID OptString `json:"session_id"`
 }
 
@@ -6548,6 +7130,7 @@ func (s *CvSessionBinding) SetSessionID(val OptString) {
 
 // Ref: #/components/schemas/CvTailorRequest
 type CvTailorRequest struct {
+	// The vacancy to tailor toward.
 	JobSlug OptString `json:"job_slug"`
 	// The base to copy; absent means the default base.
 	BaseCvID OptString `json:"base_cv_id"`
@@ -6777,6 +7360,7 @@ func (s *CvTailored) SetAgentSessionID(val string) {
 
 // Ref: #/components/schemas/CvTemplateChoice
 type CvTemplateChoice struct {
+	// A template id from `/cv-templates`.
 	TemplateID OptString `json:"template_id"`
 }
 
@@ -6875,6 +7459,7 @@ func (s *CvTracerLink) SetLastClickAt(val OptDateTime) {
 
 // Ref: #/components/schemas/CvTracerLinksSetting
 type CvTracerLinksSetting struct {
+	// Turn tracing on or off.
 	Enabled OptBool `json:"enabled"`
 }
 
@@ -6905,9 +7490,12 @@ func (s *CvTracerLinksState) SetTracerLinksEnabled(val bool) {
 
 // Ref: #/components/schemas/CvUpdate
 type CvUpdate struct {
-	Title      OptString `json:"title"`
+	// New label.
+	Title OptString `json:"title"`
+	// New template.
 	TemplateID OptString `json:"template_id"`
-	Document   jx.Raw    `json:"document"`
+	// The whole CV document.
+	Document jx.Raw `json:"document"`
 }
 
 // GetTitle returns the value of Title.
@@ -6942,16 +7530,16 @@ func (s *CvUpdate) SetDocument(val jx.Raw) {
 
 // A single item: `{"data": ...}`.
 type DecideMentorProfileOK struct {
-	Data MentorshipMentor `json:"data"`
+	Data MentorshipModeratedMentor `json:"data"`
 }
 
 // GetData returns the value of Data.
-func (s *DecideMentorProfileOK) GetData() MentorshipMentor {
+func (s *DecideMentorProfileOK) GetData() MentorshipModeratedMentor {
 	return s.Data
 }
 
 // SetData sets the value of Data.
-func (s *DecideMentorProfileOK) SetData(val MentorshipMentor) {
+func (s *DecideMentorProfileOK) SetData(val MentorshipModeratedMentor) {
 	s.Data = val
 }
 
@@ -7278,11 +7866,11 @@ func (s *DirectApplyFormPrefill) init() DirectApplyFormPrefill {
 
 // Ref: #/components/schemas/DirectApplyQuestion
 type DirectApplyQuestion struct {
-	ID       string   `json:"id"`
-	Label    string   `json:"label"`
-	Type     string   `json:"type"`
-	Required bool     `json:"required"`
-	Options  []string `json:"options"`
+	ID       string                  `json:"id"`
+	Label    string                  `json:"label"`
+	Type     DirectApplyQuestionType `json:"type"`
+	Required bool                    `json:"required"`
+	Options  []string                `json:"options"`
 }
 
 // GetID returns the value of ID.
@@ -7296,7 +7884,7 @@ func (s *DirectApplyQuestion) GetLabel() string {
 }
 
 // GetType returns the value of Type.
-func (s *DirectApplyQuestion) GetType() string {
+func (s *DirectApplyQuestion) GetType() DirectApplyQuestionType {
 	return s.Type
 }
 
@@ -7321,7 +7909,7 @@ func (s *DirectApplyQuestion) SetLabel(val string) {
 }
 
 // SetType sets the value of Type.
-func (s *DirectApplyQuestion) SetType(val string) {
+func (s *DirectApplyQuestion) SetType(val DirectApplyQuestionType) {
 	s.Type = val
 }
 
@@ -7335,13 +7923,68 @@ func (s *DirectApplyQuestion) SetOptions(val []string) {
 	s.Options = val
 }
 
+// Ref: #/components/schemas/DirectApplyQuestionType
+type DirectApplyQuestionType string
+
+const (
+	DirectApplyQuestionTypeText    DirectApplyQuestionType = "text"
+	DirectApplyQuestionTypeBoolean DirectApplyQuestionType = "boolean"
+	DirectApplyQuestionTypeSelect  DirectApplyQuestionType = "select"
+)
+
+// AllValues returns all DirectApplyQuestionType values.
+func (DirectApplyQuestionType) AllValues() []DirectApplyQuestionType {
+	return []DirectApplyQuestionType{
+		DirectApplyQuestionTypeText,
+		DirectApplyQuestionTypeBoolean,
+		DirectApplyQuestionTypeSelect,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s DirectApplyQuestionType) MarshalText() ([]byte, error) {
+	switch s {
+	case DirectApplyQuestionTypeText:
+		return []byte(s), nil
+	case DirectApplyQuestionTypeBoolean:
+		return []byte(s), nil
+	case DirectApplyQuestionTypeSelect:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *DirectApplyQuestionType) UnmarshalText(data []byte) error {
+	switch DirectApplyQuestionType(data) {
+	case DirectApplyQuestionTypeText:
+		*s = DirectApplyQuestionTypeText
+		return nil
+	case DirectApplyQuestionTypeBoolean:
+		*s = DirectApplyQuestionTypeBoolean
+		return nil
+	case DirectApplyQuestionTypeSelect:
+		*s = DirectApplyQuestionTypeSelect
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Names the CV to send: `resume: true` for the uploaded one, or `cv_id`, exactly one.
 // Ref: #/components/schemas/DirectApplyRequest
 type DirectApplyRequest struct {
-	Resume  OptBool                      `json:"resume"`
-	CvID    OptString                    `json:"cv_id"`
+	// Send the CV file uploaded to your profile. Exactly one of `resume` and `cv_id`. (e.g. `true`).
+	Resume OptBool `json:"resume"`
+	// The CV you tailored for THIS vacancy (`cvs.tailored.id` from the form). Any other CV is a `404`.
+	// (e.g. `6f1c0c3e-8a51-4c1e-9d55-6a4c1f2b0a01`).
+	CvID OptString `json:"cv_id"`
+	// Question id → answer; a yes/no answer is `"true"` or `"false"`, a list answer one of its options.
+	// (e.g. `{"q1":"true"}`).
 	Answers OptDirectApplyRequestAnswers `json:"answers"`
-	Note    OptString                    `json:"note"`
+	// Up to 2000 characters to the employer. (e.g. `Happy to talk this week.`).
+	Note OptString `json:"note"`
 }
 
 // GetResume returns the value of Resume.
@@ -7384,6 +8027,8 @@ func (s *DirectApplyRequest) SetNote(val OptString) {
 	s.Note = val
 }
 
+// Question id → answer; a yes/no answer is `"true"` or `"false"`, a list answer one of its options.
+// (e.g. `{"q1":"true"}`).
 type DirectApplyRequestAnswers map[string]string
 
 func (s *DirectApplyRequestAnswers) init() DirectApplyRequestAnswers {
@@ -7829,12 +8474,12 @@ func (s *EmbeddingProgress) SetMeasuredAt(val NilDateTime) {
 // A company account. `user_id` is the address the moderator and admin actions take.
 // Ref: #/components/schemas/EmployerAccount
 type EmployerAccount struct {
-	UserID      int64       `json:"user_id"`
-	CompanySlug string      `json:"company_slug"`
-	CompanyName string      `json:"company_name"`
-	WorkEmail   string      `json:"work_email"`
-	Status      string      `json:"status"`
-	VerifiedAt  OptDateTime `json:"verified_at"`
+	UserID      int64                 `json:"user_id"`
+	CompanySlug string                `json:"company_slug"`
+	CompanyName string                `json:"company_name"`
+	WorkEmail   string                `json:"work_email"`
+	Status      EmployerAccountStatus `json:"status"`
+	VerifiedAt  OptDateTime           `json:"verified_at"`
 	// Whether the claimant still owes the mailed code or is waiting on a moderator.
 	EmailConfirmed bool      `json:"email_confirmed"`
 	CreatedAt      time.Time `json:"created_at"`
@@ -7861,7 +8506,7 @@ func (s *EmployerAccount) GetWorkEmail() string {
 }
 
 // GetStatus returns the value of Status.
-func (s *EmployerAccount) GetStatus() string {
+func (s *EmployerAccount) GetStatus() EmployerAccountStatus {
 	return s.Status
 }
 
@@ -7901,7 +8546,7 @@ func (s *EmployerAccount) SetWorkEmail(val string) {
 }
 
 // SetStatus sets the value of Status.
-func (s *EmployerAccount) SetStatus(val string) {
+func (s *EmployerAccount) SetStatus(val EmployerAccountStatus) {
 	s.Status = val
 }
 
@@ -7918,6 +8563,55 @@ func (s *EmployerAccount) SetEmailConfirmed(val bool) {
 // SetCreatedAt sets the value of CreatedAt.
 func (s *EmployerAccount) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
+}
+
+// Ref: #/components/schemas/EmployerAccountStatus
+type EmployerAccountStatus string
+
+const (
+	EmployerAccountStatusPending EmployerAccountStatus = "pending"
+	EmployerAccountStatusActive  EmployerAccountStatus = "active"
+	EmployerAccountStatusRevoked EmployerAccountStatus = "revoked"
+)
+
+// AllValues returns all EmployerAccountStatus values.
+func (EmployerAccountStatus) AllValues() []EmployerAccountStatus {
+	return []EmployerAccountStatus{
+		EmployerAccountStatusPending,
+		EmployerAccountStatusActive,
+		EmployerAccountStatusRevoked,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EmployerAccountStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case EmployerAccountStatusPending:
+		return []byte(s), nil
+	case EmployerAccountStatusActive:
+		return []byte(s), nil
+	case EmployerAccountStatusRevoked:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EmployerAccountStatus) UnmarshalText(data []byte) error {
+	switch EmployerAccountStatus(data) {
+	case EmployerAccountStatusPending:
+		*s = EmployerAccountStatusPending
+		return nil
+	case EmployerAccountStatusActive:
+		*s = EmployerAccountStatusActive
+		return nil
+	case EmployerAccountStatusRevoked:
+		*s = EmployerAccountStatusRevoked
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/EmployerClaim
@@ -7964,12 +8658,12 @@ func (s *EmployerClosed) SetClosed(val bool) {
 // The account plus its company's curated profile; an unset profile field is left out.
 // Ref: #/components/schemas/EmployerCompany
 type EmployerCompany struct {
-	UserID      int64       `json:"user_id"`
-	CompanySlug string      `json:"company_slug"`
-	CompanyName string      `json:"company_name"`
-	WorkEmail   string      `json:"work_email"`
-	Status      string      `json:"status"`
-	VerifiedAt  OptDateTime `json:"verified_at"`
+	UserID      int64                 `json:"user_id"`
+	CompanySlug string                `json:"company_slug"`
+	CompanyName string                `json:"company_name"`
+	WorkEmail   string                `json:"work_email"`
+	Status      EmployerAccountStatus `json:"status"`
+	VerifiedAt  OptDateTime           `json:"verified_at"`
 	// Whether the claimant still owes the mailed code or is waiting on a moderator.
 	EmailConfirmed bool      `json:"email_confirmed"`
 	CreatedAt      time.Time `json:"created_at"`
@@ -8004,7 +8698,7 @@ func (s *EmployerCompany) GetWorkEmail() string {
 }
 
 // GetStatus returns the value of Status.
-func (s *EmployerCompany) GetStatus() string {
+func (s *EmployerCompany) GetStatus() EmployerAccountStatus {
 	return s.Status
 }
 
@@ -8084,7 +8778,7 @@ func (s *EmployerCompany) SetWorkEmail(val string) {
 }
 
 // SetStatus sets the value of Status.
-func (s *EmployerCompany) SetStatus(val string) {
+func (s *EmployerCompany) SetStatus(val EmployerAccountStatus) {
 	s.Status = val
 }
 
@@ -8719,32 +9413,406 @@ func (s *EngagementStatsOK) SetData(val Engagement) {
 	s.Data = val
 }
 
+// One piece of evidence, at the grain of a CV bullet. The three flags below are computed at read time.
+// Ref: #/components/schemas/ExperienceAtom
+type ExperienceAtom struct {
+	ID           string               `json:"id"`
+	EmploymentID OptString            `json:"employment_id"`
+	Claim        string               `json:"claim"`
+	Context      OptString            `json:"context"`
+	Metrics      []string             `json:"metrics"`
+	Skills       []string             `json:"skills"`
+	Provenance   ExperienceProvenance `json:"provenance"`
+	SourceRef    OptString            `json:"source_ref"`
+	NeedsContext bool                 `json:"needs_context"`
+	NeedsMetrics bool                 `json:"needs_metrics"`
+	// Shared id of a soft-duplicate group (its first member), when the list clustered this atom.
+	ClusterID OptString `json:"cluster_id"`
+}
+
+// GetID returns the value of ID.
+func (s *ExperienceAtom) GetID() string {
+	return s.ID
+}
+
+// GetEmploymentID returns the value of EmploymentID.
+func (s *ExperienceAtom) GetEmploymentID() OptString {
+	return s.EmploymentID
+}
+
+// GetClaim returns the value of Claim.
+func (s *ExperienceAtom) GetClaim() string {
+	return s.Claim
+}
+
+// GetContext returns the value of Context.
+func (s *ExperienceAtom) GetContext() OptString {
+	return s.Context
+}
+
+// GetMetrics returns the value of Metrics.
+func (s *ExperienceAtom) GetMetrics() []string {
+	return s.Metrics
+}
+
+// GetSkills returns the value of Skills.
+func (s *ExperienceAtom) GetSkills() []string {
+	return s.Skills
+}
+
+// GetProvenance returns the value of Provenance.
+func (s *ExperienceAtom) GetProvenance() ExperienceProvenance {
+	return s.Provenance
+}
+
+// GetSourceRef returns the value of SourceRef.
+func (s *ExperienceAtom) GetSourceRef() OptString {
+	return s.SourceRef
+}
+
+// GetNeedsContext returns the value of NeedsContext.
+func (s *ExperienceAtom) GetNeedsContext() bool {
+	return s.NeedsContext
+}
+
+// GetNeedsMetrics returns the value of NeedsMetrics.
+func (s *ExperienceAtom) GetNeedsMetrics() bool {
+	return s.NeedsMetrics
+}
+
+// GetClusterID returns the value of ClusterID.
+func (s *ExperienceAtom) GetClusterID() OptString {
+	return s.ClusterID
+}
+
+// SetID sets the value of ID.
+func (s *ExperienceAtom) SetID(val string) {
+	s.ID = val
+}
+
+// SetEmploymentID sets the value of EmploymentID.
+func (s *ExperienceAtom) SetEmploymentID(val OptString) {
+	s.EmploymentID = val
+}
+
+// SetClaim sets the value of Claim.
+func (s *ExperienceAtom) SetClaim(val string) {
+	s.Claim = val
+}
+
+// SetContext sets the value of Context.
+func (s *ExperienceAtom) SetContext(val OptString) {
+	s.Context = val
+}
+
+// SetMetrics sets the value of Metrics.
+func (s *ExperienceAtom) SetMetrics(val []string) {
+	s.Metrics = val
+}
+
+// SetSkills sets the value of Skills.
+func (s *ExperienceAtom) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetProvenance sets the value of Provenance.
+func (s *ExperienceAtom) SetProvenance(val ExperienceProvenance) {
+	s.Provenance = val
+}
+
+// SetSourceRef sets the value of SourceRef.
+func (s *ExperienceAtom) SetSourceRef(val OptString) {
+	s.SourceRef = val
+}
+
+// SetNeedsContext sets the value of NeedsContext.
+func (s *ExperienceAtom) SetNeedsContext(val bool) {
+	s.NeedsContext = val
+}
+
+// SetNeedsMetrics sets the value of NeedsMetrics.
+func (s *ExperienceAtom) SetNeedsMetrics(val bool) {
+	s.NeedsMetrics = val
+}
+
+// SetClusterID sets the value of ClusterID.
+func (s *ExperienceAtom) SetClusterID(val OptString) {
+	s.ClusterID = val
+}
+
 // The places with their achievements, and the achievements that belong to no place.
 // Ref: #/components/schemas/ExperienceBank
 type ExperienceBank struct {
-	// Each place with an `atoms` array of its achievements.
-	Employments []jx.Raw `json:"employments"`
-	Unplaced    []jx.Raw `json:"unplaced"`
+	Employments []ExperienceEmploymentWithAtoms `json:"employments"`
+	Unplaced    []ExperienceAtom                `json:"unplaced"`
 }
 
 // GetEmployments returns the value of Employments.
-func (s *ExperienceBank) GetEmployments() []jx.Raw {
+func (s *ExperienceBank) GetEmployments() []ExperienceEmploymentWithAtoms {
 	return s.Employments
 }
 
 // GetUnplaced returns the value of Unplaced.
-func (s *ExperienceBank) GetUnplaced() []jx.Raw {
+func (s *ExperienceBank) GetUnplaced() []ExperienceAtom {
 	return s.Unplaced
 }
 
 // SetEmployments sets the value of Employments.
-func (s *ExperienceBank) SetEmployments(val []jx.Raw) {
+func (s *ExperienceBank) SetEmployments(val []ExperienceEmploymentWithAtoms) {
 	s.Employments = val
 }
 
 // SetUnplaced sets the value of Unplaced.
-func (s *ExperienceBank) SetUnplaced(val []jx.Raw) {
+func (s *ExperienceBank) SetUnplaced(val []ExperienceAtom) {
 	s.Unplaced = val
+}
+
+// Ref: #/components/schemas/ExperienceEmploymentKind
+type ExperienceEmploymentKind string
+
+const (
+	ExperienceEmploymentKindJob     ExperienceEmploymentKind = "job"
+	ExperienceEmploymentKindProject ExperienceEmploymentKind = "project"
+)
+
+// AllValues returns all ExperienceEmploymentKind values.
+func (ExperienceEmploymentKind) AllValues() []ExperienceEmploymentKind {
+	return []ExperienceEmploymentKind{
+		ExperienceEmploymentKindJob,
+		ExperienceEmploymentKindProject,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ExperienceEmploymentKind) MarshalText() ([]byte, error) {
+	switch s {
+	case ExperienceEmploymentKindJob:
+		return []byte(s), nil
+	case ExperienceEmploymentKindProject:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ExperienceEmploymentKind) UnmarshalText(data []byte) error {
+	switch ExperienceEmploymentKind(data) {
+	case ExperienceEmploymentKindJob:
+		*s = ExperienceEmploymentKindJob
+		return nil
+	case ExperienceEmploymentKindProject:
+		*s = ExperienceEmploymentKindProject
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Ref: #/components/schemas/ExperienceEmploymentWithAtoms
+type ExperienceEmploymentWithAtoms struct {
+	ID       string                   `json:"id"`
+	Kind     ExperienceEmploymentKind `json:"kind"`
+	Company  OptString                `json:"company"`
+	Name     OptString                `json:"name"`
+	Role     OptString                `json:"role"`
+	Location OptString                `json:"location"`
+	Start    OptPeriodDate            `json:"start"`
+	End      OptPeriodDate            `json:"end"`
+	Current  OptBool                  `json:"current"`
+	Summary  OptString                `json:"summary"`
+	// Portfolio URL, typically on a project.
+	Link  OptString        `json:"link"`
+	Stack []string         `json:"stack"`
+	Atoms []ExperienceAtom `json:"atoms"`
+}
+
+// GetID returns the value of ID.
+func (s *ExperienceEmploymentWithAtoms) GetID() string {
+	return s.ID
+}
+
+// GetKind returns the value of Kind.
+func (s *ExperienceEmploymentWithAtoms) GetKind() ExperienceEmploymentKind {
+	return s.Kind
+}
+
+// GetCompany returns the value of Company.
+func (s *ExperienceEmploymentWithAtoms) GetCompany() OptString {
+	return s.Company
+}
+
+// GetName returns the value of Name.
+func (s *ExperienceEmploymentWithAtoms) GetName() OptString {
+	return s.Name
+}
+
+// GetRole returns the value of Role.
+func (s *ExperienceEmploymentWithAtoms) GetRole() OptString {
+	return s.Role
+}
+
+// GetLocation returns the value of Location.
+func (s *ExperienceEmploymentWithAtoms) GetLocation() OptString {
+	return s.Location
+}
+
+// GetStart returns the value of Start.
+func (s *ExperienceEmploymentWithAtoms) GetStart() OptPeriodDate {
+	return s.Start
+}
+
+// GetEnd returns the value of End.
+func (s *ExperienceEmploymentWithAtoms) GetEnd() OptPeriodDate {
+	return s.End
+}
+
+// GetCurrent returns the value of Current.
+func (s *ExperienceEmploymentWithAtoms) GetCurrent() OptBool {
+	return s.Current
+}
+
+// GetSummary returns the value of Summary.
+func (s *ExperienceEmploymentWithAtoms) GetSummary() OptString {
+	return s.Summary
+}
+
+// GetLink returns the value of Link.
+func (s *ExperienceEmploymentWithAtoms) GetLink() OptString {
+	return s.Link
+}
+
+// GetStack returns the value of Stack.
+func (s *ExperienceEmploymentWithAtoms) GetStack() []string {
+	return s.Stack
+}
+
+// GetAtoms returns the value of Atoms.
+func (s *ExperienceEmploymentWithAtoms) GetAtoms() []ExperienceAtom {
+	return s.Atoms
+}
+
+// SetID sets the value of ID.
+func (s *ExperienceEmploymentWithAtoms) SetID(val string) {
+	s.ID = val
+}
+
+// SetKind sets the value of Kind.
+func (s *ExperienceEmploymentWithAtoms) SetKind(val ExperienceEmploymentKind) {
+	s.Kind = val
+}
+
+// SetCompany sets the value of Company.
+func (s *ExperienceEmploymentWithAtoms) SetCompany(val OptString) {
+	s.Company = val
+}
+
+// SetName sets the value of Name.
+func (s *ExperienceEmploymentWithAtoms) SetName(val OptString) {
+	s.Name = val
+}
+
+// SetRole sets the value of Role.
+func (s *ExperienceEmploymentWithAtoms) SetRole(val OptString) {
+	s.Role = val
+}
+
+// SetLocation sets the value of Location.
+func (s *ExperienceEmploymentWithAtoms) SetLocation(val OptString) {
+	s.Location = val
+}
+
+// SetStart sets the value of Start.
+func (s *ExperienceEmploymentWithAtoms) SetStart(val OptPeriodDate) {
+	s.Start = val
+}
+
+// SetEnd sets the value of End.
+func (s *ExperienceEmploymentWithAtoms) SetEnd(val OptPeriodDate) {
+	s.End = val
+}
+
+// SetCurrent sets the value of Current.
+func (s *ExperienceEmploymentWithAtoms) SetCurrent(val OptBool) {
+	s.Current = val
+}
+
+// SetSummary sets the value of Summary.
+func (s *ExperienceEmploymentWithAtoms) SetSummary(val OptString) {
+	s.Summary = val
+}
+
+// SetLink sets the value of Link.
+func (s *ExperienceEmploymentWithAtoms) SetLink(val OptString) {
+	s.Link = val
+}
+
+// SetStack sets the value of Stack.
+func (s *ExperienceEmploymentWithAtoms) SetStack(val []string) {
+	s.Stack = val
+}
+
+// SetAtoms sets the value of Atoms.
+func (s *ExperienceEmploymentWithAtoms) SetAtoms(val []ExperienceAtom) {
+	s.Atoms = val
+}
+
+// How the bank came to hold an achievement. Only the first three are the candidate speaking and may be
+// written into a CV; `agent_inferred` is the assistant's own reading.
+// Ref: #/components/schemas/ExperienceProvenance
+type ExperienceProvenance string
+
+const (
+	ExperienceProvenanceCvImport      ExperienceProvenance = "cv_import"
+	ExperienceProvenanceStatedInChat  ExperienceProvenance = "stated_in_chat"
+	ExperienceProvenanceManual        ExperienceProvenance = "manual"
+	ExperienceProvenanceAgentInferred ExperienceProvenance = "agent_inferred"
+)
+
+// AllValues returns all ExperienceProvenance values.
+func (ExperienceProvenance) AllValues() []ExperienceProvenance {
+	return []ExperienceProvenance{
+		ExperienceProvenanceCvImport,
+		ExperienceProvenanceStatedInChat,
+		ExperienceProvenanceManual,
+		ExperienceProvenanceAgentInferred,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ExperienceProvenance) MarshalText() ([]byte, error) {
+	switch s {
+	case ExperienceProvenanceCvImport:
+		return []byte(s), nil
+	case ExperienceProvenanceStatedInChat:
+		return []byte(s), nil
+	case ExperienceProvenanceManual:
+		return []byte(s), nil
+	case ExperienceProvenanceAgentInferred:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ExperienceProvenance) UnmarshalText(data []byte) error {
+	switch ExperienceProvenance(data) {
+	case ExperienceProvenanceCvImport:
+		*s = ExperienceProvenanceCvImport
+		return nil
+	case ExperienceProvenanceStatedInChat:
+		*s = ExperienceProvenanceStatedInChat
+		return nil
+	case ExperienceProvenanceManual:
+		*s = ExperienceProvenanceManual
+		return nil
+	case ExperienceProvenanceAgentInferred:
+		*s = ExperienceProvenanceAgentInferred
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/FacetRange
@@ -9037,8 +10105,10 @@ func (*FitAnalysisResponse) runMatchAnalysisRes() {}
 // A job posting scraped off any page.
 // Ref: #/components/schemas/FitMatchTextRequest
 type FitMatchTextRequest struct {
+	// The posting title.
 	Title OptString `json:"title"`
-	Text  OptString `json:"text"`
+	// The scraped posting text.
+	Text OptString `json:"text"`
 }
 
 // GetTitle returns the value of Title.
@@ -9578,16 +10648,16 @@ func (s *GetMyEmailGroupsOK) SetData(val EmailPrefs) {
 
 // A single item: `{"data": ...}`.
 type GetMyMentorProfileOK struct {
-	Data NilMentorshipMentor `json:"data"`
+	Data NilMentorshipOwnMentor `json:"data"`
 }
 
 // GetData returns the value of Data.
-func (s *GetMyMentorProfileOK) GetData() NilMentorshipMentor {
+func (s *GetMyMentorProfileOK) GetData() NilMentorshipOwnMentor {
 	return s.Data
 }
 
 // SetData sets the value of Data.
-func (s *GetMyMentorProfileOK) SetData(val NilMentorshipMentor) {
+func (s *GetMyMentorProfileOK) SetData(val NilMentorshipOwnMentor) {
 	s.Data = val
 }
 
@@ -10384,9 +11454,9 @@ type InboxApplicationDetail struct {
 	// The ledger, newest first.
 	Events []TimelineEvent `json:"events"`
 	// The stage the newest classified message implies; absent when there is nothing to offer.
-	StageSuggestion jx.Raw `json:"stage_suggestion"`
+	StageSuggestion OptStageSuggestion `json:"stage_suggestion"`
 	// The caller's live auto-apply attempt for this job; absent when none exists.
-	AutoApply jx.Raw `json:"auto_apply"`
+	AutoApply OptAutoApplyReviewInfo `json:"auto_apply"`
 }
 
 // GetJob returns the value of Job.
@@ -10435,12 +11505,12 @@ func (s *InboxApplicationDetail) GetEvents() []TimelineEvent {
 }
 
 // GetStageSuggestion returns the value of StageSuggestion.
-func (s *InboxApplicationDetail) GetStageSuggestion() jx.Raw {
+func (s *InboxApplicationDetail) GetStageSuggestion() OptStageSuggestion {
 	return s.StageSuggestion
 }
 
 // GetAutoApply returns the value of AutoApply.
-func (s *InboxApplicationDetail) GetAutoApply() jx.Raw {
+func (s *InboxApplicationDetail) GetAutoApply() OptAutoApplyReviewInfo {
 	return s.AutoApply
 }
 
@@ -10490,12 +11560,12 @@ func (s *InboxApplicationDetail) SetEvents(val []TimelineEvent) {
 }
 
 // SetStageSuggestion sets the value of StageSuggestion.
-func (s *InboxApplicationDetail) SetStageSuggestion(val jx.Raw) {
+func (s *InboxApplicationDetail) SetStageSuggestion(val OptStageSuggestion) {
 	s.StageSuggestion = val
 }
 
 // SetAutoApply sets the value of AutoApply.
-func (s *InboxApplicationDetail) SetAutoApply(val jx.Raw) {
+func (s *InboxApplicationDetail) SetAutoApply(val OptAutoApplyReviewInfo) {
 	s.AutoApply = val
 }
 
@@ -11099,8 +12169,10 @@ func (s *InboxPage) SetMeta(val InboxMeta) {
 // The verdict an agent records for one message. Left-out fields read as empty.
 // Ref: #/components/schemas/InboxTriage
 type InboxTriage struct {
+	// One value from the vocabulary above. (e.g. `interview_invitation`).
 	Signal OptNilString `json:"signal"`
-	Slug   OptNilString `json:"slug"`
+	// Link the message to this application at the same time.
+	Slug OptNilString `json:"slug"`
 	// Stored for display; gates nothing.
 	Confidence OptNilFloat32 `json:"confidence"`
 }
@@ -11492,13 +12564,21 @@ func (s *JobCopy) SetPostedAt(val NilDateTime) {
 // without them.
 // Ref: #/components/schemas/JobCreate
 type JobCreate struct {
-	URL            OptString      `json:"url"`
-	Source         OptString      `json:"source"`
-	Title          OptString      `json:"title"`
-	Company        OptString      `json:"company"`
-	Location       OptString      `json:"location"`
-	Remote         OptBool        `json:"remote"`
-	Description    OptString      `json:"description"`
+	// Link to the posting. (e.g. `https://acme.com/careers/123`).
+	URL OptString `json:"url"`
+	// Source label. (e.g. `manual`).
+	Source OptString `json:"source"`
+	// Job title. (e.g. `Senior Go Engineer`).
+	Title OptString `json:"title"`
+	// Company name. (e.g. `Acme`).
+	Company OptString `json:"company"`
+	// Free-text location.
+	Location OptString `json:"location"`
+	// Whether the role is remote.
+	Remote OptBool `json:"remote"`
+	// Job description.
+	Description OptString `json:"description"`
+	// Posting date.
 	PostedAt       OptNilDateTime `json:"posted_at"`
 	Skills         []string       `json:"skills"`
 	Regions        []string       `json:"regions"`
@@ -11695,11 +12775,15 @@ func (s *JobCreate) SetSalaryPeriod(val OptString) {
 // Exactly one of `job_slug`, `url` and `text`; anything else is a 400.
 // Ref: #/components/schemas/JobDescriptionSource
 type JobDescriptionSource struct {
+	// An existing job’s slug.
 	JobSlug OptString `json:"job_slug"`
-	URL     OptString `json:"url"`
-	Text    OptString `json:"text"`
+	// A job posting URL.
+	URL OptString `json:"url"`
+	// Pasted job description text.
+	Text OptString `json:"text"`
 	// Hints used only with `text`.
-	Title   OptString `json:"title"`
+	Title OptString `json:"title"`
+	// Optional hint, used only alongside `text`.
 	Company OptString `json:"company"`
 }
 
@@ -11841,14 +12925,14 @@ func (s *JobFoundPosting) SetPublicSlug(val string) {
 
 // Ref: #/components/schemas/JobReport
 type JobReport struct {
-	ID              int64       `json:"id"`
-	Reason          string      `json:"reason"`
-	Details         string      `json:"details"`
-	ContactTelegram OptString   `json:"contact_telegram"`
-	Status          string      `json:"status"`
-	ReviewReason    OptString   `json:"review_reason"`
-	ReviewedAt      OptDateTime `json:"reviewed_at"`
-	CreatedAt       NilDateTime `json:"created_at"`
+	ID              int64           `json:"id"`
+	Reason          JobReportReason `json:"reason"`
+	Details         string          `json:"details"`
+	ContactTelegram OptString       `json:"contact_telegram"`
+	Status          JobReportStatus `json:"status"`
+	ReviewReason    OptString       `json:"review_reason"`
+	ReviewedAt      OptDateTime     `json:"reviewed_at"`
+	CreatedAt       NilDateTime     `json:"created_at"`
 	// Only on the moderator queue.
 	ReporterEmail OptString `json:"reporter_email"`
 	JobSlug       OptString `json:"job_slug"`
@@ -11863,7 +12947,7 @@ func (s *JobReport) GetID() int64 {
 }
 
 // GetReason returns the value of Reason.
-func (s *JobReport) GetReason() string {
+func (s *JobReport) GetReason() JobReportReason {
 	return s.Reason
 }
 
@@ -11878,7 +12962,7 @@ func (s *JobReport) GetContactTelegram() OptString {
 }
 
 // GetStatus returns the value of Status.
-func (s *JobReport) GetStatus() string {
+func (s *JobReport) GetStatus() JobReportStatus {
 	return s.Status
 }
 
@@ -11923,7 +13007,7 @@ func (s *JobReport) SetID(val int64) {
 }
 
 // SetReason sets the value of Reason.
-func (s *JobReport) SetReason(val string) {
+func (s *JobReport) SetReason(val JobReportReason) {
 	s.Reason = val
 }
 
@@ -11938,7 +13022,7 @@ func (s *JobReport) SetContactTelegram(val OptString) {
 }
 
 // SetStatus sets the value of Status.
-func (s *JobReport) SetStatus(val string) {
+func (s *JobReport) SetStatus(val JobReportStatus) {
 	s.Status = val
 }
 
@@ -11977,11 +13061,77 @@ func (s *JobReport) SetNotified(val OptBool) {
 	s.Notified = val
 }
 
+// The closed reason vocabulary (internal/engage/report validReasons and the CHECK on job_reports).
+// Ref: #/components/schemas/JobReportReason
+type JobReportReason string
+
+const (
+	JobReportReasonNoResponse  JobReportReason = "no_response"
+	JobReportReasonNotRelevant JobReportReason = "not_relevant"
+	JobReportReasonSpam        JobReportReason = "spam"
+	JobReportReasonFraud       JobReportReason = "fraud"
+	JobReportReasonOther       JobReportReason = "other"
+)
+
+// AllValues returns all JobReportReason values.
+func (JobReportReason) AllValues() []JobReportReason {
+	return []JobReportReason{
+		JobReportReasonNoResponse,
+		JobReportReasonNotRelevant,
+		JobReportReasonSpam,
+		JobReportReasonFraud,
+		JobReportReasonOther,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s JobReportReason) MarshalText() ([]byte, error) {
+	switch s {
+	case JobReportReasonNoResponse:
+		return []byte(s), nil
+	case JobReportReasonNotRelevant:
+		return []byte(s), nil
+	case JobReportReasonSpam:
+		return []byte(s), nil
+	case JobReportReasonFraud:
+		return []byte(s), nil
+	case JobReportReasonOther:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *JobReportReason) UnmarshalText(data []byte) error {
+	switch JobReportReason(data) {
+	case JobReportReasonNoResponse:
+		*s = JobReportReasonNoResponse
+		return nil
+	case JobReportReasonNotRelevant:
+		*s = JobReportReasonNotRelevant
+		return nil
+	case JobReportReasonSpam:
+		*s = JobReportReasonSpam
+		return nil
+	case JobReportReasonFraud:
+		*s = JobReportReasonFraud
+		return nil
+	case JobReportReasonOther:
+		*s = JobReportReasonOther
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/JobReportRequest
 type JobReportRequest struct {
 	// From the controlled vocabulary.
-	Reason          OptString `json:"reason"`
-	Details         OptString `json:"details"`
+	Reason OptString `json:"reason"`
+	// Free-text details.
+	Details OptString `json:"details"`
+	// Optional contact handle.
 	ContactTelegram OptString `json:"contact_telegram"`
 }
 
@@ -12013,6 +13163,55 @@ func (s *JobReportRequest) SetDetails(val OptString) {
 // SetContactTelegram sets the value of ContactTelegram.
 func (s *JobReportRequest) SetContactTelegram(val OptString) {
 	s.ContactTelegram = val
+}
+
+// Ref: #/components/schemas/JobReportStatus
+type JobReportStatus string
+
+const (
+	JobReportStatusPending   JobReportStatus = "pending"
+	JobReportStatusResolved  JobReportStatus = "resolved"
+	JobReportStatusDismissed JobReportStatus = "dismissed"
+)
+
+// AllValues returns all JobReportStatus values.
+func (JobReportStatus) AllValues() []JobReportStatus {
+	return []JobReportStatus{
+		JobReportStatusPending,
+		JobReportStatusResolved,
+		JobReportStatusDismissed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s JobReportStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case JobReportStatusPending:
+		return []byte(s), nil
+	case JobReportStatusResolved:
+		return []byte(s), nil
+	case JobReportStatusDismissed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *JobReportStatus) UnmarshalText(data []byte) error {
+	switch JobReportStatus(data) {
+	case JobReportStatusPending:
+		*s = JobReportStatusPending
+		return nil
+	case JobReportStatusResolved:
+		*s = JobReportStatusResolved
+		return nil
+	case JobReportStatusDismissed:
+		*s = JobReportStatusDismissed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/JobSearchMeta
@@ -12414,12 +13613,12 @@ func (s *ListCVsOK) SetData(val []CvTailored) {
 
 // A list: `{"data": [...], "meta": {...}}`.
 type ListCompaniesOK struct {
-	Data []jx.Raw `json:"data"`
-	Meta ListMeta `json:"meta"`
+	Data []CompanyListItem `json:"data"`
+	Meta ListMeta          `json:"meta"`
 }
 
 // GetData returns the value of Data.
-func (s *ListCompaniesOK) GetData() []jx.Raw {
+func (s *ListCompaniesOK) GetData() []CompanyListItem {
 	return s.Data
 }
 
@@ -12429,7 +13628,7 @@ func (s *ListCompaniesOK) GetMeta() ListMeta {
 }
 
 // SetData sets the value of Data.
-func (s *ListCompaniesOK) SetData(val []jx.Raw) {
+func (s *ListCompaniesOK) SetData(val []CompanyListItem) {
 	s.Data = val
 }
 
@@ -12578,6 +13777,8 @@ type ListMeta struct {
 	// Absent when every param was read.
 	IgnoredParams []IgnoredParam `json:"ignored_params"`
 	IgnoredValues jx.Raw         `json:"ignored_values"`
+	// True when `total` counts only what was read, not the whole match.
+	TotalIsLowerBound OptBool `json:"total_is_lower_bound"`
 }
 
 // GetTotal returns the value of Total.
@@ -12605,6 +13806,11 @@ func (s *ListMeta) GetIgnoredValues() jx.Raw {
 	return s.IgnoredValues
 }
 
+// GetTotalIsLowerBound returns the value of TotalIsLowerBound.
+func (s *ListMeta) GetTotalIsLowerBound() OptBool {
+	return s.TotalIsLowerBound
+}
+
 // SetTotal sets the value of Total.
 func (s *ListMeta) SetTotal(val int64) {
 	s.Total = val
@@ -12628,6 +13834,11 @@ func (s *ListMeta) SetIgnoredParams(val []IgnoredParam) {
 // SetIgnoredValues sets the value of IgnoredValues.
 func (s *ListMeta) SetIgnoredValues(val jx.Raw) {
 	s.IgnoredValues = val
+}
+
+// SetTotalIsLowerBound sets the value of TotalIsLowerBound.
+func (s *ListMeta) SetTotalIsLowerBound(val OptBool) {
+	s.TotalIsLowerBound = val
 }
 
 // A single item: `{"data": ...}`.
@@ -13357,16 +14568,16 @@ func (s *MentorProfileSuggestions) SetCompanySlug(val OptString) {
 // One session as a party to it sees it; seeker_email only for the mentor.
 // Ref: #/components/schemas/MentorshipBooking
 type MentorshipBooking struct {
-	ID          string    `json:"id"`
-	MentorSlug  string    `json:"mentor_slug"`
-	Headline    string    `json:"headline"`
-	StartsAt    time.Time `json:"starts_at"`
-	EndsAt      time.Time `json:"ends_at"`
-	Status      string    `json:"status"`
-	Note        string    `json:"note"`
-	MeetingURL  string    `json:"meeting_url"`
-	SeekerEmail OptString `json:"seeker_email"`
-	Completed   bool      `json:"completed"`
+	ID          string                  `json:"id"`
+	MentorSlug  string                  `json:"mentor_slug"`
+	Headline    string                  `json:"headline"`
+	StartsAt    time.Time               `json:"starts_at"`
+	EndsAt      time.Time               `json:"ends_at"`
+	Status      MentorshipBookingStatus `json:"status"`
+	Note        string                  `json:"note"`
+	MeetingURL  string                  `json:"meeting_url"`
+	SeekerEmail OptString               `json:"seeker_email"`
+	Completed   bool                    `json:"completed"`
 }
 
 // GetID returns the value of ID.
@@ -13395,7 +14606,7 @@ func (s *MentorshipBooking) GetEndsAt() time.Time {
 }
 
 // GetStatus returns the value of Status.
-func (s *MentorshipBooking) GetStatus() string {
+func (s *MentorshipBooking) GetStatus() MentorshipBookingStatus {
 	return s.Status
 }
 
@@ -13445,7 +14656,7 @@ func (s *MentorshipBooking) SetEndsAt(val time.Time) {
 }
 
 // SetStatus sets the value of Status.
-func (s *MentorshipBooking) SetStatus(val string) {
+func (s *MentorshipBooking) SetStatus(val MentorshipBookingStatus) {
 	s.Status = val
 }
 
@@ -13518,12 +14729,54 @@ func (s *MentorshipBookingBody) SetJobID(val OptInt64) {
 	s.JobID = val
 }
 
+// A booked session is `confirmed` or `cancelled`.
+// Ref: #/components/schemas/MentorshipBookingStatus
+type MentorshipBookingStatus string
+
+const (
+	MentorshipBookingStatusConfirmed MentorshipBookingStatus = "confirmed"
+	MentorshipBookingStatusCancelled MentorshipBookingStatus = "cancelled"
+)
+
+// AllValues returns all MentorshipBookingStatus values.
+func (MentorshipBookingStatus) AllValues() []MentorshipBookingStatus {
+	return []MentorshipBookingStatus{
+		MentorshipBookingStatusConfirmed,
+		MentorshipBookingStatusCancelled,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MentorshipBookingStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case MentorshipBookingStatusConfirmed:
+		return []byte(s), nil
+	case MentorshipBookingStatusCancelled:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MentorshipBookingStatus) UnmarshalText(data []byte) error {
+	switch MentorshipBookingStatus(data) {
+	case MentorshipBookingStatusConfirmed:
+		*s = MentorshipBookingStatusConfirmed
+		return nil
+	case MentorshipBookingStatusCancelled:
+		*s = MentorshipBookingStatusCancelled
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/MentorshipCalendarInterval
 type MentorshipCalendarInterval struct {
-	StartsAt time.Time `json:"starts_at"`
-	EndsAt   time.Time `json:"ends_at"`
-	// One of booked, busy, free or closed.
-	Status string `json:"status"`
+	StartsAt time.Time                `json:"starts_at"`
+	EndsAt   time.Time                `json:"ends_at"`
+	Status   MentorshipCalendarStatus `json:"status"`
 }
 
 // GetStartsAt returns the value of StartsAt.
@@ -13537,7 +14790,7 @@ func (s *MentorshipCalendarInterval) GetEndsAt() time.Time {
 }
 
 // GetStatus returns the value of Status.
-func (s *MentorshipCalendarInterval) GetStatus() string {
+func (s *MentorshipCalendarInterval) GetStatus() MentorshipCalendarStatus {
 	return s.Status
 }
 
@@ -13552,7 +14805,7 @@ func (s *MentorshipCalendarInterval) SetEndsAt(val time.Time) {
 }
 
 // SetStatus sets the value of Status.
-func (s *MentorshipCalendarInterval) SetStatus(val string) {
+func (s *MentorshipCalendarInterval) SetStatus(val MentorshipCalendarStatus) {
 	s.Status = val
 }
 
@@ -13580,6 +14833,64 @@ func (s *MentorshipCalendarPage) SetData(val []MentorshipCalendarInterval) {
 // SetMeta sets the value of Meta.
 func (s *MentorshipCalendarPage) SetMeta(val MentorshipTimezoneMeta) {
 	s.Meta = val
+}
+
+// `booked`: a confirmed session; `busy`: a synced interval from the mentor's calendar; `free`: offered
+// to seekers; `closed`: outside the stated availability.
+// Ref: #/components/schemas/MentorshipCalendarStatus
+type MentorshipCalendarStatus string
+
+const (
+	MentorshipCalendarStatusBooked MentorshipCalendarStatus = "booked"
+	MentorshipCalendarStatusBusy   MentorshipCalendarStatus = "busy"
+	MentorshipCalendarStatusFree   MentorshipCalendarStatus = "free"
+	MentorshipCalendarStatusClosed MentorshipCalendarStatus = "closed"
+)
+
+// AllValues returns all MentorshipCalendarStatus values.
+func (MentorshipCalendarStatus) AllValues() []MentorshipCalendarStatus {
+	return []MentorshipCalendarStatus{
+		MentorshipCalendarStatusBooked,
+		MentorshipCalendarStatusBusy,
+		MentorshipCalendarStatusFree,
+		MentorshipCalendarStatusClosed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MentorshipCalendarStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case MentorshipCalendarStatusBooked:
+		return []byte(s), nil
+	case MentorshipCalendarStatusBusy:
+		return []byte(s), nil
+	case MentorshipCalendarStatusFree:
+		return []byte(s), nil
+	case MentorshipCalendarStatusClosed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MentorshipCalendarStatus) UnmarshalText(data []byte) error {
+	switch MentorshipCalendarStatus(data) {
+	case MentorshipCalendarStatusBooked:
+		*s = MentorshipCalendarStatusBooked
+		return nil
+	case MentorshipCalendarStatusBusy:
+		*s = MentorshipCalendarStatusBusy
+		return nil
+	case MentorshipCalendarStatusFree:
+		*s = MentorshipCalendarStatusFree
+		return nil
+	case MentorshipCalendarStatusClosed:
+		*s = MentorshipCalendarStatusClosed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/MentorshipCancelBody
@@ -13680,32 +14991,24 @@ func (s *MentorshipDirectoryPage) SetMeta(val MentorshipDirectoryMeta) {
 	s.Meta = val
 }
 
-// A mentor as the public, the owner and a moderator see them. The owner and moderator views add
-// status, paused and created_at; the owner alone gets meeting_url and the session parameters.
+// A mentor as the PUBLIC sees them: the directory card and the profile read are one shape.
 // Ref: #/components/schemas/MentorshipMentor
 type MentorshipMentor struct {
-	Slug                string      `json:"slug"`
-	Name                string      `json:"name"`
-	CompanySlug         string      `json:"company_slug"`
-	CompanyName         string      `json:"company_name"`
-	Headline            string      `json:"headline"`
-	Bio                 string      `json:"bio"`
-	Topics              []string    `json:"topics"`
-	Languages           []string    `json:"languages"`
-	Timezone            string      `json:"timezone"`
-	SessionMinutes      int64       `json:"session_minutes"`
-	RatingCount         int64       `json:"rating_count"`
-	RatingAvg           float64     `json:"rating_avg"`
-	ShowPhoto           bool        `json:"show_photo"`
-	Seniority           OptString   `json:"seniority"`
-	Status              OptString   `json:"status"`
-	Paused              OptBool     `json:"paused"`
-	MeetingURL          OptString   `json:"meeting_url"`
-	CreatedAt           OptDateTime `json:"created_at"`
-	BufferBeforeMinutes OptInt64    `json:"buffer_before_minutes"`
-	BufferAfterMinutes  OptInt64    `json:"buffer_after_minutes"`
-	NoticeMinutes       OptInt64    `json:"notice_minutes"`
-	HorizonDays         OptInt64    `json:"horizon_days"`
+	Slug           string   `json:"slug"`
+	Name           string   `json:"name"`
+	CompanySlug    string   `json:"company_slug"`
+	CompanyName    string   `json:"company_name"`
+	Headline       string   `json:"headline"`
+	Bio            string   `json:"bio"`
+	Topics         []string `json:"topics"`
+	Languages      []string `json:"languages"`
+	Timezone       string   `json:"timezone"`
+	SessionMinutes int64    `json:"session_minutes"`
+	RatingCount    int64    `json:"rating_count"`
+	RatingAvg      float64  `json:"rating_avg"`
+	ShowPhoto      bool     `json:"show_photo"`
+	// Absent when the mentor left it unset.
+	Seniority OptString `json:"seniority"`
 }
 
 // GetSlug returns the value of Slug.
@@ -13778,46 +15081,6 @@ func (s *MentorshipMentor) GetSeniority() OptString {
 	return s.Seniority
 }
 
-// GetStatus returns the value of Status.
-func (s *MentorshipMentor) GetStatus() OptString {
-	return s.Status
-}
-
-// GetPaused returns the value of Paused.
-func (s *MentorshipMentor) GetPaused() OptBool {
-	return s.Paused
-}
-
-// GetMeetingURL returns the value of MeetingURL.
-func (s *MentorshipMentor) GetMeetingURL() OptString {
-	return s.MeetingURL
-}
-
-// GetCreatedAt returns the value of CreatedAt.
-func (s *MentorshipMentor) GetCreatedAt() OptDateTime {
-	return s.CreatedAt
-}
-
-// GetBufferBeforeMinutes returns the value of BufferBeforeMinutes.
-func (s *MentorshipMentor) GetBufferBeforeMinutes() OptInt64 {
-	return s.BufferBeforeMinutes
-}
-
-// GetBufferAfterMinutes returns the value of BufferAfterMinutes.
-func (s *MentorshipMentor) GetBufferAfterMinutes() OptInt64 {
-	return s.BufferAfterMinutes
-}
-
-// GetNoticeMinutes returns the value of NoticeMinutes.
-func (s *MentorshipMentor) GetNoticeMinutes() OptInt64 {
-	return s.NoticeMinutes
-}
-
-// GetHorizonDays returns the value of HorizonDays.
-func (s *MentorshipMentor) GetHorizonDays() OptInt64 {
-	return s.HorizonDays
-}
-
 // SetSlug sets the value of Slug.
 func (s *MentorshipMentor) SetSlug(val string) {
 	s.Slug = val
@@ -13888,43 +15151,446 @@ func (s *MentorshipMentor) SetSeniority(val OptString) {
 	s.Seniority = val
 }
 
+// A mentor as a moderator sees them: the public shape plus the moderation state, never the meeting
+// link.
+// Ref: #/components/schemas/MentorshipModeratedMentor
+type MentorshipModeratedMentor struct {
+	Slug           string   `json:"slug"`
+	Name           string   `json:"name"`
+	CompanySlug    string   `json:"company_slug"`
+	CompanyName    string   `json:"company_name"`
+	Headline       string   `json:"headline"`
+	Bio            string   `json:"bio"`
+	Topics         []string `json:"topics"`
+	Languages      []string `json:"languages"`
+	Timezone       string   `json:"timezone"`
+	SessionMinutes int64    `json:"session_minutes"`
+	RatingCount    int64    `json:"rating_count"`
+	RatingAvg      float64  `json:"rating_avg"`
+	ShowPhoto      bool     `json:"show_photo"`
+	// Absent when the mentor left it unset.
+	Seniority OptString               `json:"seniority"`
+	Status    MentorshipProfileStatus `json:"status"`
+	Paused    bool                    `json:"paused"`
+	CreatedAt time.Time               `json:"created_at"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *MentorshipModeratedMentor) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *MentorshipModeratedMentor) GetName() string {
+	return s.Name
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *MentorshipModeratedMentor) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *MentorshipModeratedMentor) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorshipModeratedMentor) GetHeadline() string {
+	return s.Headline
+}
+
+// GetBio returns the value of Bio.
+func (s *MentorshipModeratedMentor) GetBio() string {
+	return s.Bio
+}
+
+// GetTopics returns the value of Topics.
+func (s *MentorshipModeratedMentor) GetTopics() []string {
+	return s.Topics
+}
+
+// GetLanguages returns the value of Languages.
+func (s *MentorshipModeratedMentor) GetLanguages() []string {
+	return s.Languages
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipModeratedMentor) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetSessionMinutes returns the value of SessionMinutes.
+func (s *MentorshipModeratedMentor) GetSessionMinutes() int64 {
+	return s.SessionMinutes
+}
+
+// GetRatingCount returns the value of RatingCount.
+func (s *MentorshipModeratedMentor) GetRatingCount() int64 {
+	return s.RatingCount
+}
+
+// GetRatingAvg returns the value of RatingAvg.
+func (s *MentorshipModeratedMentor) GetRatingAvg() float64 {
+	return s.RatingAvg
+}
+
+// GetShowPhoto returns the value of ShowPhoto.
+func (s *MentorshipModeratedMentor) GetShowPhoto() bool {
+	return s.ShowPhoto
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *MentorshipModeratedMentor) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipModeratedMentor) GetStatus() MentorshipProfileStatus {
+	return s.Status
+}
+
+// GetPaused returns the value of Paused.
+func (s *MentorshipModeratedMentor) GetPaused() bool {
+	return s.Paused
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *MentorshipModeratedMentor) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// SetSlug sets the value of Slug.
+func (s *MentorshipModeratedMentor) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *MentorshipModeratedMentor) SetName(val string) {
+	s.Name = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *MentorshipModeratedMentor) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *MentorshipModeratedMentor) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorshipModeratedMentor) SetHeadline(val string) {
+	s.Headline = val
+}
+
+// SetBio sets the value of Bio.
+func (s *MentorshipModeratedMentor) SetBio(val string) {
+	s.Bio = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *MentorshipModeratedMentor) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *MentorshipModeratedMentor) SetLanguages(val []string) {
+	s.Languages = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipModeratedMentor) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetSessionMinutes sets the value of SessionMinutes.
+func (s *MentorshipModeratedMentor) SetSessionMinutes(val int64) {
+	s.SessionMinutes = val
+}
+
+// SetRatingCount sets the value of RatingCount.
+func (s *MentorshipModeratedMentor) SetRatingCount(val int64) {
+	s.RatingCount = val
+}
+
+// SetRatingAvg sets the value of RatingAvg.
+func (s *MentorshipModeratedMentor) SetRatingAvg(val float64) {
+	s.RatingAvg = val
+}
+
+// SetShowPhoto sets the value of ShowPhoto.
+func (s *MentorshipModeratedMentor) SetShowPhoto(val bool) {
+	s.ShowPhoto = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *MentorshipModeratedMentor) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
 // SetStatus sets the value of Status.
-func (s *MentorshipMentor) SetStatus(val OptString) {
+func (s *MentorshipModeratedMentor) SetStatus(val MentorshipProfileStatus) {
 	s.Status = val
 }
 
 // SetPaused sets the value of Paused.
-func (s *MentorshipMentor) SetPaused(val OptBool) {
+func (s *MentorshipModeratedMentor) SetPaused(val bool) {
 	s.Paused = val
 }
 
-// SetMeetingURL sets the value of MeetingURL.
-func (s *MentorshipMentor) SetMeetingURL(val OptString) {
-	s.MeetingURL = val
-}
-
 // SetCreatedAt sets the value of CreatedAt.
-func (s *MentorshipMentor) SetCreatedAt(val OptDateTime) {
+func (s *MentorshipModeratedMentor) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
 }
 
+// A mentor as their owner sees them: the moderated shape plus the room and the session parameters.
+// Ref: #/components/schemas/MentorshipOwnMentor
+type MentorshipOwnMentor struct {
+	Slug           string   `json:"slug"`
+	Name           string   `json:"name"`
+	CompanySlug    string   `json:"company_slug"`
+	CompanyName    string   `json:"company_name"`
+	Headline       string   `json:"headline"`
+	Bio            string   `json:"bio"`
+	Topics         []string `json:"topics"`
+	Languages      []string `json:"languages"`
+	Timezone       string   `json:"timezone"`
+	SessionMinutes int64    `json:"session_minutes"`
+	RatingCount    int64    `json:"rating_count"`
+	RatingAvg      float64  `json:"rating_avg"`
+	ShowPhoto      bool     `json:"show_photo"`
+	// Absent when the mentor left it unset.
+	Seniority OptString               `json:"seniority"`
+	Status    MentorshipProfileStatus `json:"status"`
+	Paused    bool                    `json:"paused"`
+	CreatedAt time.Time               `json:"created_at"`
+	// Absent while the mentor has not set one.
+	MeetingURL          OptString `json:"meeting_url"`
+	BufferBeforeMinutes int64     `json:"buffer_before_minutes"`
+	BufferAfterMinutes  int64     `json:"buffer_after_minutes"`
+	NoticeMinutes       int64     `json:"notice_minutes"`
+	HorizonDays         int64     `json:"horizon_days"`
+}
+
+// GetSlug returns the value of Slug.
+func (s *MentorshipOwnMentor) GetSlug() string {
+	return s.Slug
+}
+
+// GetName returns the value of Name.
+func (s *MentorshipOwnMentor) GetName() string {
+	return s.Name
+}
+
+// GetCompanySlug returns the value of CompanySlug.
+func (s *MentorshipOwnMentor) GetCompanySlug() string {
+	return s.CompanySlug
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *MentorshipOwnMentor) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetHeadline returns the value of Headline.
+func (s *MentorshipOwnMentor) GetHeadline() string {
+	return s.Headline
+}
+
+// GetBio returns the value of Bio.
+func (s *MentorshipOwnMentor) GetBio() string {
+	return s.Bio
+}
+
+// GetTopics returns the value of Topics.
+func (s *MentorshipOwnMentor) GetTopics() []string {
+	return s.Topics
+}
+
+// GetLanguages returns the value of Languages.
+func (s *MentorshipOwnMentor) GetLanguages() []string {
+	return s.Languages
+}
+
+// GetTimezone returns the value of Timezone.
+func (s *MentorshipOwnMentor) GetTimezone() string {
+	return s.Timezone
+}
+
+// GetSessionMinutes returns the value of SessionMinutes.
+func (s *MentorshipOwnMentor) GetSessionMinutes() int64 {
+	return s.SessionMinutes
+}
+
+// GetRatingCount returns the value of RatingCount.
+func (s *MentorshipOwnMentor) GetRatingCount() int64 {
+	return s.RatingCount
+}
+
+// GetRatingAvg returns the value of RatingAvg.
+func (s *MentorshipOwnMentor) GetRatingAvg() float64 {
+	return s.RatingAvg
+}
+
+// GetShowPhoto returns the value of ShowPhoto.
+func (s *MentorshipOwnMentor) GetShowPhoto() bool {
+	return s.ShowPhoto
+}
+
+// GetSeniority returns the value of Seniority.
+func (s *MentorshipOwnMentor) GetSeniority() OptString {
+	return s.Seniority
+}
+
+// GetStatus returns the value of Status.
+func (s *MentorshipOwnMentor) GetStatus() MentorshipProfileStatus {
+	return s.Status
+}
+
+// GetPaused returns the value of Paused.
+func (s *MentorshipOwnMentor) GetPaused() bool {
+	return s.Paused
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *MentorshipOwnMentor) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetMeetingURL returns the value of MeetingURL.
+func (s *MentorshipOwnMentor) GetMeetingURL() OptString {
+	return s.MeetingURL
+}
+
+// GetBufferBeforeMinutes returns the value of BufferBeforeMinutes.
+func (s *MentorshipOwnMentor) GetBufferBeforeMinutes() int64 {
+	return s.BufferBeforeMinutes
+}
+
+// GetBufferAfterMinutes returns the value of BufferAfterMinutes.
+func (s *MentorshipOwnMentor) GetBufferAfterMinutes() int64 {
+	return s.BufferAfterMinutes
+}
+
+// GetNoticeMinutes returns the value of NoticeMinutes.
+func (s *MentorshipOwnMentor) GetNoticeMinutes() int64 {
+	return s.NoticeMinutes
+}
+
+// GetHorizonDays returns the value of HorizonDays.
+func (s *MentorshipOwnMentor) GetHorizonDays() int64 {
+	return s.HorizonDays
+}
+
+// SetSlug sets the value of Slug.
+func (s *MentorshipOwnMentor) SetSlug(val string) {
+	s.Slug = val
+}
+
+// SetName sets the value of Name.
+func (s *MentorshipOwnMentor) SetName(val string) {
+	s.Name = val
+}
+
+// SetCompanySlug sets the value of CompanySlug.
+func (s *MentorshipOwnMentor) SetCompanySlug(val string) {
+	s.CompanySlug = val
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *MentorshipOwnMentor) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetHeadline sets the value of Headline.
+func (s *MentorshipOwnMentor) SetHeadline(val string) {
+	s.Headline = val
+}
+
+// SetBio sets the value of Bio.
+func (s *MentorshipOwnMentor) SetBio(val string) {
+	s.Bio = val
+}
+
+// SetTopics sets the value of Topics.
+func (s *MentorshipOwnMentor) SetTopics(val []string) {
+	s.Topics = val
+}
+
+// SetLanguages sets the value of Languages.
+func (s *MentorshipOwnMentor) SetLanguages(val []string) {
+	s.Languages = val
+}
+
+// SetTimezone sets the value of Timezone.
+func (s *MentorshipOwnMentor) SetTimezone(val string) {
+	s.Timezone = val
+}
+
+// SetSessionMinutes sets the value of SessionMinutes.
+func (s *MentorshipOwnMentor) SetSessionMinutes(val int64) {
+	s.SessionMinutes = val
+}
+
+// SetRatingCount sets the value of RatingCount.
+func (s *MentorshipOwnMentor) SetRatingCount(val int64) {
+	s.RatingCount = val
+}
+
+// SetRatingAvg sets the value of RatingAvg.
+func (s *MentorshipOwnMentor) SetRatingAvg(val float64) {
+	s.RatingAvg = val
+}
+
+// SetShowPhoto sets the value of ShowPhoto.
+func (s *MentorshipOwnMentor) SetShowPhoto(val bool) {
+	s.ShowPhoto = val
+}
+
+// SetSeniority sets the value of Seniority.
+func (s *MentorshipOwnMentor) SetSeniority(val OptString) {
+	s.Seniority = val
+}
+
+// SetStatus sets the value of Status.
+func (s *MentorshipOwnMentor) SetStatus(val MentorshipProfileStatus) {
+	s.Status = val
+}
+
+// SetPaused sets the value of Paused.
+func (s *MentorshipOwnMentor) SetPaused(val bool) {
+	s.Paused = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *MentorshipOwnMentor) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetMeetingURL sets the value of MeetingURL.
+func (s *MentorshipOwnMentor) SetMeetingURL(val OptString) {
+	s.MeetingURL = val
+}
+
 // SetBufferBeforeMinutes sets the value of BufferBeforeMinutes.
-func (s *MentorshipMentor) SetBufferBeforeMinutes(val OptInt64) {
+func (s *MentorshipOwnMentor) SetBufferBeforeMinutes(val int64) {
 	s.BufferBeforeMinutes = val
 }
 
 // SetBufferAfterMinutes sets the value of BufferAfterMinutes.
-func (s *MentorshipMentor) SetBufferAfterMinutes(val OptInt64) {
+func (s *MentorshipOwnMentor) SetBufferAfterMinutes(val int64) {
 	s.BufferAfterMinutes = val
 }
 
 // SetNoticeMinutes sets the value of NoticeMinutes.
-func (s *MentorshipMentor) SetNoticeMinutes(val OptInt64) {
+func (s *MentorshipOwnMentor) SetNoticeMinutes(val int64) {
 	s.NoticeMinutes = val
 }
 
 // SetHorizonDays sets the value of HorizonDays.
-func (s *MentorshipMentor) SetHorizonDays(val OptInt64) {
+func (s *MentorshipOwnMentor) SetHorizonDays(val int64) {
 	s.HorizonDays = val
 }
 
@@ -13946,30 +15612,26 @@ func (s *MentorshipPauseBody) SetPaused(val OptBool) {
 // A pending profile in the moderation queue.
 // Ref: #/components/schemas/MentorshipPendingMentor
 type MentorshipPendingMentor struct {
-	Slug                     string      `json:"slug"`
-	Name                     string      `json:"name"`
-	CompanySlug              string      `json:"company_slug"`
-	CompanyName              string      `json:"company_name"`
-	Headline                 string      `json:"headline"`
-	Bio                      string      `json:"bio"`
-	Topics                   []string    `json:"topics"`
-	Languages                []string    `json:"languages"`
-	Timezone                 string      `json:"timezone"`
-	SessionMinutes           int64       `json:"session_minutes"`
-	RatingCount              int64       `json:"rating_count"`
-	RatingAvg                float64     `json:"rating_avg"`
-	ShowPhoto                bool        `json:"show_photo"`
-	Seniority                OptString   `json:"seniority"`
-	Status                   OptString   `json:"status"`
-	Paused                   OptBool     `json:"paused"`
-	MeetingURL               OptString   `json:"meeting_url"`
-	CreatedAt                OptDateTime `json:"created_at"`
-	BufferBeforeMinutes      OptInt64    `json:"buffer_before_minutes"`
-	BufferAfterMinutes       OptInt64    `json:"buffer_after_minutes"`
-	NoticeMinutes            OptInt64    `json:"notice_minutes"`
-	HorizonDays              OptInt64    `json:"horizon_days"`
-	ID                       int64       `json:"id"`
-	HasApprovedReferralOffer bool        `json:"has_approved_referral_offer"`
+	Slug           string   `json:"slug"`
+	Name           string   `json:"name"`
+	CompanySlug    string   `json:"company_slug"`
+	CompanyName    string   `json:"company_name"`
+	Headline       string   `json:"headline"`
+	Bio            string   `json:"bio"`
+	Topics         []string `json:"topics"`
+	Languages      []string `json:"languages"`
+	Timezone       string   `json:"timezone"`
+	SessionMinutes int64    `json:"session_minutes"`
+	RatingCount    int64    `json:"rating_count"`
+	RatingAvg      float64  `json:"rating_avg"`
+	ShowPhoto      bool     `json:"show_photo"`
+	// Absent when the mentor left it unset.
+	Seniority                OptString               `json:"seniority"`
+	Status                   MentorshipProfileStatus `json:"status"`
+	Paused                   bool                    `json:"paused"`
+	CreatedAt                time.Time               `json:"created_at"`
+	ID                       int64                   `json:"id"`
+	HasApprovedReferralOffer bool                    `json:"has_approved_referral_offer"`
 }
 
 // GetSlug returns the value of Slug.
@@ -14043,43 +15705,18 @@ func (s *MentorshipPendingMentor) GetSeniority() OptString {
 }
 
 // GetStatus returns the value of Status.
-func (s *MentorshipPendingMentor) GetStatus() OptString {
+func (s *MentorshipPendingMentor) GetStatus() MentorshipProfileStatus {
 	return s.Status
 }
 
 // GetPaused returns the value of Paused.
-func (s *MentorshipPendingMentor) GetPaused() OptBool {
+func (s *MentorshipPendingMentor) GetPaused() bool {
 	return s.Paused
 }
 
-// GetMeetingURL returns the value of MeetingURL.
-func (s *MentorshipPendingMentor) GetMeetingURL() OptString {
-	return s.MeetingURL
-}
-
 // GetCreatedAt returns the value of CreatedAt.
-func (s *MentorshipPendingMentor) GetCreatedAt() OptDateTime {
+func (s *MentorshipPendingMentor) GetCreatedAt() time.Time {
 	return s.CreatedAt
-}
-
-// GetBufferBeforeMinutes returns the value of BufferBeforeMinutes.
-func (s *MentorshipPendingMentor) GetBufferBeforeMinutes() OptInt64 {
-	return s.BufferBeforeMinutes
-}
-
-// GetBufferAfterMinutes returns the value of BufferAfterMinutes.
-func (s *MentorshipPendingMentor) GetBufferAfterMinutes() OptInt64 {
-	return s.BufferAfterMinutes
-}
-
-// GetNoticeMinutes returns the value of NoticeMinutes.
-func (s *MentorshipPendingMentor) GetNoticeMinutes() OptInt64 {
-	return s.NoticeMinutes
-}
-
-// GetHorizonDays returns the value of HorizonDays.
-func (s *MentorshipPendingMentor) GetHorizonDays() OptInt64 {
-	return s.HorizonDays
 }
 
 // GetID returns the value of ID.
@@ -14163,43 +15800,18 @@ func (s *MentorshipPendingMentor) SetSeniority(val OptString) {
 }
 
 // SetStatus sets the value of Status.
-func (s *MentorshipPendingMentor) SetStatus(val OptString) {
+func (s *MentorshipPendingMentor) SetStatus(val MentorshipProfileStatus) {
 	s.Status = val
 }
 
 // SetPaused sets the value of Paused.
-func (s *MentorshipPendingMentor) SetPaused(val OptBool) {
+func (s *MentorshipPendingMentor) SetPaused(val bool) {
 	s.Paused = val
 }
 
-// SetMeetingURL sets the value of MeetingURL.
-func (s *MentorshipPendingMentor) SetMeetingURL(val OptString) {
-	s.MeetingURL = val
-}
-
 // SetCreatedAt sets the value of CreatedAt.
-func (s *MentorshipPendingMentor) SetCreatedAt(val OptDateTime) {
+func (s *MentorshipPendingMentor) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
-}
-
-// SetBufferBeforeMinutes sets the value of BufferBeforeMinutes.
-func (s *MentorshipPendingMentor) SetBufferBeforeMinutes(val OptInt64) {
-	s.BufferBeforeMinutes = val
-}
-
-// SetBufferAfterMinutes sets the value of BufferAfterMinutes.
-func (s *MentorshipPendingMentor) SetBufferAfterMinutes(val OptInt64) {
-	s.BufferAfterMinutes = val
-}
-
-// SetNoticeMinutes sets the value of NoticeMinutes.
-func (s *MentorshipPendingMentor) SetNoticeMinutes(val OptInt64) {
-	s.NoticeMinutes = val
-}
-
-// SetHorizonDays sets the value of HorizonDays.
-func (s *MentorshipPendingMentor) SetHorizonDays(val OptInt64) {
-	s.HorizonDays = val
 }
 
 // SetID sets the value of ID.
@@ -14390,6 +16002,63 @@ func (s *MentorshipProfileBody) SetShowPhoto(val OptBool) {
 // SetSeniority sets the value of Seniority.
 func (s *MentorshipProfileBody) SetSeniority(val OptString) {
 	s.Seniority = val
+}
+
+// The moderation status of a profile. `withdrawn` is a mentor who has left; the row survives it.
+// Ref: #/components/schemas/MentorshipProfileStatus
+type MentorshipProfileStatus string
+
+const (
+	MentorshipProfileStatusPending   MentorshipProfileStatus = "pending"
+	MentorshipProfileStatusApproved  MentorshipProfileStatus = "approved"
+	MentorshipProfileStatusRejected  MentorshipProfileStatus = "rejected"
+	MentorshipProfileStatusWithdrawn MentorshipProfileStatus = "withdrawn"
+)
+
+// AllValues returns all MentorshipProfileStatus values.
+func (MentorshipProfileStatus) AllValues() []MentorshipProfileStatus {
+	return []MentorshipProfileStatus{
+		MentorshipProfileStatusPending,
+		MentorshipProfileStatusApproved,
+		MentorshipProfileStatusRejected,
+		MentorshipProfileStatusWithdrawn,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s MentorshipProfileStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case MentorshipProfileStatusPending:
+		return []byte(s), nil
+	case MentorshipProfileStatusApproved:
+		return []byte(s), nil
+	case MentorshipProfileStatusRejected:
+		return []byte(s), nil
+	case MentorshipProfileStatusWithdrawn:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *MentorshipProfileStatus) UnmarshalText(data []byte) error {
+	switch MentorshipProfileStatus(data) {
+	case MentorshipProfileStatusPending:
+		*s = MentorshipProfileStatusPending
+		return nil
+	case MentorshipProfileStatusApproved:
+		*s = MentorshipProfileStatusApproved
+		return nil
+	case MentorshipProfileStatusRejected:
+		*s = MentorshipProfileStatusRejected
+		return nil
+	case MentorshipProfileStatusWithdrawn:
+		*s = MentorshipProfileStatusWithdrawn
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/MentorshipReview
@@ -15177,37 +16846,37 @@ func (o NilJobFoundPosting) Or(d JobFoundPosting) JobFoundPosting {
 	return d
 }
 
-// NewNilMentorshipMentor returns new NilMentorshipMentor with value set to v.
-func NewNilMentorshipMentor(v MentorshipMentor) NilMentorshipMentor {
-	return NilMentorshipMentor{
+// NewNilMentorshipOwnMentor returns new NilMentorshipOwnMentor with value set to v.
+func NewNilMentorshipOwnMentor(v MentorshipOwnMentor) NilMentorshipOwnMentor {
+	return NilMentorshipOwnMentor{
 		Value: v,
 	}
 }
 
-// NilMentorshipMentor is nullable MentorshipMentor.
-type NilMentorshipMentor struct {
-	Value MentorshipMentor
+// NilMentorshipOwnMentor is nullable MentorshipOwnMentor.
+type NilMentorshipOwnMentor struct {
+	Value MentorshipOwnMentor
 	Null  bool
 }
 
 // SetTo sets value to v.
-func (o *NilMentorshipMentor) SetTo(v MentorshipMentor) {
+func (o *NilMentorshipOwnMentor) SetTo(v MentorshipOwnMentor) {
 	o.Null = false
 	o.Value = v
 }
 
 // IsNull returns true if value is Null.
-func (o NilMentorshipMentor) IsNull() bool { return o.Null }
+func (o NilMentorshipOwnMentor) IsNull() bool { return o.Null }
 
 // SetToNull sets value to null.
-func (o *NilMentorshipMentor) SetToNull() {
+func (o *NilMentorshipOwnMentor) SetToNull() {
 	o.Null = true
-	var v MentorshipMentor
+	var v MentorshipOwnMentor
 	o.Value = v
 }
 
 // Get returns value and boolean that denotes whether value was set.
-func (o NilMentorshipMentor) Get() (v MentorshipMentor, ok bool) {
+func (o NilMentorshipOwnMentor) Get() (v MentorshipOwnMentor, ok bool) {
 	if o.Null {
 		return v, false
 	}
@@ -15215,7 +16884,7 @@ func (o NilMentorshipMentor) Get() (v MentorshipMentor, ok bool) {
 }
 
 // Or returns value if set, or given parameter if does not.
-func (o NilMentorshipMentor) Or(d MentorshipMentor) MentorshipMentor {
+func (o NilMentorshipOwnMentor) Or(d MentorshipOwnMentor) MentorshipOwnMentor {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -15306,6 +16975,51 @@ func (o NilScreeningAnswers) Get() (v ScreeningAnswers, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o NilScreeningAnswers) Or(d ScreeningAnswers) ScreeningAnswers {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewNilSilenceState returns new NilSilenceState with value set to v.
+func NewNilSilenceState(v SilenceState) NilSilenceState {
+	return NilSilenceState{
+		Value: v,
+	}
+}
+
+// NilSilenceState is nullable SilenceState.
+type NilSilenceState struct {
+	Value SilenceState
+	Null  bool
+}
+
+// SetTo sets value to v.
+func (o *NilSilenceState) SetTo(v SilenceState) {
+	o.Null = false
+	o.Value = v
+}
+
+// IsNull returns true if value is Null.
+func (o NilSilenceState) IsNull() bool { return o.Null }
+
+// SetToNull sets value to null.
+func (o *NilSilenceState) SetToNull() {
+	o.Null = true
+	var v SilenceState
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o NilSilenceState) Get() (v SilenceState, ok bool) {
+	if o.Null {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o NilSilenceState) Or(d SilenceState) SilenceState {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -15449,15 +17163,15 @@ func (o NilString) Or(d string) string {
 
 // Ref: #/components/schemas/Notification
 type Notification struct {
-	ID         int64     `json:"id"`
-	Kind       string    `json:"kind"`
-	Title      string    `json:"title"`
-	Body       string    `json:"body"`
-	PublicSlug NilString `json:"public_slug"`
+	ID         int64            `json:"id"`
+	Kind       NotificationKind `json:"kind"`
+	Title      string           `json:"title"`
+	Body       string           `json:"body"`
+	PublicSlug NilString        `json:"public_slug"`
 	// The stored snapshot of a multi-job digest; left out for every other kind.
-	Jobs      jx.Raw      `json:"jobs"`
-	CreatedAt NilDateTime `json:"created_at"`
-	ReadAt    NilDateTime `json:"read_at"`
+	Jobs      []NotificationDigestJob `json:"jobs"`
+	CreatedAt NilDateTime             `json:"created_at"`
+	ReadAt    NilDateTime             `json:"read_at"`
 }
 
 // GetID returns the value of ID.
@@ -15466,7 +17180,7 @@ func (s *Notification) GetID() int64 {
 }
 
 // GetKind returns the value of Kind.
-func (s *Notification) GetKind() string {
+func (s *Notification) GetKind() NotificationKind {
 	return s.Kind
 }
 
@@ -15486,7 +17200,7 @@ func (s *Notification) GetPublicSlug() NilString {
 }
 
 // GetJobs returns the value of Jobs.
-func (s *Notification) GetJobs() jx.Raw {
+func (s *Notification) GetJobs() []NotificationDigestJob {
 	return s.Jobs
 }
 
@@ -15506,7 +17220,7 @@ func (s *Notification) SetID(val int64) {
 }
 
 // SetKind sets the value of Kind.
-func (s *Notification) SetKind(val string) {
+func (s *Notification) SetKind(val NotificationKind) {
 	s.Kind = val
 }
 
@@ -15526,7 +17240,7 @@ func (s *Notification) SetPublicSlug(val NilString) {
 }
 
 // SetJobs sets the value of Jobs.
-func (s *Notification) SetJobs(val jx.Raw) {
+func (s *Notification) SetJobs(val []NotificationDigestJob) {
 	s.Jobs = val
 }
 
@@ -15538,6 +17252,194 @@ func (s *Notification) SetCreatedAt(val NilDateTime) {
 // SetReadAt sets the value of ReadAt.
 func (s *Notification) SetReadAt(val NilDateTime) {
 	s.ReadAt = val
+}
+
+// One job of a multi-job digest, as recorded at delivery (notify.SnapshotJob).
+// Ref: #/components/schemas/NotificationDigestJob
+type NotificationDigestJob struct {
+	Title   string `json:"title"`
+	Company string `json:"company"`
+	Slug    string `json:"slug"`
+}
+
+// GetTitle returns the value of Title.
+func (s *NotificationDigestJob) GetTitle() string {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *NotificationDigestJob) GetCompany() string {
+	return s.Company
+}
+
+// GetSlug returns the value of Slug.
+func (s *NotificationDigestJob) GetSlug() string {
+	return s.Slug
+}
+
+// SetTitle sets the value of Title.
+func (s *NotificationDigestJob) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *NotificationDigestJob) SetCompany(val string) {
+	s.Company = val
+}
+
+// SetSlug sets the value of Slug.
+func (s *NotificationDigestJob) SetSlug(val string) {
+	s.Slug = val
+}
+
+// What a `user_notifications` row can be about. The column is free text; these are the kinds the
+// engines write (notify, reminder, nudge, buddy, messaging, auto-apply), plus
+// `auto_apply_tailor_ready`, which only historical rows carry.
+// Ref: #/components/schemas/NotificationKind
+type NotificationKind string
+
+const (
+	NotificationKindSubscriptionDigest       NotificationKind = "subscription_digest"
+	NotificationKindReminder                 NotificationKind = "reminder"
+	NotificationKindNudgeFollowUp            NotificationKind = "nudge_follow_up"
+	NotificationKindNudgeInterviewPrep       NotificationKind = "nudge_interview_prep"
+	NotificationKindNudgeJobClosed           NotificationKind = "nudge_job_closed"
+	NotificationKindNudgeAutoApplySubmitted  NotificationKind = "nudge_auto_apply_submitted"
+	NotificationKindNudgeAutoApplyBlocked    NotificationKind = "nudge_auto_apply_blocked"
+	NotificationKindNudgeAutoApplyFailed     NotificationKind = "nudge_auto_apply_failed"
+	NotificationKindAutoApplyTailorReady     NotificationKind = "auto_apply_tailor_ready"
+	NotificationKindAutoApplyReadyForReview  NotificationKind = "auto_apply_ready_for_review"
+	NotificationKindAutoApplyTailoringFailed NotificationKind = "auto_apply_tailoring_failed"
+	NotificationKindBuddyMockBooked          NotificationKind = "buddy_mock_booked"
+	NotificationKindBuddyMockCancelled       NotificationKind = "buddy_mock_cancelled"
+	NotificationKindBuddyMockReminder        NotificationKind = "buddy_mock_reminder"
+	NotificationKindBuddyReaction            NotificationKind = "buddy_reaction"
+	NotificationKindBuddyMessage             NotificationKind = "buddy_message"
+	NotificationKindBuddyInvitation          NotificationKind = "buddy_invitation"
+)
+
+// AllValues returns all NotificationKind values.
+func (NotificationKind) AllValues() []NotificationKind {
+	return []NotificationKind{
+		NotificationKindSubscriptionDigest,
+		NotificationKindReminder,
+		NotificationKindNudgeFollowUp,
+		NotificationKindNudgeInterviewPrep,
+		NotificationKindNudgeJobClosed,
+		NotificationKindNudgeAutoApplySubmitted,
+		NotificationKindNudgeAutoApplyBlocked,
+		NotificationKindNudgeAutoApplyFailed,
+		NotificationKindAutoApplyTailorReady,
+		NotificationKindAutoApplyReadyForReview,
+		NotificationKindAutoApplyTailoringFailed,
+		NotificationKindBuddyMockBooked,
+		NotificationKindBuddyMockCancelled,
+		NotificationKindBuddyMockReminder,
+		NotificationKindBuddyReaction,
+		NotificationKindBuddyMessage,
+		NotificationKindBuddyInvitation,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s NotificationKind) MarshalText() ([]byte, error) {
+	switch s {
+	case NotificationKindSubscriptionDigest:
+		return []byte(s), nil
+	case NotificationKindReminder:
+		return []byte(s), nil
+	case NotificationKindNudgeFollowUp:
+		return []byte(s), nil
+	case NotificationKindNudgeInterviewPrep:
+		return []byte(s), nil
+	case NotificationKindNudgeJobClosed:
+		return []byte(s), nil
+	case NotificationKindNudgeAutoApplySubmitted:
+		return []byte(s), nil
+	case NotificationKindNudgeAutoApplyBlocked:
+		return []byte(s), nil
+	case NotificationKindNudgeAutoApplyFailed:
+		return []byte(s), nil
+	case NotificationKindAutoApplyTailorReady:
+		return []byte(s), nil
+	case NotificationKindAutoApplyReadyForReview:
+		return []byte(s), nil
+	case NotificationKindAutoApplyTailoringFailed:
+		return []byte(s), nil
+	case NotificationKindBuddyMockBooked:
+		return []byte(s), nil
+	case NotificationKindBuddyMockCancelled:
+		return []byte(s), nil
+	case NotificationKindBuddyMockReminder:
+		return []byte(s), nil
+	case NotificationKindBuddyReaction:
+		return []byte(s), nil
+	case NotificationKindBuddyMessage:
+		return []byte(s), nil
+	case NotificationKindBuddyInvitation:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *NotificationKind) UnmarshalText(data []byte) error {
+	switch NotificationKind(data) {
+	case NotificationKindSubscriptionDigest:
+		*s = NotificationKindSubscriptionDigest
+		return nil
+	case NotificationKindReminder:
+		*s = NotificationKindReminder
+		return nil
+	case NotificationKindNudgeFollowUp:
+		*s = NotificationKindNudgeFollowUp
+		return nil
+	case NotificationKindNudgeInterviewPrep:
+		*s = NotificationKindNudgeInterviewPrep
+		return nil
+	case NotificationKindNudgeJobClosed:
+		*s = NotificationKindNudgeJobClosed
+		return nil
+	case NotificationKindNudgeAutoApplySubmitted:
+		*s = NotificationKindNudgeAutoApplySubmitted
+		return nil
+	case NotificationKindNudgeAutoApplyBlocked:
+		*s = NotificationKindNudgeAutoApplyBlocked
+		return nil
+	case NotificationKindNudgeAutoApplyFailed:
+		*s = NotificationKindNudgeAutoApplyFailed
+		return nil
+	case NotificationKindAutoApplyTailorReady:
+		*s = NotificationKindAutoApplyTailorReady
+		return nil
+	case NotificationKindAutoApplyReadyForReview:
+		*s = NotificationKindAutoApplyReadyForReview
+		return nil
+	case NotificationKindAutoApplyTailoringFailed:
+		*s = NotificationKindAutoApplyTailoringFailed
+		return nil
+	case NotificationKindBuddyMockBooked:
+		*s = NotificationKindBuddyMockBooked
+		return nil
+	case NotificationKindBuddyMockCancelled:
+		*s = NotificationKindBuddyMockCancelled
+		return nil
+	case NotificationKindBuddyMockReminder:
+		*s = NotificationKindBuddyMockReminder
+		return nil
+	case NotificationKindBuddyReaction:
+		*s = NotificationKindBuddyReaction
+		return nil
+	case NotificationKindBuddyMessage:
+		*s = NotificationKindBuddyMessage
+		return nil
+	case NotificationKindBuddyInvitation:
+		*s = NotificationKindBuddyInvitation
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/NotificationListMeta
@@ -15699,7 +17601,10 @@ func (s *NotificationSettings) SetQuietHoursEnd(val NilString) {
 // Every field is read as its zero value when left out. Times are `HH:MM`.
 // Ref: #/components/schemas/NotificationSettingsUpdate
 type NotificationSettingsUpdate struct {
-	Enabled             OptNilBool        `json:"enabled"`
+	// Turn notifications on or off.
+	Enabled OptNilBool `json:"enabled"`
+	// Delivery channels: `email`, `telegram`, `push`. Adding `push` needs a device the mobile app has
+	// registered (409 otherwise).
 	Channels            OptNilStringArray `json:"channels"`
 	DigestFrequency     OptNilString      `json:"digest_frequency"`
 	DigestTime          OptNilString      `json:"digest_time"`
@@ -15935,6 +17840,144 @@ func (o OptAssistantSessionRequest) Get() (v AssistantSessionRequest, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptAssistantSessionRequest) Or(d AssistantSessionRequest) AssistantSessionRequest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAutoApplyResolvedPreview returns new OptAutoApplyResolvedPreview with value set to v.
+func NewOptAutoApplyResolvedPreview(v AutoApplyResolvedPreview) OptAutoApplyResolvedPreview {
+	return OptAutoApplyResolvedPreview{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAutoApplyResolvedPreview is optional AutoApplyResolvedPreview.
+type OptAutoApplyResolvedPreview struct {
+	Value AutoApplyResolvedPreview
+	Set   bool
+}
+
+// IsSet returns true if OptAutoApplyResolvedPreview was set.
+func (o OptAutoApplyResolvedPreview) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAutoApplyResolvedPreview) Reset() {
+	var v AutoApplyResolvedPreview
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAutoApplyResolvedPreview) SetTo(v AutoApplyResolvedPreview) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAutoApplyResolvedPreview) Get() (v AutoApplyResolvedPreview, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAutoApplyResolvedPreview) Or(d AutoApplyResolvedPreview) AutoApplyResolvedPreview {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAutoApplyReviewInfo returns new OptAutoApplyReviewInfo with value set to v.
+func NewOptAutoApplyReviewInfo(v AutoApplyReviewInfo) OptAutoApplyReviewInfo {
+	return OptAutoApplyReviewInfo{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAutoApplyReviewInfo is optional AutoApplyReviewInfo.
+type OptAutoApplyReviewInfo struct {
+	Value AutoApplyReviewInfo
+	Set   bool
+}
+
+// IsSet returns true if OptAutoApplyReviewInfo was set.
+func (o OptAutoApplyReviewInfo) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAutoApplyReviewInfo) Reset() {
+	var v AutoApplyReviewInfo
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAutoApplyReviewInfo) SetTo(v AutoApplyReviewInfo) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAutoApplyReviewInfo) Get() (v AutoApplyReviewInfo, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAutoApplyReviewInfo) Or(d AutoApplyReviewInfo) AutoApplyReviewInfo {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptAutoApplyReviewStatus returns new OptAutoApplyReviewStatus with value set to v.
+func NewOptAutoApplyReviewStatus(v AutoApplyReviewStatus) OptAutoApplyReviewStatus {
+	return OptAutoApplyReviewStatus{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptAutoApplyReviewStatus is optional AutoApplyReviewStatus.
+type OptAutoApplyReviewStatus struct {
+	Value AutoApplyReviewStatus
+	Set   bool
+}
+
+// IsSet returns true if OptAutoApplyReviewStatus was set.
+func (o OptAutoApplyReviewStatus) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptAutoApplyReviewStatus) Reset() {
+	var v AutoApplyReviewStatus
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptAutoApplyReviewStatus) SetTo(v AutoApplyReviewStatus) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptAutoApplyReviewStatus) Get() (v AutoApplyReviewStatus, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptAutoApplyReviewStatus) Or(d AutoApplyReviewStatus) AutoApplyReviewStatus {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -17153,6 +19196,52 @@ func (o OptResolveJobReportRequest) Or(d ResolveJobReportRequest) ResolveJobRepo
 	return d
 }
 
+// NewOptStageSuggestion returns new OptStageSuggestion with value set to v.
+func NewOptStageSuggestion(v StageSuggestion) OptStageSuggestion {
+	return OptStageSuggestion{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptStageSuggestion is optional StageSuggestion.
+type OptStageSuggestion struct {
+	Value StageSuggestion
+	Set   bool
+}
+
+// IsSet returns true if OptStageSuggestion was set.
+func (o OptStageSuggestion) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptStageSuggestion) Reset() {
+	var v StageSuggestion
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptStageSuggestion) SetTo(v StageSuggestion) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptStageSuggestion) Get() (v StageSuggestion, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptStageSuggestion) Or(d StageSuggestion) StageSuggestion {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -17254,33 +19343,32 @@ func (s *PatchCVOK) SetData(val CvMeta) {
 
 // A single item: `{"data": ...}`.
 type PauseMentorProfileOK struct {
-	Data MentorshipMentor `json:"data"`
+	Data MentorshipOwnMentor `json:"data"`
 }
 
 // GetData returns the value of Data.
-func (s *PauseMentorProfileOK) GetData() MentorshipMentor {
+func (s *PauseMentorProfileOK) GetData() MentorshipOwnMentor {
 	return s.Data
 }
 
 // SetData sets the value of Data.
-func (s *PauseMentorProfileOK) SetData(val MentorshipMentor) {
+func (s *PauseMentorProfileOK) SetData(val MentorshipOwnMentor) {
 	s.Data = val
 }
 
 // Ref: #/components/schemas/PendingCompanyRelation
 type PendingCompanyRelation struct {
-	ID              int64     `json:"id"`
-	Kind            string    `json:"kind"`
-	CompanySlug     string    `json:"company_slug"`
-	CompanyName     string    `json:"company_name"`
-	CompanyJobCount int64     `json:"company_job_count"`
-	TargetSlug      string    `json:"target_slug"`
-	TargetName      string    `json:"target_name"`
-	TargetJobCount  int64     `json:"target_job_count"`
-	Note            string    `json:"note"`
-	CreatedAt       time.Time `json:"created_at"`
-	// `pending`, or `approved` for a merge whose job move stopped part-way.
-	Status string `json:"status"`
+	ID              int64                        `json:"id"`
+	Kind            CompanyRelationKind          `json:"kind"`
+	CompanySlug     string                       `json:"company_slug"`
+	CompanyName     string                       `json:"company_name"`
+	CompanyJobCount int64                        `json:"company_job_count"`
+	TargetSlug      string                       `json:"target_slug"`
+	TargetName      string                       `json:"target_name"`
+	TargetJobCount  int64                        `json:"target_job_count"`
+	Note            string                       `json:"note"`
+	CreatedAt       time.Time                    `json:"created_at"`
+	Status          PendingCompanyRelationStatus `json:"status"`
 }
 
 // GetID returns the value of ID.
@@ -17289,7 +19377,7 @@ func (s *PendingCompanyRelation) GetID() int64 {
 }
 
 // GetKind returns the value of Kind.
-func (s *PendingCompanyRelation) GetKind() string {
+func (s *PendingCompanyRelation) GetKind() CompanyRelationKind {
 	return s.Kind
 }
 
@@ -17334,7 +19422,7 @@ func (s *PendingCompanyRelation) GetCreatedAt() time.Time {
 }
 
 // GetStatus returns the value of Status.
-func (s *PendingCompanyRelation) GetStatus() string {
+func (s *PendingCompanyRelation) GetStatus() PendingCompanyRelationStatus {
 	return s.Status
 }
 
@@ -17344,7 +19432,7 @@ func (s *PendingCompanyRelation) SetID(val int64) {
 }
 
 // SetKind sets the value of Kind.
-func (s *PendingCompanyRelation) SetKind(val string) {
+func (s *PendingCompanyRelation) SetKind(val CompanyRelationKind) {
 	s.Kind = val
 }
 
@@ -17389,8 +19477,51 @@ func (s *PendingCompanyRelation) SetCreatedAt(val time.Time) {
 }
 
 // SetStatus sets the value of Status.
-func (s *PendingCompanyRelation) SetStatus(val string) {
+func (s *PendingCompanyRelation) SetStatus(val PendingCompanyRelationStatus) {
 	s.Status = val
+}
+
+// `approved` marks a merge whose job move stopped part-way; approving again resumes it.
+// Ref: #/components/schemas/PendingCompanyRelationStatus
+type PendingCompanyRelationStatus string
+
+const (
+	PendingCompanyRelationStatusPending  PendingCompanyRelationStatus = "pending"
+	PendingCompanyRelationStatusApproved PendingCompanyRelationStatus = "approved"
+)
+
+// AllValues returns all PendingCompanyRelationStatus values.
+func (PendingCompanyRelationStatus) AllValues() []PendingCompanyRelationStatus {
+	return []PendingCompanyRelationStatus{
+		PendingCompanyRelationStatusPending,
+		PendingCompanyRelationStatusApproved,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s PendingCompanyRelationStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case PendingCompanyRelationStatusPending:
+		return []byte(s), nil
+	case PendingCompanyRelationStatusApproved:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *PendingCompanyRelationStatus) UnmarshalText(data []byte) error {
+	switch PendingCompanyRelationStatus(data) {
+	case PendingCompanyRelationStatusPending:
+		*s = PendingCompanyRelationStatusPending
+		return nil
+	case PendingCompanyRelationStatusApproved:
+		*s = PendingCompanyRelationStatusApproved
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // A year, with a month when the CV gives one.
@@ -18112,6 +20243,7 @@ func (s *PostJobAutoApplyRetryOK) SetData(val AutoApplyRetried) {
 
 // Ref: #/components/schemas/PrefillRequest
 type PrefillRequest struct {
+	// The job posting URL to parse.
 	URL OptString `json:"url"`
 }
 
@@ -18212,13 +20344,13 @@ func (s *ProblemStatusCode) SetResponse(val Problem) {
 // What a person reported about a company's hiring process.
 // Ref: #/components/schemas/ProcessReport
 type ProcessReport struct {
-	Kind string `json:"kind"`
+	Kind ProcessReportKind `json:"kind"`
 	// How many people have reported this kind for the company.
 	Count int64 `json:"count"`
 }
 
 // GetKind returns the value of Kind.
-func (s *ProcessReport) GetKind() string {
+func (s *ProcessReport) GetKind() ProcessReportKind {
 	return s.Kind
 }
 
@@ -18228,13 +20360,49 @@ func (s *ProcessReport) GetCount() int64 {
 }
 
 // SetKind sets the value of Kind.
-func (s *ProcessReport) SetKind(val string) {
+func (s *ProcessReport) SetKind(val ProcessReportKind) {
 	s.Kind = val
 }
 
 // SetCount sets the value of Count.
 func (s *ProcessReport) SetCount(val int64) {
 	s.Count = val
+}
+
+// What a candidate can report about a company's hiring (vocab.CompanyProcessReportKindValues).
+// Ref: #/components/schemas/ProcessReportKind
+type ProcessReportKind string
+
+const (
+	ProcessReportKindAiInterview ProcessReportKind = "ai_interview"
+)
+
+// AllValues returns all ProcessReportKind values.
+func (ProcessReportKind) AllValues() []ProcessReportKind {
+	return []ProcessReportKind{
+		ProcessReportKindAiInterview,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ProcessReportKind) MarshalText() ([]byte, error) {
+	switch s {
+	case ProcessReportKindAiInterview:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ProcessReportKind) UnmarshalText(data []byte) error {
+	switch ProcessReportKind(data) {
+	case ProcessReportKindAiInterview:
+		*s = ProcessReportKindAiInterview
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/ProcessReportRequest
@@ -18396,11 +20564,15 @@ func (s *Profile) SetUpdatedAt(val NilDateTime) {
 // The profile as saved.
 // Ref: #/components/schemas/ProfileUpdate
 type ProfileUpdate struct {
-	Specializations   OptNilStringArray `json:"specializations"`
-	Skills            OptNilStringArray `json:"skills"`
-	Seniorities       OptNilStringArray `json:"seniorities"`
-	ExcludedSkills    OptNilStringArray `json:"excluded_skills"`
-	ExcludedSources   OptNilStringArray `json:"excluded_sources"`
+	// One or more job categories (max 5). (e.g. `["backend"]`).
+	Specializations OptNilStringArray `json:"specializations"`
+	// Canonical skill tokens (non-empty). (e.g. `["go","postgresql"]`).
+	Skills          OptNilStringArray `json:"skills"`
+	Seniorities     OptNilStringArray `json:"seniorities"`
+	ExcludedSkills  OptNilStringArray `json:"excluded_skills"`
+	ExcludedSources OptNilStringArray `json:"excluded_sources"`
+	// Preferred vacancy languages as two-letter codes (max 200); empty or omitted means any language.
+	// (e.g. `["en","ru"]`).
 	JobLanguages      OptNilStringArray `json:"job_languages"`
 	ExcludedCompanies OptNilStringArray `json:"excluded_companies"`
 	// Shaped like LocationPreferences; null or absent keeps none.
@@ -18768,6 +20940,7 @@ func (s *PushToken) SetLastSeenAt(val NilDateTime) {
 
 // Ref: #/components/schemas/PushTokenRegister
 type PushTokenRegister struct {
+	// The Expo push token minted by the device. (e.g. `ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]`).
 	Token OptString `json:"token"`
 	// `ios` or `android`.
 	Platform OptString `json:"platform"`
@@ -18795,6 +20968,7 @@ func (s *PushTokenRegister) SetPlatform(val OptString) {
 
 // Ref: #/components/schemas/PushTokenRemove
 type PushTokenRemove struct {
+	// The token to remove.
 	Token OptString `json:"token"`
 }
 
@@ -18892,16 +21066,16 @@ type RateSupportSessionNoContent struct{}
 
 // A single item: `{"data": ...}`.
 type ReactivateMentorProfileOK struct {
-	Data MentorshipMentor `json:"data"`
+	Data MentorshipOwnMentor `json:"data"`
 }
 
 // GetData returns the value of Data.
-func (s *ReactivateMentorProfileOK) GetData() MentorshipMentor {
+func (s *ReactivateMentorProfileOK) GetData() MentorshipOwnMentor {
 	return s.Data
 }
 
 // SetData sets the value of Data.
-func (s *ReactivateMentorProfileOK) SetData(val MentorshipMentor) {
+func (s *ReactivateMentorProfileOK) SetData(val MentorshipOwnMentor) {
 	s.Data = val
 }
 
@@ -18923,17 +21097,17 @@ func (s *RecallApplicationMailOK) SetData(val MailRecallResult) {
 // A feed row: the thread plus the subject's display names, empty when the subject no longer exists.
 // Ref: #/components/schemas/RecentThread
 type RecentThread struct {
-	ID             int64     `json:"id"`
-	SubjectType    string    `json:"subject_type"`
-	SubjectSlug    string    `json:"subject_slug"`
-	Title          string    `json:"title"`
-	Body           string    `json:"body"`
-	Author         string    `json:"author"`
-	ReplyCount     int64     `json:"reply_count"`
-	Status         string    `json:"status"`
-	CreatedAt      time.Time `json:"created_at"`
-	SubjectTitle   string    `json:"subject_title"`
-	SubjectCompany string    `json:"subject_company"`
+	ID             int64             `json:"id"`
+	SubjectType    ThreadSubjectType `json:"subject_type"`
+	SubjectSlug    string            `json:"subject_slug"`
+	Title          string            `json:"title"`
+	Body           string            `json:"body"`
+	Author         string            `json:"author"`
+	ReplyCount     int64             `json:"reply_count"`
+	Status         ThreadStatus      `json:"status"`
+	CreatedAt      time.Time         `json:"created_at"`
+	SubjectTitle   string            `json:"subject_title"`
+	SubjectCompany string            `json:"subject_company"`
 }
 
 // GetID returns the value of ID.
@@ -18942,7 +21116,7 @@ func (s *RecentThread) GetID() int64 {
 }
 
 // GetSubjectType returns the value of SubjectType.
-func (s *RecentThread) GetSubjectType() string {
+func (s *RecentThread) GetSubjectType() ThreadSubjectType {
 	return s.SubjectType
 }
 
@@ -18972,7 +21146,7 @@ func (s *RecentThread) GetReplyCount() int64 {
 }
 
 // GetStatus returns the value of Status.
-func (s *RecentThread) GetStatus() string {
+func (s *RecentThread) GetStatus() ThreadStatus {
 	return s.Status
 }
 
@@ -18997,7 +21171,7 @@ func (s *RecentThread) SetID(val int64) {
 }
 
 // SetSubjectType sets the value of SubjectType.
-func (s *RecentThread) SetSubjectType(val string) {
+func (s *RecentThread) SetSubjectType(val ThreadSubjectType) {
 	s.SubjectType = val
 }
 
@@ -19027,7 +21201,7 @@ func (s *RecentThread) SetReplyCount(val int64) {
 }
 
 // SetStatus sets the value of Status.
-func (s *RecentThread) SetStatus(val string) {
+func (s *RecentThread) SetStatus(val ThreadStatus) {
 	s.Status = val
 }
 
@@ -19172,8 +21346,52 @@ func (s *ReferralCVOptions) SetHasResume(val bool) {
 	s.HasResume = val
 }
 
+// `original` attaches the uploaded CV; `built` one tailored in freehire.
+// Ref: #/components/schemas/ReferralCvKind
+type ReferralCvKind string
+
+const (
+	ReferralCvKindOriginal ReferralCvKind = "original"
+	ReferralCvKindBuilt    ReferralCvKind = "built"
+)
+
+// AllValues returns all ReferralCvKind values.
+func (ReferralCvKind) AllValues() []ReferralCvKind {
+	return []ReferralCvKind{
+		ReferralCvKindOriginal,
+		ReferralCvKindBuilt,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ReferralCvKind) MarshalText() ([]byte, error) {
+	switch s {
+	case ReferralCvKindOriginal:
+		return []byte(s), nil
+	case ReferralCvKindBuilt:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ReferralCvKind) UnmarshalText(data []byte) error {
+	switch ReferralCvKind(data) {
+	case ReferralCvKindOriginal:
+		*s = ReferralCvKindOriginal
+		return nil
+	case ReferralCvKindBuilt:
+		*s = ReferralCvKindBuilt
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/ReferralDecision
 type ReferralDecision struct {
+	// True approves the referrer; false rejects the offer.
 	Approve OptBool `json:"approve"`
 }
 
@@ -19190,17 +21408,17 @@ func (s *ReferralDecision) SetApprove(val OptBool) {
 // What a referrer sees: the seeker's chosen contact and CV, never their user id.
 // Ref: #/components/schemas/ReferralIncomingRequest
 type ReferralIncomingRequest struct {
-	ID              string      `json:"id"`
-	CompanySlug     string      `json:"company_slug"`
-	CompanyName     string      `json:"company_name"`
-	JobID           NilInt64    `json:"job_id"`
-	CvKind          string      `json:"cv_kind"`
-	LinkedinURL     OptString   `json:"linkedin_url"`
-	ContactTelegram OptString   `json:"contact_telegram"`
-	ContactEmail    OptString   `json:"contact_email"`
-	Note            OptString   `json:"note"`
-	Status          string      `json:"status"`
-	CreatedAt       NilDateTime `json:"created_at"`
+	ID              string                `json:"id"`
+	CompanySlug     string                `json:"company_slug"`
+	CompanyName     string                `json:"company_name"`
+	JobID           NilInt64              `json:"job_id"`
+	CvKind          ReferralCvKind        `json:"cv_kind"`
+	LinkedinURL     OptString             `json:"linkedin_url"`
+	ContactTelegram OptString             `json:"contact_telegram"`
+	ContactEmail    OptString             `json:"contact_email"`
+	Note            OptString             `json:"note"`
+	Status          ReferralRequestStatus `json:"status"`
+	CreatedAt       NilDateTime           `json:"created_at"`
 }
 
 // GetID returns the value of ID.
@@ -19224,7 +21442,7 @@ func (s *ReferralIncomingRequest) GetJobID() NilInt64 {
 }
 
 // GetCvKind returns the value of CvKind.
-func (s *ReferralIncomingRequest) GetCvKind() string {
+func (s *ReferralIncomingRequest) GetCvKind() ReferralCvKind {
 	return s.CvKind
 }
 
@@ -19249,7 +21467,7 @@ func (s *ReferralIncomingRequest) GetNote() OptString {
 }
 
 // GetStatus returns the value of Status.
-func (s *ReferralIncomingRequest) GetStatus() string {
+func (s *ReferralIncomingRequest) GetStatus() ReferralRequestStatus {
 	return s.Status
 }
 
@@ -19279,7 +21497,7 @@ func (s *ReferralIncomingRequest) SetJobID(val NilInt64) {
 }
 
 // SetCvKind sets the value of CvKind.
-func (s *ReferralIncomingRequest) SetCvKind(val string) {
+func (s *ReferralIncomingRequest) SetCvKind(val ReferralCvKind) {
 	s.CvKind = val
 }
 
@@ -19304,7 +21522,7 @@ func (s *ReferralIncomingRequest) SetNote(val OptString) {
 }
 
 // SetStatus sets the value of Status.
-func (s *ReferralIncomingRequest) SetStatus(val string) {
+func (s *ReferralIncomingRequest) SetStatus(val ReferralRequestStatus) {
 	s.Status = val
 }
 
@@ -19315,13 +21533,13 @@ func (s *ReferralIncomingRequest) SetCreatedAt(val NilDateTime) {
 
 // Ref: #/components/schemas/ReferralOffer
 type ReferralOffer struct {
-	ID          string      `json:"id"`
-	CompanySlug string      `json:"company_slug"`
-	CompanyName string      `json:"company_name"`
-	LinkedinURL string      `json:"linkedin_url"`
-	Status      string      `json:"status"`
-	DecidedAt   NilDateTime `json:"decided_at"`
-	CreatedAt   NilDateTime `json:"created_at"`
+	ID          string              `json:"id"`
+	CompanySlug string              `json:"company_slug"`
+	CompanyName string              `json:"company_name"`
+	LinkedinURL string              `json:"linkedin_url"`
+	Status      ReferralOfferStatus `json:"status"`
+	DecidedAt   NilDateTime         `json:"decided_at"`
+	CreatedAt   NilDateTime         `json:"created_at"`
 }
 
 // GetID returns the value of ID.
@@ -19345,7 +21563,7 @@ func (s *ReferralOffer) GetLinkedinURL() string {
 }
 
 // GetStatus returns the value of Status.
-func (s *ReferralOffer) GetStatus() string {
+func (s *ReferralOffer) GetStatus() ReferralOfferStatus {
 	return s.Status
 }
 
@@ -19380,7 +21598,7 @@ func (s *ReferralOffer) SetLinkedinURL(val string) {
 }
 
 // SetStatus sets the value of Status.
-func (s *ReferralOffer) SetStatus(val string) {
+func (s *ReferralOffer) SetStatus(val ReferralOfferStatus) {
 	s.Status = val
 }
 
@@ -19394,18 +21612,75 @@ func (s *ReferralOffer) SetCreatedAt(val NilDateTime) {
 	s.CreatedAt = val
 }
 
+// Ref: #/components/schemas/ReferralOfferStatus
+type ReferralOfferStatus string
+
+const (
+	ReferralOfferStatusPending  ReferralOfferStatus = "pending"
+	ReferralOfferStatusApproved ReferralOfferStatus = "approved"
+	ReferralOfferStatusRejected ReferralOfferStatus = "rejected"
+)
+
+// AllValues returns all ReferralOfferStatus values.
+func (ReferralOfferStatus) AllValues() []ReferralOfferStatus {
+	return []ReferralOfferStatus{
+		ReferralOfferStatusPending,
+		ReferralOfferStatusApproved,
+		ReferralOfferStatusRejected,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ReferralOfferStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ReferralOfferStatusPending:
+		return []byte(s), nil
+	case ReferralOfferStatusApproved:
+		return []byte(s), nil
+	case ReferralOfferStatusRejected:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ReferralOfferStatus) UnmarshalText(data []byte) error {
+	switch ReferralOfferStatus(data) {
+	case ReferralOfferStatusPending:
+		*s = ReferralOfferStatusPending
+		return nil
+	case ReferralOfferStatusApproved:
+		*s = ReferralOfferStatusApproved
+		return nil
+	case ReferralOfferStatusRejected:
+		*s = ReferralOfferStatusRejected
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // Ref: #/components/schemas/ReferralRequestCreate
 type ReferralRequestCreate struct {
+	// The company to ask.
 	CompanySlug OptString `json:"company_slug"`
 	// Names the vacancy; an unknown slug is a 404. Wins over `job_id`.
-	JobSlug         OptString    `json:"job_slug"`
-	JobID           OptNilInt64  `json:"job_id"`
-	CvKind          OptString    `json:"cv_kind"`
-	CvID            OptNilString `json:"cv_id"`
-	LinkedinURL     OptString    `json:"linkedin_url"`
-	ContactTelegram OptString    `json:"contact_telegram"`
-	ContactEmail    OptString    `json:"contact_email"`
-	Note            OptString    `json:"note"`
+	JobSlug OptString   `json:"job_slug"`
+	JobID   OptNilInt64 `json:"job_id"`
+	// Which CV to attach: `original` (your uploaded one) or `built`.
+	CvKind OptString `json:"cv_kind"`
+	// The built CV, when `cv_kind` is `built`: one you tailored for that opening, or — with no opening
+	// — for any opening at the company (see `cv-options`). Any other CV answers 422.
+	CvID OptNilString `json:"cv_id"`
+	// Your LinkedIn profile URL.
+	LinkedinURL OptString `json:"linkedin_url"`
+	// How the referrer reaches you.
+	ContactTelegram OptString `json:"contact_telegram"`
+	// How the referrer reaches you.
+	ContactEmail OptString `json:"contact_email"`
+	// A short message to the referrer.
+	Note OptString `json:"note"`
 }
 
 // GetCompanySlug returns the value of CompanySlug.
@@ -19498,9 +21773,59 @@ func (s *ReferralRequestCreate) SetNote(val OptString) {
 	s.Note = val
 }
 
+// Ref: #/components/schemas/ReferralRequestStatus
+type ReferralRequestStatus string
+
+const (
+	ReferralRequestStatusSent      ReferralRequestStatus = "sent"
+	ReferralRequestStatusContacted ReferralRequestStatus = "contacted"
+	ReferralRequestStatusDeclined  ReferralRequestStatus = "declined"
+)
+
+// AllValues returns all ReferralRequestStatus values.
+func (ReferralRequestStatus) AllValues() []ReferralRequestStatus {
+	return []ReferralRequestStatus{
+		ReferralRequestStatusSent,
+		ReferralRequestStatusContacted,
+		ReferralRequestStatusDeclined,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ReferralRequestStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ReferralRequestStatusSent:
+		return []byte(s), nil
+	case ReferralRequestStatusContacted:
+		return []byte(s), nil
+	case ReferralRequestStatusDeclined:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ReferralRequestStatus) UnmarshalText(data []byte) error {
+	switch ReferralRequestStatus(data) {
+	case ReferralRequestStatusSent:
+		*s = ReferralRequestStatusSent
+		return nil
+	case ReferralRequestStatusContacted:
+		*s = ReferralRequestStatusContacted
+		return nil
+	case ReferralRequestStatusDeclined:
+		*s = ReferralRequestStatusDeclined
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // `status` is "contacted" or "declined".
 // Ref: #/components/schemas/ReferralResolve
 type ReferralResolve struct {
+	// `contacted` or `declined`. (e.g. `contacted`).
 	Status OptString `json:"status"`
 }
 
@@ -19517,14 +21842,14 @@ func (s *ReferralResolve) SetStatus(val OptString) {
 // A seeker's own request: the target and status, no referrer identity.
 // Ref: #/components/schemas/ReferralSeekerRequest
 type ReferralSeekerRequest struct {
-	ID          string      `json:"id"`
-	CompanySlug string      `json:"company_slug"`
-	CompanyName string      `json:"company_name"`
-	JobID       NilInt64    `json:"job_id"`
-	CvKind      string      `json:"cv_kind"`
-	CvID        NilString   `json:"cv_id"`
-	Status      string      `json:"status"`
-	CreatedAt   NilDateTime `json:"created_at"`
+	ID          string                `json:"id"`
+	CompanySlug string                `json:"company_slug"`
+	CompanyName string                `json:"company_name"`
+	JobID       NilInt64              `json:"job_id"`
+	CvKind      ReferralCvKind        `json:"cv_kind"`
+	CvID        NilString             `json:"cv_id"`
+	Status      ReferralRequestStatus `json:"status"`
+	CreatedAt   NilDateTime           `json:"created_at"`
 }
 
 // GetID returns the value of ID.
@@ -19548,7 +21873,7 @@ func (s *ReferralSeekerRequest) GetJobID() NilInt64 {
 }
 
 // GetCvKind returns the value of CvKind.
-func (s *ReferralSeekerRequest) GetCvKind() string {
+func (s *ReferralSeekerRequest) GetCvKind() ReferralCvKind {
 	return s.CvKind
 }
 
@@ -19558,7 +21883,7 @@ func (s *ReferralSeekerRequest) GetCvID() NilString {
 }
 
 // GetStatus returns the value of Status.
-func (s *ReferralSeekerRequest) GetStatus() string {
+func (s *ReferralSeekerRequest) GetStatus() ReferralRequestStatus {
 	return s.Status
 }
 
@@ -19588,7 +21913,7 @@ func (s *ReferralSeekerRequest) SetJobID(val NilInt64) {
 }
 
 // SetCvKind sets the value of CvKind.
-func (s *ReferralSeekerRequest) SetCvKind(val string) {
+func (s *ReferralSeekerRequest) SetCvKind(val ReferralCvKind) {
 	s.CvKind = val
 }
 
@@ -19598,7 +21923,7 @@ func (s *ReferralSeekerRequest) SetCvID(val NilString) {
 }
 
 // SetStatus sets the value of Status.
-func (s *ReferralSeekerRequest) SetStatus(val string) {
+func (s *ReferralSeekerRequest) SetStatus(val ReferralRequestStatus) {
 	s.Status = val
 }
 
@@ -20145,10 +22470,9 @@ func (s *ResolvedJob) SetJobSlug(val string) {
 // Ref: #/components/schemas/ResolvedJobPage
 type ResolvedJobPage struct {
 	// The catalogue job; null while it is still queued.
-	PublicSlug NilString `json:"public_slug"`
-	// `found`, `tracked`, `imported`, `review` or `queued`.
-	Status      string    `json:"status"`
-	CompanySlug OptString `json:"company_slug"`
+	PublicSlug  NilString         `json:"public_slug"`
+	Status      ResolvedJobStatus `json:"status"`
+	CompanySlug OptString         `json:"company_slug"`
 }
 
 // GetPublicSlug returns the value of PublicSlug.
@@ -20157,7 +22481,7 @@ func (s *ResolvedJobPage) GetPublicSlug() NilString {
 }
 
 // GetStatus returns the value of Status.
-func (s *ResolvedJobPage) GetStatus() string {
+func (s *ResolvedJobPage) GetStatus() ResolvedJobStatus {
 	return s.Status
 }
 
@@ -20172,13 +22496,80 @@ func (s *ResolvedJobPage) SetPublicSlug(val NilString) {
 }
 
 // SetStatus sets the value of Status.
-func (s *ResolvedJobPage) SetStatus(val string) {
+func (s *ResolvedJobPage) SetStatus(val ResolvedJobStatus) {
 	s.Status = val
 }
 
 // SetCompanySlug sets the value of CompanySlug.
 func (s *ResolvedJobPage) SetCompanySlug(val OptString) {
 	s.CompanySlug = val
+}
+
+// What became of the board behind a job page: `found` (the catalogue already carried the posting),
+// `tracked` (imported, and the board is already crawled), `imported` (imported, and the board queued
+// for onboarding), `review` (imported, but no crawlable board could be named) or `queued` (nothing
+// could read the page, so the link went to manual triage).
+// Ref: #/components/schemas/ResolvedJobStatus
+type ResolvedJobStatus string
+
+const (
+	ResolvedJobStatusFound    ResolvedJobStatus = "found"
+	ResolvedJobStatusTracked  ResolvedJobStatus = "tracked"
+	ResolvedJobStatusImported ResolvedJobStatus = "imported"
+	ResolvedJobStatusReview   ResolvedJobStatus = "review"
+	ResolvedJobStatusQueued   ResolvedJobStatus = "queued"
+)
+
+// AllValues returns all ResolvedJobStatus values.
+func (ResolvedJobStatus) AllValues() []ResolvedJobStatus {
+	return []ResolvedJobStatus{
+		ResolvedJobStatusFound,
+		ResolvedJobStatusTracked,
+		ResolvedJobStatusImported,
+		ResolvedJobStatusReview,
+		ResolvedJobStatusQueued,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ResolvedJobStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ResolvedJobStatusFound:
+		return []byte(s), nil
+	case ResolvedJobStatusTracked:
+		return []byte(s), nil
+	case ResolvedJobStatusImported:
+		return []byte(s), nil
+	case ResolvedJobStatusReview:
+		return []byte(s), nil
+	case ResolvedJobStatusQueued:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ResolvedJobStatus) UnmarshalText(data []byte) error {
+	switch ResolvedJobStatus(data) {
+	case ResolvedJobStatusFound:
+		*s = ResolvedJobStatusFound
+		return nil
+	case ResolvedJobStatusTracked:
+		*s = ResolvedJobStatusTracked
+		return nil
+	case ResolvedJobStatusImported:
+		*s = ResolvedJobStatusImported
+		return nil
+	case ResolvedJobStatusReview:
+		*s = ResolvedJobStatusReview
+		return nil
+	case ResolvedJobStatusQueued:
+		*s = ResolvedJobStatusQueued
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // RestoreEmailNoContent is response for RestoreEmail operation.
@@ -21114,6 +23505,7 @@ func (s *SavedSearch) SetUpdatedAt(val NilDateTime) {
 // An empty name is refused with a 400, like an out-of-range one.
 // Ref: #/components/schemas/SavedSearchCreate
 type SavedSearchCreate struct {
+	// Display name. (e.g. `Senior Go remote`).
 	Name OptString `json:"name"`
 	// Empty is the valid "show all" snapshot.
 	Query              OptString `json:"query"`
@@ -21180,7 +23572,9 @@ func (s *SavedSearchList) SetMeta(val AlertListMeta) {
 // A partial update: an absent or null field is kept; an empty query is a real "show all".
 // Ref: #/components/schemas/SavedSearchUpdate
 type SavedSearchUpdate struct {
-	Name  OptNilString `json:"name"`
+	// New name (optional).
+	Name OptNilString `json:"name"`
+	// New query (optional).
 	Query OptNilString `json:"query"`
 }
 
@@ -21698,6 +24092,56 @@ func (s *SetTalentNetworkVisibilityOK) GetData() TalentNetworkMembership {
 // SetData sets the value of Data.
 func (s *SetTalentNetworkVisibilityOK) SetData(val TalentNetworkMembership) {
 	s.Data = val
+}
+
+// Where an application sits against the silence thresholds of its stage (internal/job/silence).
+// Ref: #/components/schemas/SilenceState
+type SilenceState string
+
+const (
+	SilenceStateActive      SilenceState = "active"
+	SilenceStateSilent      SilenceState = "silent"
+	SilenceStateUnconfirmed SilenceState = "unconfirmed"
+)
+
+// AllValues returns all SilenceState values.
+func (SilenceState) AllValues() []SilenceState {
+	return []SilenceState{
+		SilenceStateActive,
+		SilenceStateSilent,
+		SilenceStateUnconfirmed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SilenceState) MarshalText() ([]byte, error) {
+	switch s {
+	case SilenceStateActive:
+		return []byte(s), nil
+	case SilenceStateSilent:
+		return []byte(s), nil
+	case SilenceStateUnconfirmed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SilenceState) UnmarshalText(data []byte) error {
+	switch SilenceState(data) {
+	case SilenceStateActive:
+		*s = SilenceStateActive
+		return nil
+	case SilenceStateSilent:
+		*s = SilenceStateSilent
+		return nil
+	case SilenceStateUnconfirmed:
+		*s = SilenceStateUnconfirmed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // A single item: `{"data": ...}`.
@@ -22316,6 +24760,44 @@ func (s *SourceJobs) SetMeasuredAt(val string) {
 	s.MeasuredAt = val
 }
 
+// An offer to move the application to the stage its newest classified message implies.
+// Ref: #/components/schemas/StageSuggestion
+type StageSuggestion struct {
+	Stage   string `json:"stage"`
+	Signal  string `json:"signal"`
+	EmailID int64  `json:"email_id"`
+}
+
+// GetStage returns the value of Stage.
+func (s *StageSuggestion) GetStage() string {
+	return s.Stage
+}
+
+// GetSignal returns the value of Signal.
+func (s *StageSuggestion) GetSignal() string {
+	return s.Signal
+}
+
+// GetEmailID returns the value of EmailID.
+func (s *StageSuggestion) GetEmailID() int64 {
+	return s.EmailID
+}
+
+// SetStage sets the value of Stage.
+func (s *StageSuggestion) SetStage(val string) {
+	s.Stage = val
+}
+
+// SetSignal sets the value of Signal.
+func (s *StageSuggestion) SetSignal(val string) {
+	s.Signal = val
+}
+
+// SetEmailID sets the value of EmailID.
+func (s *StageSuggestion) SetEmailID(val int64) {
+	s.EmailID = val
+}
+
 // A single item: `{"data": ...}`.
 type StartBaseSessionOK struct {
 	Data CvBaseSession `json:"data"`
@@ -22476,12 +24958,11 @@ type Submission struct {
 	Remote      bool      `json:"remote"`
 	Description OptString `json:"description"`
 	// RFC 3339.
-	PostedAt OptString `json:"posted_at"`
-	// Pending, approved or rejected.
-	Status       string    `json:"status"`
-	ReviewReason OptString `json:"review_reason"`
-	ReviewedAt   OptString `json:"reviewed_at"`
-	CreatedAt    NilString `json:"created_at"`
+	PostedAt     OptString        `json:"posted_at"`
+	Status       SubmissionStatus `json:"status"`
+	ReviewReason OptString        `json:"review_reason"`
+	ReviewedAt   OptString        `json:"reviewed_at"`
+	CreatedAt    NilString        `json:"created_at"`
 	// Moderator queue only.
 	SubmitterEmail OptString `json:"submitter_email"`
 	// The minted vacancy's slug; on an approved submission in the caller's own list only.
@@ -22544,7 +25025,7 @@ func (s *Submission) GetPostedAt() OptString {
 }
 
 // GetStatus returns the value of Status.
-func (s *Submission) GetStatus() string {
+func (s *Submission) GetStatus() SubmissionStatus {
 	return s.Status
 }
 
@@ -22669,7 +25150,7 @@ func (s *Submission) SetPostedAt(val OptString) {
 }
 
 // SetStatus sets the value of Status.
-func (s *Submission) SetStatus(val string) {
+func (s *Submission) SetStatus(val SubmissionStatus) {
 	s.Status = val
 }
 
@@ -22868,12 +25349,19 @@ func (s *SubmissionPrefill) SetExistingJobSlug(val OptString) {
 // with a 400.
 // Ref: #/components/schemas/SubmissionRequest
 type SubmissionRequest struct {
-	URL         OptNilString `json:"url"`
-	Source      OptNilString `json:"source"`
-	Title       OptNilString `json:"title"`
-	Company     OptNilString `json:"company"`
-	Location    OptNilString `json:"location"`
-	Remote      OptNilBool   `json:"remote"`
+	// Link to the original posting. (e.g. `https://acme.com/careers/123`).
+	URL OptNilString `json:"url"`
+	// Origin hint (optional).
+	Source OptNilString `json:"source"`
+	// Job title. (e.g. `Senior Go Engineer`).
+	Title OptNilString `json:"title"`
+	// Company name. (e.g. `Acme`).
+	Company OptNilString `json:"company"`
+	// Free-text location. (e.g. `Remote — EU`).
+	Location OptNilString `json:"location"`
+	// Whether the role is remote. (e.g. `true`).
+	Remote OptNilBool `json:"remote"`
+	// Job description.
 	Description OptNilString `json:"description"`
 	// RFC 3339.
 	PostedAt       OptNilString      `json:"posted_at"`
@@ -23069,18 +25557,67 @@ func (s *SubmissionRequest) SetSalaryPeriod(val OptNilString) {
 	s.SalaryPeriod = val
 }
 
+// Ref: #/components/schemas/SubmissionStatus
+type SubmissionStatus string
+
+const (
+	SubmissionStatusPending  SubmissionStatus = "pending"
+	SubmissionStatusApproved SubmissionStatus = "approved"
+	SubmissionStatusRejected SubmissionStatus = "rejected"
+)
+
+// AllValues returns all SubmissionStatus values.
+func (SubmissionStatus) AllValues() []SubmissionStatus {
+	return []SubmissionStatus{
+		SubmissionStatusPending,
+		SubmissionStatusApproved,
+		SubmissionStatusRejected,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s SubmissionStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case SubmissionStatusPending:
+		return []byte(s), nil
+	case SubmissionStatusApproved:
+		return []byte(s), nil
+	case SubmissionStatusRejected:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *SubmissionStatus) UnmarshalText(data []byte) error {
+	switch SubmissionStatus(data) {
+	case SubmissionStatusPending:
+		*s = SubmissionStatusPending
+		return nil
+	case SubmissionStatusApproved:
+		*s = SubmissionStatusApproved
+		return nil
+	case SubmissionStatusRejected:
+		*s = SubmissionStatusRejected
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // A single item: `{"data": ...}`.
 type SubmitMentorProfileCreated struct {
-	Data MentorshipMentor `json:"data"`
+	Data MentorshipOwnMentor `json:"data"`
 }
 
 // GetData returns the value of Data.
-func (s *SubmitMentorProfileCreated) GetData() MentorshipMentor {
+func (s *SubmitMentorProfileCreated) GetData() MentorshipOwnMentor {
 	return s.Data
 }
 
 // SetData sets the value of Data.
-func (s *SubmitMentorProfileCreated) SetData(val MentorshipMentor) {
+func (s *SubmitMentorProfileCreated) SetData(val MentorshipOwnMentor) {
 	s.Data = val
 }
 
@@ -23157,6 +25694,7 @@ func (s *Subscription) SetCreatedAt(val NilDateTime) {
 
 // Ref: #/components/schemas/SubscriptionActive
 type SubscriptionActive struct {
+	// Whether the subscription is active. (e.g. `false`).
 	Active OptBool `json:"active"`
 }
 
@@ -23172,6 +25710,7 @@ func (s *SubscriptionActive) SetActive(val OptBool) {
 
 // Ref: #/components/schemas/SubscriptionCreate
 type SubscriptionCreate struct {
+	// The saved search to subscribe. (e.g. `2`).
 	SavedSearchID OptInt64 `json:"saved_search_id"`
 	// Defaults to telegram when empty.
 	Channel OptString `json:"channel"`
@@ -23485,13 +26024,20 @@ func (s *SupportSession) SetJobID(val OptInt64) {
 // The onboarding survey. Each field is optional.
 // Ref: #/components/schemas/SurveyResponses
 type SurveyResponses struct {
-	JobSearchStage    OptNilString      `json:"job_search_stage"`
+	// One of `not_started`, `searching`, `employed_looking`, `exploring`. (e.g. `searching`).
+	JobSearchStage OptNilString `json:"job_search_stage"`
+	// Any of `recruiter_contact`, `job_fit`, `remote_flexible`, `working_abroad`, `visa_sponsorship`,
+	// `technical_interviews`, `english`, `first_job`, `just_starting`, `other`. `just_starting` stands
+	// alone. Replaces the stored list. (e.g. `["technical_interviews"]`).
 	BiggestChallenges OptNilStringArray `json:"biggest_challenges"`
 	// Kept only while `other` is among the challenges.
-	BiggestChallengeNote  OptNilString `json:"biggest_challenge_note"`
-	CurrentIncomeAmount   OptNilInt64  `json:"current_income_amount"`
+	BiggestChallengeNote OptNilString `json:"biggest_challenge_note"`
+	// What you earn today, in the currency and period below. (e.g. `5000`).
+	CurrentIncomeAmount OptNilInt64 `json:"current_income_amount"`
+	// Three-letter ISO 4217 currency code. (e.g. `USD`).
 	CurrentIncomeCurrency OptNilString `json:"current_income_currency"`
-	CurrentIncomePeriod   OptNilString `json:"current_income_period"`
+	// Income period, e.g. `year`, `month`. (e.g. `month`).
+	CurrentIncomePeriod OptNilString `json:"current_income_period"`
 }
 
 // GetJobSearchStage returns the value of JobSearchStage.
@@ -23882,11 +26428,9 @@ func (s *TalentMember) SetHasPhoto(val bool) {
 	s.HasPhoto = val
 }
 
-// The caller's own place in the Talent Network.
 // Ref: #/components/schemas/TalentNetworkMembership
 type TalentNetworkMembership struct {
-	// `off` or `anonymous`.
-	TalentNetworkVisibility string `json:"talent_network_visibility"`
+	TalentNetworkVisibility TalentNetworkVisibility `json:"talent_network_visibility"`
 	// The handle in the member's public URL, once they have one.
 	TalentHandle OptString `json:"talent_handle"`
 	// Whether the catalogue shows the member right now.
@@ -23894,7 +26438,7 @@ type TalentNetworkMembership struct {
 }
 
 // GetTalentNetworkVisibility returns the value of TalentNetworkVisibility.
-func (s *TalentNetworkMembership) GetTalentNetworkVisibility() string {
+func (s *TalentNetworkMembership) GetTalentNetworkVisibility() TalentNetworkVisibility {
 	return s.TalentNetworkVisibility
 }
 
@@ -23909,7 +26453,7 @@ func (s *TalentNetworkMembership) GetListed() bool {
 }
 
 // SetTalentNetworkVisibility sets the value of TalentNetworkVisibility.
-func (s *TalentNetworkMembership) SetTalentNetworkVisibility(val string) {
+func (s *TalentNetworkMembership) SetTalentNetworkVisibility(val TalentNetworkVisibility) {
 	s.TalentNetworkVisibility = val
 }
 
@@ -23921,6 +26465,49 @@ func (s *TalentNetworkMembership) SetTalentHandle(val OptString) {
 // SetListed sets the value of Listed.
 func (s *TalentNetworkMembership) SetListed(val bool) {
 	s.Listed = val
+}
+
+// The caller's own place in the Talent Network.
+// Ref: #/components/schemas/TalentNetworkVisibility
+type TalentNetworkVisibility string
+
+const (
+	TalentNetworkVisibilityOff       TalentNetworkVisibility = "off"
+	TalentNetworkVisibilityAnonymous TalentNetworkVisibility = "anonymous"
+)
+
+// AllValues returns all TalentNetworkVisibility values.
+func (TalentNetworkVisibility) AllValues() []TalentNetworkVisibility {
+	return []TalentNetworkVisibility{
+		TalentNetworkVisibilityOff,
+		TalentNetworkVisibilityAnonymous,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s TalentNetworkVisibility) MarshalText() ([]byte, error) {
+	switch s {
+	case TalentNetworkVisibilityOff:
+		return []byte(s), nil
+	case TalentNetworkVisibilityAnonymous:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *TalentNetworkVisibility) UnmarshalText(data []byte) error {
+	switch TalentNetworkVisibility(data) {
+	case TalentNetworkVisibilityOff:
+		*s = TalentNetworkVisibilityOff
+		return nil
+	case TalentNetworkVisibilityAnonymous:
+		*s = TalentNetworkVisibilityAnonymous
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/TalentNetworkVisibilityUpdate
@@ -24036,18 +26623,17 @@ func (s *TestPushTokenOK) SetData(val PushTokenTestResult) {
 	s.Data = val
 }
 
-// The author is the persona handle, "AI" for a system reply or "[deleted]" once the account is gone.
 // Ref: #/components/schemas/Thread
 type Thread struct {
-	ID          int64     `json:"id"`
-	SubjectType string    `json:"subject_type"`
-	SubjectSlug string    `json:"subject_slug"`
-	Title       string    `json:"title"`
-	Body        string    `json:"body"`
-	Author      string    `json:"author"`
-	ReplyCount  int64     `json:"reply_count"`
-	Status      string    `json:"status"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int64             `json:"id"`
+	SubjectType ThreadSubjectType `json:"subject_type"`
+	SubjectSlug string            `json:"subject_slug"`
+	Title       string            `json:"title"`
+	Body        string            `json:"body"`
+	Author      string            `json:"author"`
+	ReplyCount  int64             `json:"reply_count"`
+	Status      ThreadStatus      `json:"status"`
+	CreatedAt   time.Time         `json:"created_at"`
 }
 
 // GetID returns the value of ID.
@@ -24056,7 +26642,7 @@ func (s *Thread) GetID() int64 {
 }
 
 // GetSubjectType returns the value of SubjectType.
-func (s *Thread) GetSubjectType() string {
+func (s *Thread) GetSubjectType() ThreadSubjectType {
 	return s.SubjectType
 }
 
@@ -24086,7 +26672,7 @@ func (s *Thread) GetReplyCount() int64 {
 }
 
 // GetStatus returns the value of Status.
-func (s *Thread) GetStatus() string {
+func (s *Thread) GetStatus() ThreadStatus {
 	return s.Status
 }
 
@@ -24101,7 +26687,7 @@ func (s *Thread) SetID(val int64) {
 }
 
 // SetSubjectType sets the value of SubjectType.
-func (s *Thread) SetSubjectType(val string) {
+func (s *Thread) SetSubjectType(val ThreadSubjectType) {
 	s.SubjectType = val
 }
 
@@ -24131,7 +26717,7 @@ func (s *Thread) SetReplyCount(val int64) {
 }
 
 // SetStatus sets the value of Status.
-func (s *Thread) SetStatus(val string) {
+func (s *Thread) SetStatus(val ThreadStatus) {
 	s.Status = val
 }
 
@@ -24142,8 +26728,8 @@ func (s *Thread) SetCreatedAt(val time.Time) {
 
 // Ref: #/components/schemas/ThreadClosed
 type ThreadClosed struct {
-	ID     int64  `json:"id"`
-	Status string `json:"status"`
+	ID     int64        `json:"id"`
+	Status ThreadStatus `json:"status"`
 }
 
 // GetID returns the value of ID.
@@ -24152,7 +26738,7 @@ func (s *ThreadClosed) GetID() int64 {
 }
 
 // GetStatus returns the value of Status.
-func (s *ThreadClosed) GetStatus() string {
+func (s *ThreadClosed) GetStatus() ThreadStatus {
 	return s.Status
 }
 
@@ -24162,7 +26748,7 @@ func (s *ThreadClosed) SetID(val int64) {
 }
 
 // SetStatus sets the value of Status.
-func (s *ThreadClosed) SetStatus(val string) {
+func (s *ThreadClosed) SetStatus(val ThreadStatus) {
 	s.Status = val
 }
 
@@ -24317,6 +26903,92 @@ func (s *ThreadReply) SetBody(val string) {
 // SetCreatedAt sets the value of CreatedAt.
 func (s *ThreadReply) SetCreatedAt(val time.Time) {
 	s.CreatedAt = val
+}
+
+// A thread is open until a moderator closes it.
+// Ref: #/components/schemas/ThreadStatus
+type ThreadStatus string
+
+const (
+	ThreadStatusOpen   ThreadStatus = "open"
+	ThreadStatusClosed ThreadStatus = "closed"
+)
+
+// AllValues returns all ThreadStatus values.
+func (ThreadStatus) AllValues() []ThreadStatus {
+	return []ThreadStatus{
+		ThreadStatusOpen,
+		ThreadStatusClosed,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ThreadStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case ThreadStatusOpen:
+		return []byte(s), nil
+	case ThreadStatusClosed:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ThreadStatus) UnmarshalText(data []byte) error {
+	switch ThreadStatus(data) {
+	case ThreadStatusOpen:
+		*s = ThreadStatusOpen
+		return nil
+	case ThreadStatusClosed:
+		*s = ThreadStatusClosed
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// The author is the persona handle, "AI" for a system reply or "[deleted]" once the account is gone.
+// Ref: #/components/schemas/ThreadSubjectType
+type ThreadSubjectType string
+
+const (
+	ThreadSubjectTypeCompany ThreadSubjectType = "company"
+	ThreadSubjectTypeJob     ThreadSubjectType = "job"
+)
+
+// AllValues returns all ThreadSubjectType values.
+func (ThreadSubjectType) AllValues() []ThreadSubjectType {
+	return []ThreadSubjectType{
+		ThreadSubjectTypeCompany,
+		ThreadSubjectTypeJob,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ThreadSubjectType) MarshalText() ([]byte, error) {
+	switch s {
+	case ThreadSubjectTypeCompany:
+		return []byte(s), nil
+	case ThreadSubjectTypeJob:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ThreadSubjectType) UnmarshalText(data []byte) error {
+	switch ThreadSubjectType(data) {
+	case ThreadSubjectTypeCompany:
+		*s = ThreadSubjectTypeCompany
+		return nil
+	case ThreadSubjectTypeJob:
+		*s = ThreadSubjectTypeJob
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/ThreadWithReplies
@@ -24539,7 +27211,9 @@ func (s *TrackApplicationOK) SetData(val Interaction) {
 // At least one of the two is required. A field left out or null keeps the stored value.
 // Ref: #/components/schemas/TrackJob
 type TrackJob struct {
+	// Application stage from the vocabulary above. (e.g. `interview`).
 	Stage OptNilString `json:"stage"`
+	// Free-text notes.
 	Notes OptNilString `json:"notes"`
 }
 
@@ -24594,13 +27268,13 @@ type TrackedJob struct {
 	Notes      NilString   `json:"notes"`
 	EmailCount int64       `json:"email_count"`
 	// The silence fields are null together on any row that is not awaiting a reply.
-	LastActivityAt NilDateTime `json:"last_activity_at"`
-	DaysSilent     NilInt64    `json:"days_silent"`
-	SilenceState   NilString   `json:"silence_state"`
-	FollowedUpAt   NilDateTime `json:"followed_up_at"`
-	CvOpenedAt     NilDateTime `json:"cv_opened_at"`
+	LastActivityAt NilDateTime     `json:"last_activity_at"`
+	DaysSilent     NilInt64        `json:"days_silent"`
+	SilenceState   NilSilenceState `json:"silence_state"`
+	FollowedUpAt   NilDateTime     `json:"followed_up_at"`
+	CvOpenedAt     NilDateTime     `json:"cv_opened_at"`
 	// The status of this job's live auto-apply attempt; absent when it has none.
-	AutoApplyStatus OptString `json:"auto_apply_status"`
+	AutoApplyStatus OptAutoApplyReviewStatus `json:"auto_apply_status"`
 }
 
 // GetAddedToBoardAt returns the value of AddedToBoardAt.
@@ -24669,7 +27343,7 @@ func (s *TrackedJob) GetDaysSilent() NilInt64 {
 }
 
 // GetSilenceState returns the value of SilenceState.
-func (s *TrackedJob) GetSilenceState() NilString {
+func (s *TrackedJob) GetSilenceState() NilSilenceState {
 	return s.SilenceState
 }
 
@@ -24684,7 +27358,7 @@ func (s *TrackedJob) GetCvOpenedAt() NilDateTime {
 }
 
 // GetAutoApplyStatus returns the value of AutoApplyStatus.
-func (s *TrackedJob) GetAutoApplyStatus() OptString {
+func (s *TrackedJob) GetAutoApplyStatus() OptAutoApplyReviewStatus {
 	return s.AutoApplyStatus
 }
 
@@ -24754,7 +27428,7 @@ func (s *TrackedJob) SetDaysSilent(val NilInt64) {
 }
 
 // SetSilenceState sets the value of SilenceState.
-func (s *TrackedJob) SetSilenceState(val NilString) {
+func (s *TrackedJob) SetSilenceState(val NilSilenceState) {
 	s.SilenceState = val
 }
 
@@ -24769,7 +27443,7 @@ func (s *TrackedJob) SetCvOpenedAt(val NilDateTime) {
 }
 
 // SetAutoApplyStatus sets the value of AutoApplyStatus.
-func (s *TrackedJob) SetAutoApplyStatus(val OptString) {
+func (s *TrackedJob) SetAutoApplyStatus(val OptAutoApplyReviewStatus) {
 	s.AutoApplyStatus = val
 }
 
@@ -25243,16 +27917,16 @@ func (s *UpdateLanguageOK) SetData(val AuthUser) {
 
 // A single item: `{"data": ...}`.
 type UpdateMentorProfileOK struct {
-	Data MentorshipMentor `json:"data"`
+	Data MentorshipOwnMentor `json:"data"`
 }
 
 // GetData returns the value of Data.
-func (s *UpdateMentorProfileOK) GetData() MentorshipMentor {
+func (s *UpdateMentorProfileOK) GetData() MentorshipOwnMentor {
 	return s.Data
 }
 
 // SetData sets the value of Data.
-func (s *UpdateMentorProfileOK) SetData(val MentorshipMentor) {
+func (s *UpdateMentorProfileOK) SetData(val MentorshipOwnMentor) {
 	s.Data = val
 }
 

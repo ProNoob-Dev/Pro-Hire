@@ -16,7 +16,6 @@ import (
 
 	"github.com/strelov1/freehire/internal/ai/assistant"
 	"github.com/strelov1/freehire/internal/api/mcpapp"
-	"github.com/strelov1/freehire/internal/application/agentview"
 	"github.com/strelov1/freehire/internal/job/jobview"
 	"github.com/strelov1/freehire/internal/platform/db"
 	"github.com/strelov1/freehire/internal/platform/llm"
@@ -38,8 +37,8 @@ const assistantDefaultSearchLimit = 10
 func (h *assistantHandlers) assistantDiscoveryTools() []assistant.Tool {
 	return []assistant.Tool{
 		h.getProfileTool(),
-		h.facetsTool(),
-		h.searchJobsTool(),
+		h.facets(true),
+		h.searchJobs(),
 		h.getJobTool(),
 		h.getCompanyTool(),
 		h.marketFitTool(),
@@ -112,14 +111,6 @@ func assistantFacetNames() []string {
 	return out
 }
 
-// facetsTool reports the live filter vocabulary — every facet's values with a
-// vacancy count each, plus the numeric ranges. It is the tool the agent is told to
-// call before filtering, so its filter values and skill slugs are the market's own
-// rather than invented.
-func (h *assistantHandlers) facetsTool() assistant.Tool {
-	return h.facets(true)
-}
-
 // facets builds the facets tool. full lists every value for the in-app assistant, whose turn
 // caps a tool result. An MCP client caps nothing and keeps every answer in its context,
 // where the whole vocabulary ran to ~125 KB (2026-11-05) — metros, cities, skills and
@@ -157,7 +148,7 @@ func (h *assistantHandlers) facets(full bool) assistant.Tool {
 				return nil, err
 			}
 			if h.search == nil || h.search.facets == nil {
-				return nil, fiber.NewError(fiber.StatusServiceUnavailable, "search is not available")
+				return nil, unavailable("search")
 			}
 			vals, err := in.Filters.values()
 			if err != nil {
@@ -267,31 +258,15 @@ func facetIndex(view facetPayload, facet, contains string) map[string]any {
 	return map[string]any{"total": view.Total, "facet": facet, "values": values}
 }
 
-// searchJobsTool searches the catalogue with a keyword and facet filters, hitting
-// the same index the public search does and rehydrating each result's full
-// description so the agent screens a whole set in one call.
-func (h *assistantHandlers) searchJobsTool() assistant.Tool {
-	return h.searchJobs(true)
-}
-
-// mcpSearchExcerptRunes bounds the description each MCP search result carries.
+// mcpSearchExcerptRunes bounds the description each vacancy in get_company's page carries.
 const mcpSearchExcerptRunes = 400
 
-// searchJobs builds search_jobs. full rehydrates each result's whole description for the
-// in-app assistant, whose turn caps a tool result. An MCP client caps nothing and keeps
-// every answer in its context, where ten full descriptions ran to ~130 KB (2026-11-05),
-// so MCP gets the opening of each from the index preview and reads the rest via get_job.
-func (h *assistantHandlers) searchJobs(full bool) assistant.Tool {
+// searchJobs builds search_jobs for the in-app assistant: each result's whole description is
+// rehydrated, since its turn caps a tool result. MCP serves the catalogue's own search_jobs.
+func (h *assistantHandlers) searchJobs() assistant.Tool {
 	description := "Search open vacancies by keyword and facet filters. Every result carries its full " +
 		"description as markdown and its public_slug — link a vacancy as https://freehire.me/jobs/<public_slug>. " +
 		"Take filter names and values from the facets tool."
-	if !full {
-		// No other tool is named here: the Claude directory policy keeps cross-tool guidance
-		// out of tool descriptions (see mcpapp's TestNoToolDescriptionDirectsTheModelToAnotherTool).
-		description = "Search open vacancies by keyword and facet filters. Every result carries the first " +
-			"400 characters of its description as markdown and its public_slug. " +
-			"Link a vacancy as https://freehire.me/jobs/<public_slug>."
-	}
 	return assistant.Tool{
 		Name:        "search_jobs",
 		Title:       "Search jobs",
@@ -329,7 +304,7 @@ func (h *assistantHandlers) searchJobs(full bool) assistant.Tool {
 				return nil, err
 			}
 			if h.search == nil || h.search.search == nil {
-				return nil, fiber.NewError(fiber.StatusServiceUnavailable, "search is not available")
+				return nil, unavailable("search")
 			}
 			vals, err := in.Filters.values()
 			if err != nil {
@@ -353,36 +328,15 @@ func (h *assistantHandlers) searchJobs(full bool) assistant.Tool {
 				vals.Set("skills_mode", "and")
 			}
 
-			limit := in.Limit
-			if limit <= 0 {
-				limit = assistantDefaultSearchLimit
-			}
-			limit = min(limit, assistantMaxSearchLimit)
-			offset := max(in.Offset, 0)
-
-			res, err := h.search.search.Search(ctx, search.SearchParams{
-				Query:  in.Query,
-				Filter: search.FilterFromValues(vals),
-				Sort:   defaultSort(in.Query),
-				Limit:  limit,
-				Offset: offset,
-			})
+			limit, offset := toolPage(in.Limit, in.Offset)
+			vals.Set("q", in.Query)
+			res, _, err := runAgentSearch(ctx, h.search.search, vals, limit, offset, false)
 			if err != nil {
 				return nil, searchToolError(err)
 			}
-			if full {
-				if err := h.search.hydrateDescriptions(ctx, res.Hits); err != nil {
-					return nil, err
-				}
-			}
-			agentview.Record(ctx, agentview.KindSearch, hitIDs(res.Hits))
-			jobs := make([]jobview.Job, len(res.Hits))
-			for i, hit := range res.Hits {
-				hit.Description = formatDescription(hit.Description, "markdown")
-				if !full {
-					hit.Description = llm.ClipRunesEllipsis(hit.Description, mcpSearchExcerptRunes)
-				}
-				jobs[i] = hit.Job
+			jobs, err := h.search.markdownJobs(ctx, res.Hits)
+			if err != nil {
+				return nil, err
 			}
 			return map[string]any{"total": res.Total, "limit": limit, "offset": offset, "jobs": jobs}, nil
 		},
@@ -427,7 +381,7 @@ func (h *assistantHandlers) getJobTool() assistant.Tool {
 		Description: "Read one vacancy in full by its public_slug.",
 		Schema: map[string]any{
 			"type":       "object",
-			"properties": map[string]any{"slug": map[string]any{"type": "string", "description": "The vacancy's public_slug."}},
+			"properties": map[string]any{"slug": vacancySlugProperty},
 			"required":   []string{"slug"},
 		},
 		Run: func(ctx context.Context, _ int64, raw json.RawMessage) (any, error) {
@@ -440,14 +394,11 @@ func (h *assistantHandlers) getJobTool() assistant.Tool {
 			if in.Slug == "" {
 				return nil, assistant.BadArg("slug", fiber.NewError(fiber.StatusBadRequest, "slug is required"))
 			}
-			job, err := agentJobBySlug(ctx, h.queries, in.Slug)
+			_, view, err := loadAgentJob(ctx, func(ctx context.Context, slug string) (db.Job, error) {
+				return agentJobBySlug(ctx, h.queries, slug)
+			}, nil, in.Slug)
 			if err != nil {
-				return nil, lookupMiss(err, fmt.Sprintf("no vacancy with slug %q", in.Slug))
-			}
-			agentview.Record(ctx, agentview.KindDetail, []int64{job.ID})
-			view, err := jobview.FromRow(job)
-			if err != nil {
-				return nil, err
+				return nil, lookupMiss(err, jobNotFound(in.Slug).Error())
 			}
 			view.Description = formatDescription(view.Description, "markdown")
 			return view, nil
@@ -534,7 +485,7 @@ func (h *assistantHandlers) marketFitTool() assistant.Tool {
 				return nil, err
 			}
 			if h.search == nil || h.search.facets == nil {
-				return nil, fiber.NewError(fiber.StatusServiceUnavailable, "search is not available")
+				return nil, unavailable("search")
 			}
 			skills := nonEmptyStrings(in.Skills)
 			if len(skills) == 0 {

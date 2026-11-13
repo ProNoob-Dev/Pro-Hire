@@ -1,6 +1,8 @@
 import "@typespec/http";
+import "@typespec/openapi";
 
 using Http;
+using TypeSpec.OpenAPI;
 
 namespace Freehire;
 
@@ -19,9 +21,14 @@ model BanRequest {
   reason?: string;
 }
 
+/** What a candidate can report about a company's hiring (vocab.CompanyProcessReportKindValues). */
+enum ProcessReportKind {
+  ai_interview,
+}
+
 /** What a person reported about a company's hiring process. */
 model ProcessReport {
-  kind: string;
+  kind: ProcessReportKind;
 
   /** How many people have reported this kind for the company. */
   count: int64;
@@ -34,16 +41,19 @@ model ProcessReportRequest {
 // Moderators only (session cookie and the moderator role): look up an account by id,
 // email or username, and ban or unban it. An admin cannot be banned, nor can the caller.
 
+@extension("x-audience", "moderator")
 @tag("Moderation")
 @route("/moderation/users")
 @get
 op findModeratedUser(@query q?: string): Data<ModeratedUser> | Problem;
 
+@extension("x-audience", "moderator")
 @tag("Moderation")
 @route("/moderation/users/{id}/ban")
 @post
 op banUser(@path id: string, @body body: BanRequest): Data<ModeratedUser> | Problem;
 
+@extension("x-audience", "moderator")
 @tag("Moderation")
 @route("/moderation/users/{id}/unban")
 @post

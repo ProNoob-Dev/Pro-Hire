@@ -1,6 +1,8 @@
 import "@typespec/http";
+import "@typespec/openapi";
 
 using Http;
+using TypeSpec.OpenAPI;
 
 namespace Freehire;
 
@@ -9,13 +11,19 @@ namespace Freehire;
 // review of a claim. A vacancy is the shared job view (internal/job/jobview), whose wide
 // shape belongs to search too, so it travels as an opaque value.
 
+enum EmployerAccountStatus {
+  pending,
+  active,
+  revoked,
+}
+
 /** A company account. `user_id` is the address the moderator and admin actions take. */
 model EmployerAccount {
   user_id: int64;
   company_slug: string;
   company_name: string;
   work_email: string;
-  status: string;
+  status: EmployerAccountStatus;
   verified_at?: utcDateTime;
 
   /** Whether the claimant still owes the mailed code or is waiting on a moderator. */
@@ -170,18 +178,21 @@ op closeEmployerVacancy(@path slug: string): Data<EmployerClosed> | Problem;
 op reopenEmployerVacancy(@path slug: string): Data<EmployerClosed> | Problem;
 
 /** Moderators only: the claims that could not auto-activate. */
+@extension("x-audience", "moderator")
 @tag("Employer")
 @route("/employer/claims")
 @get
 op listEmployerPendingClaims(): Data<EmployerAccount[]> | Problem;
 
 /** Moderators only. The user id travels as a string so a non-number keeps its 400. */
+@extension("x-audience", "moderator")
 @tag("Employer")
 @route("/employer/claims/{user_id}/approve")
 @post
 op approveEmployerClaim(@path user_id: string): Data<EmployerAccount> | Problem;
 
 /** Moderators only. */
+@extension("x-audience", "moderator")
 @tag("Employer")
 @route("/employer/claims/{user_id}/reject")
 @post

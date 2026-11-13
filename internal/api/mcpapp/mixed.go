@@ -23,6 +23,10 @@ const MixedResourceMetadataPath = "/.well-known/oauth-protected-resource/api/v1/
 // so it can offer Connect instead of buttons that would fail.
 const accountMetaKey = "freehire.me/account"
 
+// catalogueOwned are the in-app assistant tool names the public catalogue tools serve instead,
+// with their own schemas, previews and widgets.
+var catalogueOwned = map[string]bool{toolSearchJobs: true, toolGetJob: true, toolGetCompany: true}
+
 func mixedChallenge(origin string) string {
 	return `Bearer resource_metadata="` + strings.TrimSuffix(origin, "/") + MixedResourceMetadataPath +
 		`", error="insufficient_scope", error_description="Sign in to Freehire to use personal tools"`
@@ -47,7 +51,14 @@ func stampsAccount(signedIn bool) mcp.Middleware {
 	}
 }
 
-func newMixedServer(tools []assistant.Tool, userID int64, origin string, reader Reader) *mcp.Server {
+// cliSessionInstructions ends the instructions of a session the freehire CLI opened
+// (`freehire mcp`). Such an agent has a shell, so work that would flood its context —
+// whole result sets, a PDF — can go to disk through the CLI instead; nothing else tells
+// the agent the CLI is there. It names CLI commands, not tools, and grants nothing.
+const cliSessionInstructions = "The freehire CLI is on this shell: `freehire search <query> --json > jobs.json` " +
+	"saves whole results with full descriptions to grep; `freehire cv render <id> --out cv.pdf` writes the CV PDF."
+
+func newMixedServer(tools []assistant.Tool, userID int64, origin string, reader Reader, viaCLI bool) *mcp.Server {
 	instructions := "Public catalogue tools work without signing in. Personal tools require OAuth for this account. " +
 		"Geography filters form a union. "
 	// An anonymous connection must not be told to call get_profile first: the call would
@@ -57,8 +68,11 @@ func newMixedServer(tools []assistant.Tool, userID int64, origin string, reader 
 	if userID == 0 {
 		described = slices.DeleteFunc(slices.Clone(tools), func(t assistant.Tool) bool { return t.Name == "get_profile" })
 	}
-	account := accountInstructions(described)
-	instructions += strings.TrimPrefix(account, accountServerInstructions)
+	instructions += accountInstructions(described)
+	if viaCLI {
+		// The account paragraphs do not all end in a space (report_problem's does not).
+		instructions = strings.TrimRight(instructions, " ") + " " + cliSessionInstructions
+	}
 	if userID == 0 {
 		reader = forAnonymous(reader)
 	}
@@ -73,8 +87,7 @@ func newMixedServer(tools []assistant.Tool, userID int64, origin string, reader 
 	}
 	for _, tool := range tools {
 		// Preserve the public schemas, previews and widgets on the canonical endpoint.
-		switch tool.Name {
-		case toolSearchJobs, toolGetJob, toolGetCompany:
+		if catalogueOwned[tool.Name] {
 			continue
 		}
 		handler := accountToolHandler(tool, userID)
@@ -112,12 +125,8 @@ func newMixedServer(tools []assistant.Tool, userID int64, origin string, reader 
 func MixedHandler(tools []assistant.Tool, origin string, reader Reader) http.Handler {
 	personal := map[string]bool{}
 	for _, tool := range tools {
-		personal[tool.Name] = true
+		personal[tool.Name] = !catalogueOwned[tool.Name]
 	}
-	// These names are served by the public catalogue tools instead.
-	delete(personal, toolSearchJobs)
-	delete(personal, toolGetJob)
-	delete(personal, toolGetCompany)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(AccountUserIDHeader) == "" && signsInOnlyAtConnect(r.Header.Get("User-Agent")) {
 			w.Header().Set("WWW-Authenticate", mixedChallenge(origin))
@@ -153,9 +162,10 @@ func MixedHandler(tools []assistant.Tool, origin string, reader Reader) http.Han
 			}
 			userID = parsed
 		}
-		mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
-			return newMixedServer(tools, userID, origin, reader)
-		}, &mcp.StreamableHTTPOptions{Stateless: true}).ServeHTTP(w, r)
+		viaCLI := strings.HasPrefix(r.Header.Get("User-Agent"), "freehire-cli/")
+		StatelessHandler(func() *mcp.Server {
+			return newMixedServer(tools, userID, origin, reader, viaCLI)
+		}).ServeHTTP(w, r)
 	})
 }
 

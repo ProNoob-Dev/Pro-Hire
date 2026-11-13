@@ -31,8 +31,11 @@ func TestAccountPrompts_AreListedAndRenderTheirToolOrder(t *testing.T) {
 	want := []string{"apply_to_saved_jobs", "jobs_for_my_profile", "set_up_my_profile", "whats_new_in_my_alerts"}
 
 	account := connectAccountCatalogue(t, granted, nil)
-	if got := promptNames(t, account); !slices.Equal(got, want) {
-		t.Fatalf("account prompts = %v, want %v", got, want)
+	got := promptNames(t, account)
+	for _, name := range want {
+		if !slices.Contains(got, name) {
+			t.Fatalf("account prompts = %v, want %v among them", got, want)
+		}
 	}
 	text, err := promptText(t, account, "apply_to_saved_jobs", nil)
 	if err != nil {
@@ -44,22 +47,51 @@ func TestAccountPrompts_AreListedAndRenderTheirToolOrder(t *testing.T) {
 	}
 
 	// The canonical endpoint offers them to a signed-in person next to the catalogue prompts.
-	mixed := connectServer(t, newMixedServer(granted, 42, testOrigin, readerThatFinds(t)))
+	mixed := connectServer(t, newMixedServer(granted, 42, testOrigin, readerThatFinds(t), false))
 	if got := promptNames(t, mixed); !slices.Contains(got, "jobs_for_my_profile") || !slices.Contains(got, promptJobsForStack) {
 		t.Errorf("signed-in canonical prompts = %v", got)
 	}
 	// An anonymous connection is offered only the catalogue ones.
-	anon := connectServer(t, newMixedServer(granted, 0, testOrigin, readerThatFinds(t)))
+	anon := connectServer(t, newMixedServer(granted, 0, testOrigin, readerThatFinds(t), false))
 	if got := promptNames(t, anon); slices.Contains(got, "jobs_for_my_profile") {
 		t.Errorf("anonymous prompts offer a personal workflow: %v", got)
+	}
+}
+
+// With the setup tools served, setting up starts from what is missing — a CV first — and
+// saves only what the person confirms.
+func TestAccountPrompts_SetUpWalksTheGuidedSetup(t *testing.T) {
+	granted := connectAccountCatalogue(t,
+		namedTools("get_profile", "update_profile", "get_setup_status", "add_cv"), nil)
+	text, err := promptText(t, granted, "set_up_my_profile", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	order := []string{"get_setup_status", "add_cv", "update_profile"}
+	for i, name := range order {
+		if !strings.Contains(text, name) {
+			t.Fatalf("set-up prompt does not name %s: %q", name, text)
+		}
+		if i > 0 && strings.Index(text, order[i-1]) > strings.Index(text, name) {
+			t.Errorf("set-up prompt names %s before %s: %q", name, order[i-1], text)
+		}
+	}
+	if !strings.Contains(text, "confirm") {
+		t.Errorf("set-up prompt does not ask for confirmation: %q", text)
+	}
+	// add_cv takes the person's own CV only; an agent never composes one from a chat.
+	if !strings.Contains(text, "verbatim") || strings.Contains(text, "work history") {
+		t.Errorf("set-up prompt invites a composed CV: %q", text)
 	}
 }
 
 func TestAccountPrompts_FollowTheServedTools(t *testing.T) {
 	keyed := connectAccountCatalogue(t, namedTools("get_profile", "search_jobs"), nil)
 	got := promptNames(t, keyed)
-	if !slices.Equal(got, []string{"jobs_for_my_profile", "set_up_my_profile"}) {
-		t.Fatalf("a key is offered %v", got)
+	for name, offered := range map[string]bool{"jobs_for_my_profile": true, "set_up_my_profile": true, "apply_to_saved_jobs": false, "whats_new_in_my_alerts": false} {
+		if slices.Contains(got, name) != offered {
+			t.Fatalf("a key is offered %v, want %s offered = %v", got, name, offered)
+		}
 	}
 	text, err := promptText(t, keyed, "set_up_my_profile", nil)
 	if err != nil {

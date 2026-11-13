@@ -2,7 +2,7 @@
 
 The canonical MCP at `/api/v1/mcp` combines anonymous catalogue reads with
 OAuth account tools (`mixed.go`). Anonymous and OAuth sessions discover the same
-54 tools; personal calls without authentication never reach business code.
+56 tools; personal calls without authentication never reach business code.
 ChatGPT (User-Agent `openai-mcp`) gets an error result carrying `mcp/www_authenticate`,
 the in-band challenge its Apps SDK opens sign-in from. Every other host gets HTTP 401 with
 `WWW-Authenticate`, because Grok and Claude.ai ignore the in-band challenge and open sign-in
@@ -15,10 +15,11 @@ widget shows one Connect panel instead of per-card buttons that would fail.
 Per-tool `_meta.securitySchemes` declares access.
 
 The eleven catalogue tools retain their public schemas, previews and widgets.
-The strict bearer-only `/api/v1/mcp/account` alias (`account.go`) retains its
-legacy account `search_jobs`, `get_job` and `get_company` schemas. Both reuse the
-in-app assistant's personal handlers and the catalogue `Reader`; avoid changing
-one endpoint's schemas to match the other.
+`/api/v1/mcp/account` is the same server (`MixedHandler`) at its original URL, kept for
+existing connectors; the only difference is that its Fiber middleware requires a bearer
+credential, so it is signed-in only and never anonymous. There is one server and one
+tool list: the in-app assistant's own `search_jobs`, `get_job` and `get_company` are
+never registered here (`catalogueOwned`), the catalogue's are.
 
 Fiber authentication in `internal/api/handler/mcpapp_account.go` clears external
 `AccountUserIDHeader` values before resolving credentials, including anonymous
@@ -34,8 +35,29 @@ suggestions, problem reports and the interview-buddy tools. Dictionary suggestio
 buddy tools (`internal/api/handler/buddy_mcp_tools.go`: membership, mock hosts, slots,
 booking, cancelling and the hosting schedule) preserve the cookie-only REST gate, and so does
 `update_profile` (`assistant_profile_write_tool.go`: a partial update of the saved job-search
-profile: preferences plus the headline and summary text, never a CV document); problem
-reports use the signed-in agent's reporting workflow. A narrow (`cv`) key is a 403.
+profile: preferences plus the headline and summary text, never a CV document), and so do
+the guided-setup tools below; problem reports use the signed-in agent's reporting workflow.
+A narrow (`cv`) key is a 403.
+
+## Guided setup: `get_setup_status` and `add_cv`
+
+For a person who connects before uploading a CV (`internal/api/handler/assistant_setup_status_tool.go`,
+`assistant_cv_add_tool.go`, openspec/changes/mcp-cv-setup). `get_setup_status` derives, on every
+call and from existing state only, the steps `cv` → `preferences` → `alerts` → optional
+`paid_plan` and `agents_may_apply`, and ONE `next_step` (a tool or a page URL) — always a core
+step; once those are done it is `search_jobs`. `add_cv` takes the person's OWN CV, verbatim, as
+text (100–30,000 characters) — a CV they pasted or a CV file they gave the agent, never one an
+agent composed or summarised; a person with no CV is sent to `/my/profile`. It goes through
+`storeFirstCV`, the website's own upload use case — so the stored document, the free extraction
+(`plan.WithFreeAI`, set inside the derivation) and the experience import are a paste on the
+profile page, including its skills merge: once the work history is read, skills found in it are
+added to the profile's skills (removable with `update_profile`). Its atoms are `cv_import`,
+which is honest only because the text is the person's CV document. It refuses an account that
+already has a CV (409) — replacing the person's document stays a website act — under the
+per-user upload lock (`resume.Store.PutIfAbsent`, `pg_advisory_xact_lock`) every upload takes,
+so a concurrent website upload or second call cannot slip between the check and the write. It
+returns suggested `specializations`/`seniorities`/`skills` that `update_profile` saves once
+confirmed.
 
 OAuth clients use `suggest_dictionary_term` when a user-requested specialization, skill
 or company industry cannot be resolved; zero search hits alone do not prove a gap.
@@ -76,8 +98,19 @@ Both results carry one short `next` sentence (`next.go`): signed in, the follow-
 tools the session is actually served (an API key has no auto-apply); signed out, a pointer at
 signing in instead of tools it cannot call. It is the same text for every call of a session
 and once per response, never per job: the result is replayed into the model's context every
-turn. On the typed catalogue tools it is a plain struct field; on the account server's untyped
-tools `withNext` adds it to the JSON object.
+turn. It is a plain struct field of the typed catalogue tools.
+
+## A session the freehire CLI opened
+
+`freehire mcp` (in the `freehire-cli` repository) runs the canonical endpoint over stdio
+for local hosts, and the CLI's client sends `User-Agent: freehire-cli/<version>`. For that
+User-Agent alone `MixedHandler` appends `cliSessionInstructions`: the CLI is on the agent's
+shell, so whole result sets (`freehire search … --json`, which reads `/agent/jobs/search`
+with full descriptions) and the CV PDF go to disk rather than into context. That is why
+the MCP results here can stay bounded. It lives in the instructions, not in `next`: having
+a shell is a fact about the session, and `next` is replayed with every result. It names
+CLI commands, never a tool, so the directory policy below does not apply; it has its own
+256-character budget, outside the 720 every host reads.
 
 ## Why there are two MCP servers
 
@@ -124,14 +157,14 @@ carries no description vectors, so the request is answered by keywords and the r
   bodies is what it is for. Here ten of those in one turn is the context window spent on
   text the model reduces to a line each. `summaryMaxChars` bounds the preview here rather
   than trusting the caller, because the bound is a property of this tool and not of whoever
-  filled the field. The signed-in server takes its `search_jobs` from the in-app assistant,
-  whose own copy rehydrates; `mcpKeyTools` (which `mcpAccountTools` builds on, so OAuth
-  grants and API keys alike) serves `searchJobs(false)` instead — the index preview clipped
-  to the same 400 runes. Before 2026-11-05 it served the rehydrating copy, ~130 KB a call.
-  `facets` follows the same split: `facets(false)` answers with the filter names and how many
-  values each has, and lists one filter's values when named in `facet` (narrowed by
+  filled the field. The in-app assistant's own copy
+  rehydrates and is never served over MCP: the catalogue's `search_jobs`
+  answers there, with the index preview. Before 2026-11-05 MCP served the rehydrating copy,
+  ~130 KB a call. The signed-in `facets` is bounded the same way: `mcpKeyTools` swaps in
+  `facets(false)`, which answers with the filter names and how many values each has, and lists one filter's values when named in `facet` (narrowed by
   `contains`, which shares `ContainsMatcher` with `list_filter_values`). The whole vocabulary
-  was ~125 KB, and `list_filter_values` does not cover every facet, metros among them.
+  was ~125 KB. `facets` stays beside `list_filter_values` because the latter does not cover every
+  facet: metros, `company_slug`, the boolean facets and the numeric ranges (`stats`) are only here.
 - **Publish a link we cannot vouch for.** `official_job_url` is filled only for a provider in
   `sources.EmployerURLProviders()` — an ATS or a company's own careers site. That set is
   resolved ONCE, in `NewProjector`, and the shape of the API is why: the rule used to be a
@@ -183,7 +216,7 @@ OJCP surface uses). A search result carries only `first_seen_at`.
   slugs in one Postgres read (`ListJobLivenessBySlugs`). It reports a CLOSED posting as closed
   — that is the point of the tool — so it does not reuse `publishedToAgents`, which refuses
   closed postings; private and duplicate postings still answer not_found.
-- **`get_job`** (here and on the account server) loads through `agentJobBySlug`, NOT
+- **`get_job`** loads through `agentJobBySlug`, NOT
   `publishedToAgents`: search reads an index that trails the database, so it hands out slugs
   that closed or became duplicates since the push, and a not_found for a slug the previous
   turn returned is what four agent reports in one day were about (2026-11-07). A closed
@@ -232,7 +265,7 @@ person types — the vocabulary itself, never a copy. A free-text argument (`sta
 `postings`) offers nothing: a client replaces the whole field with what it picks, so a
 suggestion for one word of "Go and Kubernetes" would erase the rest.
 
-A signed-in session (the account alias, and the canonical endpoint with a grant or key) also gets
+A signed-in session (either URL, with a grant or key) also gets
 `accountPrompts` (`account_prompts.go`): `jobs_for_my_profile`, `set_up_my_profile`,
 `whats_new_in_my_alerts` and `apply_to_saved_jobs`. They DO name tools and their order, since the
 sequence is the point; each is offered only when every tool it needs is served, so an API key
@@ -289,7 +322,7 @@ that ignores `_meta.ui` sees exactly what it saw before.
 
 Anthropic's directory policy rules out tool descriptions that instruct the model about other
 tools ("call get_job for the full text" was in three places). A tool or field description
-states what comes back; cross-tool guidance, where needed, goes in `serverInstructions`.
+states what comes back; cross-tool guidance, where needed, goes in the server instructions (`newMixedServer`).
 `TestNoToolDescriptionDirectsTheModelToAnotherTool` walks the registered tools and both
 schemas to hold the line.
 
@@ -297,12 +330,12 @@ schemas to hold the line.
 
 Every tool declares `readOnlyHint: true`, `destructiveHint: false`, `openWorldHint: true`.
 Incorrect annotation of these three is a named rejection reason in OpenAI's submission
-guidelines. The block is written once (`readOnly()`) and a test walks the REGISTERED tools
+guidelines. The block is written once (`ReadOnly()`) and a test walks the REGISTERED tools
 rather than a list beside them — checked by removing one annotation and watching it fail.
 
-A tool on THIS (anonymous) server that writes anything belongs behind authentication, which
-this surface does not have — that is what `account.go`'s separate, authenticated server is
-for; do not add a write tool here instead of there.
+A tool on the catalogue (anonymous) surface that writes anything belongs behind authentication, which
+this surface does not have — that is what the signed-in tool set (`mixed.go`'s personal
+tools, behind the middleware) is for; do not add a write tool to the catalogue instead.
 
 The account server's annotations come from each tool's own `assistant.Effect` —
 `EffectReads`, `EffectAdds` (nothing already held is lost: `save_job`, `apply_job`) or
@@ -320,7 +353,7 @@ An answer saved here is the CANDIDATE's (`answerbank.AuthorCandidate`, so it is 
 server only ever acts for the person who approved the connection. `accountInstructions`
 describes the account boundary and the tool groups actually served, opens with one line on what
 freehire can do (search, save/track, alerts, auto-apply prepared for review) and says to call
-`get_profile` before the first search and, with auto-apply served, `get_plan` before auto-apply. Its budget is 720 characters (the public server keeps 512);
+`get_profile` before the first search and, with auto-apply served, `get_plan` before auto-apply. Its budget is 720 characters (the anonymous catalogue session keeps 512);
 Claude Code cuts server instructions at 2048. Search and application
 workflows belong to the packaged skill; initialization describes capabilities and result
 states without prescribing a call sequence or presentation.

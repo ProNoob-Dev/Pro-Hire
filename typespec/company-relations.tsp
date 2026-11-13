@@ -1,11 +1,25 @@
 import "@typespec/http";
+import "@typespec/openapi";
 
 using Http;
+using TypeSpec.OpenAPI;
 
 namespace Freehire;
 
 // Corrections people propose about two companies (the same employer, or one the
 // subsidiary of another) and the moderator queue that decides them.
+
+/** `same`: one employer under two names; `subsidiary`: the page's company is owned by the target. */
+enum CompanyRelationKind {
+  same,
+  subsidiary,
+}
+
+/** `approved` marks a merge whose job move stopped part-way; approving again resumes it. */
+enum PendingCompanyRelationStatus {
+  pending,
+  approved,
+}
 
 model CompanyRelationRequest {
   /** `same` or `subsidiary`. */
@@ -27,7 +41,7 @@ model CompanyRelationProposal {
 
 model PendingCompanyRelation {
   id: int64;
-  kind: string;
+  kind: CompanyRelationKind;
   company_slug: string;
   company_name: string;
   company_job_count: int64;
@@ -37,8 +51,7 @@ model PendingCompanyRelation {
   note: string;
   created_at: utcDateTime;
 
-  /** `pending`, or `approved` for a merge whose job move stopped part-way. */
-  status: string;
+  status: PendingCompanyRelationStatus;
 }
 
 model CompanyRelationApproval {
@@ -62,18 +75,21 @@ op proposeCompanyRelation(@path slug: string, @body body: CompanyRelationRequest
 } | Problem;
 
 /** Moderators only, oldest first. */
+@extension("x-audience", "moderator")
 @tag("Company relations")
 @route("/company-relations")
 @get
 op listPendingCompanyRelations(): Data<PendingCompanyRelation[]> | Problem;
 
 /** Moderators only. Approving again resumes a move that failed part-way. */
+@extension("x-audience", "moderator")
 @tag("Company relations")
 @route("/company-relations/{id}/approve")
 @post
 op approveCompanyRelation(@path id: string): Data<CompanyRelationApproval> | Problem;
 
 /** Moderators only. */
+@extension("x-audience", "moderator")
 @tag("Company relations")
 @route("/company-relations/{id}/reject")
 @post

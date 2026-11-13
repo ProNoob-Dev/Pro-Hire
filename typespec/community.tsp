@@ -1,6 +1,8 @@
 import "@typespec/http";
+import "@typespec/openapi";
 
 using Http;
+using TypeSpec.OpenAPI;
 
 namespace Freehire;
 
@@ -9,15 +11,26 @@ namespace Freehire;
 // cookie and closing a thread is for moderators.
 
 /** The author is the persona handle, "AI" for a system reply or "[deleted]" once the account is gone. */
+enum ThreadSubjectType {
+  company,
+  job,
+}
+
+/** A thread is open until a moderator closes it. */
+enum ThreadStatus {
+  open,
+  closed,
+}
+
 model Thread {
   id: int64;
-  subject_type: string;
+  subject_type: ThreadSubjectType;
   subject_slug: string;
   title: string;
   body: string;
   author: string;
   reply_count: int64;
-  status: string;
+  status: ThreadStatus;
   created_at: utcDateTime;
 }
 
@@ -68,17 +81,20 @@ model ThreadDetailPage {
 
 model ThreadClosed {
   id: int64;
-  status: string;
+  status: ThreadStatus;
 }
 
 model CreateThreadRequest {
   subject_type?: string;
   subject_slug?: string;
+  /** Thread title. */
   title?: string;
+  /** Opening post. */
   body?: string;
 }
 
 model CreateReplyRequest {
+  /** Your reply. */
   body?: string;
 
   /** Nests the reply under another reply; 0 or omitted is top-level. */
@@ -86,6 +102,8 @@ model CreateReplyRequest {
 }
 
 /** A subject's open threads, newest first, keyset-paged. */
+@summary("Public discussion threads.")
+@useAuth(NoAuth)
 @tag("Community")
 @route("/threads")
 @get
@@ -96,24 +114,37 @@ op listThreads(
 ): ThreadPage | Problem;
 
 /** Open threads across every subject, newest first, keyset-paged: the discussions feed. */
+@useAuth(NoAuth)
 @tag("Community")
 @route("/threads/recent")
 @get
 op listRecentThreads(@query cursor?: string): RecentThreadPage | Problem;
 
 /** A subject's open-thread count. */
+@summary("How many threads there are.")
+@useAuth(NoAuth)
+@opExample(#{
+  returnType: #{
+    data: #{
+      count: 214,
+    },
+  },
+})
 @tag("Community")
 @route("/threads/count")
 @get
 op countThreads(@query subject_type?: string, @query subject_slug?: string): Data<ThreadCount> | Problem;
 
 /** A thread with its first page of replies. The id is declared a string and parsed in Go, which keeps the 400 text. */
+@summary("One thread with its replies.")
+@useAuth(NoAuth)
 @tag("Community")
 @route("/threads/{id}")
 @get
-op getThread(@path id: string, @query cursor?: string): ThreadDetailPage | Problem;
+op getThread(/** The thread id. */ @path id: string, @query cursor?: string): ThreadDetailPage | Problem;
 
 /** Opens a thread on a company or job. */
+@summary("Start a thread.")
 @tag("Community")
 @route("/threads")
 @post
@@ -123,16 +154,19 @@ op createThread(@body body: CreateThreadRequest): {
 } | Problem;
 
 /** Posts a reply to an open thread. */
+@summary("Reply to a thread.")
 @tag("Community")
 @route("/threads/{id}/replies")
 @post
-op createReply(@path id: string, @body body: CreateReplyRequest): {
+op createReply(/** The thread id. */ @path id: string, @body body: CreateReplyRequest): {
   @statusCode _: 201;
   @body body: Data<ThreadReply>;
 } | Problem;
 
 /** Moderators only: closes a thread. */
+@summary("Close a thread.")
+@extension("x-audience", "moderator")
 @tag("Community")
 @route("/threads/{id}/close")
 @post
-op closeThread(@path id: string): Data<ThreadClosed> | Problem;
+op closeThread(/** The thread id. */ @path id: string): Data<ThreadClosed> | Problem;
