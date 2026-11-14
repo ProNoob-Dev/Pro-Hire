@@ -559,6 +559,10 @@ func (s *Server) handleAgentSearchJobsRequest(args [0]string, argsEscaped bool, 
 					In:   "query",
 				}: params.QFields,
 				{
+					Name: "q_prefix",
+					In:   "query",
+				}: params.QPrefix,
+				{
 					Name: "sort",
 					In:   "query",
 				}: params.Sort,
@@ -3885,6 +3889,82 @@ func (s *Server) handleCancelSupportTurnRequest(args [1]string, argsEscaped bool
 	}
 
 	if err := encodeCancelSupportTurnResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleCatalogHistoryRequest handles catalogHistory operation.
+//
+// The same set `/stats/catalog` counts as `open_jobs`, one figure per UTC day.
+//
+// GET /stats/catalog-history
+func (s *Server) handleCatalogHistoryRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	statusWriter := &codeRecorder{ResponseWriter: w}
+	w = statusWriter
+	ctx := r.Context()
+
+	var (
+		err error
+	)
+
+	var rawBody []byte
+
+	var response *CatalogHistoryOK
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    CatalogHistoryOperation,
+			OperationSummary: "The catalogue's size per UTC day, measured or reconstructed.",
+			OperationID:      "catalogHistory",
+			Body:             nil,
+			RawBody:          rawBody,
+			Params:           middleware.Parameters{},
+			Raw:              r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = struct{}
+			Response = *CatalogHistoryOK
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			nil,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.CatalogHistory(ctx)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.CatalogHistory(ctx)
+	}
+	if err != nil {
+		if errRes, ok := errors.Into[*ProblemStatusCode](err); ok {
+			if err := encodeErrorResponse(errRes, w); err != nil {
+				defer recordError("Internal", err)
+			}
+			return
+		}
+		if errors.Is(err, ht.ErrNotImplemented) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+			return
+		}
+		if err := encodeErrorResponse(s.h.NewError(ctx, err), w); err != nil {
+			defer recordError("Internal", err)
+		}
+		return
+	}
+
+	if err := encodeCatalogHistoryResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -9475,6 +9555,82 @@ func (s *Server) handleGetApiPlanRequest(args [0]string, argsEscaped bool, w htt
 	}
 
 	if err := encodeGetApiPlanResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleGetApiUsageRequest handles getApiUsage operation.
+//
+// The last 30 UTC days, oldest first; a day without requests is absent.
+//
+// GET /me/api-usage
+func (s *Server) handleGetApiUsageRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	statusWriter := &codeRecorder{ResponseWriter: w}
+	w = statusWriter
+	ctx := r.Context()
+
+	var (
+		err error
+	)
+
+	var rawBody []byte
+
+	var response *GetApiUsageOK
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    GetApiUsageOperation,
+			OperationSummary: "",
+			OperationID:      "getApiUsage",
+			Body:             nil,
+			RawBody:          rawBody,
+			Params:           middleware.Parameters{},
+			Raw:              r,
+		}
+
+		type (
+			Request  = struct{}
+			Params   = struct{}
+			Response = *GetApiUsageOK
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			nil,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.GetApiUsage(ctx)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.GetApiUsage(ctx)
+	}
+	if err != nil {
+		if errRes, ok := errors.Into[*ProblemStatusCode](err); ok {
+			if err := encodeErrorResponse(errRes, w); err != nil {
+				defer recordError("Internal", err)
+			}
+			return
+		}
+		if errors.Is(err, ht.ErrNotImplemented) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+			return
+		}
+		if err := encodeErrorResponse(s.h.NewError(ctx, err), w); err != nil {
+			defer recordError("Internal", err)
+		}
+		return
+	}
+
+	if err := encodeGetApiUsageResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -16102,10 +16258,9 @@ func (s *Server) handleJobCopiesRequest(args [1]string, argsEscaped bool, w http
 
 // handleJobFacetsRequest handles jobFacets operation.
 //
-// Takes the same `q` and facet filter params as search, but returns the distribution of values instead
-// of a page of jobs — use it to build filter UIs or see how a filter narrows the set. Continuous
-// numeric facets are returned as `stats` (min/max), not per-value buckets. `former_employers` is
-// ignored even for signed-in callers.
+// The same `q` and filters as search, answered with the count of postings per facet value and `stats`
+// (min/max) for the numeric facets. `former_employers` and `watchlist` are ignored. Narrow with
+// `facets=`; naming `company_slug` there adds `companies_total` and `top_companies`.
 //
 // GET /jobs/facets
 func (s *Server) handleJobFacetsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -21802,6 +21957,103 @@ func (s *Server) handleMyProcessReportsRequest(args [1]string, argsEscaped bool,
 	}
 
 	if err := encodeMyProcessReportsResponse(response, w); err != nil {
+		defer recordError("EncodeResponse", err)
+		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+		}
+		return
+	}
+}
+
+// handleOnboardingMatchesRequest handles onboardingMatches operation.
+//
+// Open postings ranked by how well their skills match a caller-supplied skill list, under the
+// jobs-search filters in `query`. Public: it is what the CV-first onboarding shows a visitor who has
+// no account and so no stored profile. Answers the top ten.
+//
+// POST /onboarding/matches
+func (s *Server) handleOnboardingMatchesRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
+	statusWriter := &codeRecorder{ResponseWriter: w}
+	w = statusWriter
+	ctx := r.Context()
+
+	var (
+		err          error
+		opErrContext = ogenerrors.OperationContext{
+			Name: OnboardingMatchesOperation,
+			ID:   "onboardingMatches",
+		}
+	)
+
+	var rawBody []byte
+	request, rawBody, close, err := s.decodeOnboardingMatchesRequest(r)
+	if err != nil {
+		err = &ogenerrors.DecodeRequestError{
+			OperationContext: opErrContext,
+			Err:              err,
+		}
+		defer recordError("DecodeRequest", err)
+		s.cfg.ErrorHandler(ctx, w, r, err)
+		return
+	}
+	defer func() {
+		if err := close(); err != nil {
+			recordError("CloseRequest", err)
+		}
+	}()
+
+	var response *OnboardingMatchesOK
+	if m := s.cfg.Middleware; m != nil {
+		mreq := middleware.Request{
+			Context:          ctx,
+			OperationName:    OnboardingMatchesOperation,
+			OperationSummary: "",
+			OperationID:      "onboardingMatches",
+			Body:             request,
+			RawBody:          rawBody,
+			Params:           middleware.Parameters{},
+			Raw:              r,
+		}
+
+		type (
+			Request  = *OnboardingMatchesRequest
+			Params   = struct{}
+			Response = *OnboardingMatchesOK
+		)
+		response, err = middleware.HookMiddleware[
+			Request,
+			Params,
+			Response,
+		](
+			m,
+			mreq,
+			nil,
+			func(ctx context.Context, request Request, params Params) (response Response, err error) {
+				response, err = s.h.OnboardingMatches(ctx, request)
+				return response, err
+			},
+		)
+	} else {
+		response, err = s.h.OnboardingMatches(ctx, request)
+	}
+	if err != nil {
+		if errRes, ok := errors.Into[*ProblemStatusCode](err); ok {
+			if err := encodeErrorResponse(errRes, w); err != nil {
+				defer recordError("Internal", err)
+			}
+			return
+		}
+		if errors.Is(err, ht.ErrNotImplemented) {
+			s.cfg.ErrorHandler(ctx, w, r, err)
+			return
+		}
+		if err := encodeErrorResponse(s.h.NewError(ctx, err), w); err != nil {
+			defer recordError("Internal", err)
+		}
+		return
+	}
+
+	if err := encodeOnboardingMatchesResponse(response, w); err != nil {
 		defer recordError("EncodeResponse", err)
 		if !errors.Is(err, ht.ErrInternalServerErrorResponse) {
 			s.cfg.ErrorHandler(ctx, w, r, err)
@@ -27557,13 +27809,9 @@ func (s *Server) handleSearchCitiesRequest(args [0]string, argsEscaped bool, w h
 
 // handleSearchJobsRequest handles searchJobs operation.
 //
-// Combine free-text `q` with any of the filter params below. Repeated facet params are ORed; add
-// `<param>_mode=and` to require all, or `<param>_exclude=<value>` to exclude. Without `q`, results
-// default to newest first; with `q`, to relevance. A param no filter reads is ignored rather than
-// refused, and listed in `meta.ignored_params` — check it, since a dropped filter otherwise looks
-// like a broad result.
-//
-// Plus every filter in the "Filtering jobs" section.
+// Free-text `q` plus any filter (the "Filtering jobs" section). Repeated values OR; `<param>_mode=and`
+// requires all, `<param>_exclude` excludes. Newest first without `q`, by relevance with it. An unread
+// param is listed in `meta.ignored_params`: check it, a dropped filter looks like a broad result.
 //
 // GET /jobs/search
 func (s *Server) handleSearchJobsRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -27609,6 +27857,10 @@ func (s *Server) handleSearchJobsRequest(args [0]string, argsEscaped bool, w htt
 					Name: "q_fields",
 					In:   "query",
 				}: params.QFields,
+				{
+					Name: "q_prefix",
+					In:   "query",
+				}: params.QPrefix,
 				{
 					Name: "sort",
 					In:   "query",
@@ -29199,7 +29451,9 @@ func (s *Server) handleSubmitMentorProfileRequest(args [0]string, argsEscaped bo
 
 // handleSuggestRequest handles suggest operation.
 //
-// Search-box suggestions. 503 when search is not configured.
+// Completes a PHRASE, not a word: `senior software engineer go` completes to Senior Software Engineer
+// at Google. Each row carries every part it names; apply them all. Typos are forgiven in the trailing
+// fragment only. An empty `q` returns no rows. 503 when search is not configured.
 //
 // GET /suggest
 func (s *Server) handleSuggestRequest(args [0]string, argsEscaped bool, w http.ResponseWriter, r *http.Request) {
@@ -29232,7 +29486,7 @@ func (s *Server) handleSuggestRequest(args [0]string, argsEscaped bool, w http.R
 		mreq := middleware.Request{
 			Context:          ctx,
 			OperationName:    SuggestOperation,
-			OperationSummary: "",
+			OperationSummary: "Complete what is being typed into a search box.",
 			OperationID:      "suggest",
 			Body:             nil,
 			RawBody:          rawBody,

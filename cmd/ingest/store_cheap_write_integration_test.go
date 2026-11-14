@@ -51,6 +51,12 @@ func backdateStamps(t *testing.T, pool *pgxpool.Pool, externalID string) {
 	); err != nil {
 		t.Fatalf("back-date stamps for %s: %v", externalID, err)
 	}
+	if _, err := pool.Exec(context.Background(),
+		`UPDATE job_activity a SET last_seen_at=j.last_seen_at FROM jobs j
+		 WHERE a.job_id=j.id AND j.source='lever' AND j.external_id=$1`, externalID,
+	); err != nil {
+		t.Fatalf("back-date activity for %s: %v", externalID, err)
+	}
 }
 
 func loadJob(t *testing.T, pool *pgxpool.Pool, externalID string) db.Job {
@@ -231,7 +237,7 @@ func TestTouch_CountsAsACheapWrite(t *testing.T) {
 	if err := store.Save(ctx, cheapPosting("acme:cheap-4", "Site Engineer")); err != nil {
 		t.Fatalf("Save: %v", err)
 	}
-	if _, err := store.Touch(ctx, "lever", "acme:cheap-4"); err != nil {
+	if _, err := store.Touch(ctx, "lever", "acme:cheap-4", nil); err != nil {
 		t.Fatalf("Touch: %v", err)
 	}
 

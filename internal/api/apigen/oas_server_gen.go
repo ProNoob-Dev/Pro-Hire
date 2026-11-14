@@ -208,6 +208,12 @@ type Handler interface {
 	//
 	// POST /support/sessions/{id}/cancel
 	CancelSupportTurn(ctx context.Context, params CancelSupportTurnParams) error
+	// CatalogHistory implements catalogHistory operation.
+	//
+	// The same set `/stats/catalog` counts as `open_jobs`, one figure per UTC day.
+	//
+	// GET /stats/catalog-history
+	CatalogHistory(ctx context.Context) (*CatalogHistoryOK, error)
 	// CatalogScale implements catalogScale operation.
 	//
 	// The canonical numbers behind every "how big is this" figure on the site (the jobs list total, the
@@ -586,6 +592,12 @@ type Handler interface {
 	//
 	// GET /me/api-plan
 	GetApiPlan(ctx context.Context) (*GetApiPlanOK, error)
+	// GetApiUsage implements getApiUsage operation.
+	//
+	// The last 30 UTC days, oldest first; a day without requests is absent.
+	//
+	// GET /me/api-usage
+	GetApiUsage(ctx context.Context) (*GetApiUsageOK, error)
 	// GetApplicationFollowUp implements getApplicationFollowUp operation.
 	//
 	// Offered only when the application is in the silent state the tracking board’s own badge uses — a
@@ -1114,10 +1126,9 @@ type Handler interface {
 	JobCopies(ctx context.Context, params JobCopiesParams) (*JobCopiesPage, error)
 	// JobFacets implements jobFacets operation.
 	//
-	// Takes the same `q` and facet filter params as search, but returns the distribution of values instead
-	// of a page of jobs — use it to build filter UIs or see how a filter narrows the set. Continuous
-	// numeric facets are returned as `stats` (min/max), not per-value buckets. `former_employers` is
-	// ignored even for signed-in callers.
+	// The same `q` and filters as search, answered with the count of postings per facet value and `stats`
+	// (min/max) for the numeric facets. `former_employers` and `watchlist` are ignored. Narrow with
+	// `facets=`; naming `company_slug` there adds `companies_total` and `top_companies`.
 	//
 	// GET /jobs/facets
 	JobFacets(ctx context.Context, params JobFacetsParams) (*JobFacetsOK, error)
@@ -1540,6 +1551,14 @@ type Handler interface {
 	//
 	// GET /companies/{slug}/process-reports/mine
 	MyProcessReports(ctx context.Context, params MyProcessReportsParams) (*MyProcessReportsOK, error)
+	// OnboardingMatches implements onboardingMatches operation.
+	//
+	// Open postings ranked by how well their skills match a caller-supplied skill list, under the
+	// jobs-search filters in `query`. Public: it is what the CV-first onboarding shows a visitor who has
+	// no account and so no stored profile. Answers the top ten.
+	//
+	// POST /onboarding/matches
+	OnboardingMatches(ctx context.Context, req *OnboardingMatchesRequest) (*OnboardingMatchesOK, error)
 	// OneClickUnsubscribe implements oneClickUnsubscribe operation.
 	//
 	// RFC 8058 one-click unsubscribe: turns off only the group the token names.
@@ -1945,13 +1964,9 @@ type Handler interface {
 	SearchCities(ctx context.Context, params SearchCitiesParams) (*SearchCitiesOK, error)
 	// SearchJobs implements searchJobs operation.
 	//
-	// Combine free-text `q` with any of the filter params below. Repeated facet params are ORed; add
-	// `<param>_mode=and` to require all, or `<param>_exclude=<value>` to exclude. Without `q`, results
-	// default to newest first; with `q`, to relevance. A param no filter reads is ignored rather than
-	// refused, and listed in `meta.ignored_params` — check it, since a dropped filter otherwise looks
-	// like a broad result.
-	//
-	// Plus every filter in the "Filtering jobs" section.
+	// Free-text `q` plus any filter (the "Filtering jobs" section). Repeated values OR; `<param>_mode=and`
+	// requires all, `<param>_exclude` excludes. Newest first without `q`, by relevance with it. An unread
+	// param is listed in `meta.ignored_params`: check it, a dropped filter looks like a broad result.
 	//
 	// GET /jobs/search
 	SearchJobs(ctx context.Context, params SearchJobsParams) (*JobSearchPageHeaders, error)
@@ -2056,7 +2071,9 @@ type Handler interface {
 	SubmitMentorProfile(ctx context.Context, req *MentorshipProfileBody) (*SubmitMentorProfileCreated, error)
 	// Suggest implements suggest operation.
 	//
-	// Search-box suggestions. 503 when search is not configured.
+	// Completes a PHRASE, not a word: `senior software engineer go` completes to Senior Software Engineer
+	// at Google. Each row carries every part it names; apply them all. Typos are forgiven in the trailing
+	// fragment only. An empty `q` returns no rows. 503 when search is not configured.
 	//
 	// GET /suggest
 	Suggest(ctx context.Context, params SuggestParams) (*SuggestOK, error)

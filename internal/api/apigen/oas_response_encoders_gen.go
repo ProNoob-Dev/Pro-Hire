@@ -495,6 +495,19 @@ func encodeCancelSupportTurnResponse(response *CancelSupportTurnNoContent, w htt
 	return nil
 }
 
+func encodeCatalogHistoryResponse(response *CatalogHistoryOK, w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(200)
+
+	e := new(jx.Encoder)
+	response.Encode(e)
+	if _, err := e.WriteTo(w); err != nil {
+		return errors.Wrap(err, "write")
+	}
+
+	return nil
+}
+
 func encodeCatalogScaleResponse(response *CatalogScaleOK, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
@@ -1227,6 +1240,19 @@ func encodeGetAgentPermissionsResponse(response *GetAgentPermissionsOK, w http.R
 }
 
 func encodeGetApiPlanResponse(response *GetApiPlanOK, w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(200)
+
+	e := new(jx.Encoder)
+	response.Encode(e)
+	if _, err := e.WriteTo(w); err != nil {
+		return errors.Wrap(err, "write")
+	}
+
+	return nil
+}
+
+func encodeGetApiUsageResponse(response *GetApiUsageOK, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 
@@ -3098,6 +3124,19 @@ func encodeMyCompanyFeedbackResponse(response *MyCompanyFeedbackOK, w http.Respo
 }
 
 func encodeMyProcessReportsResponse(response *MyProcessReportsOK, w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(200)
+
+	e := new(jx.Encoder)
+	response.Encode(e)
+	if _, err := e.WriteTo(w); err != nil {
+		return errors.Wrap(err, "write")
+	}
+
+	return nil
+}
+
+func encodeOnboardingMatchesResponse(response *OnboardingMatchesOK, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(200)
 

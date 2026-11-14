@@ -21,6 +21,11 @@ type Querier interface {
 	// than a silent re-stamp of verified_at. An unconfirmed work email is the same miss: a
 	// moderator must never be able to activate a claim on an address nobody proved they read.
 	ActivateCompanyAccount(ctx context.Context, userID int64) (CompanyAccount, error)
+	// Adds one flush of buffered counts: parallel arrays, one element per (account, day).
+	// Additive, so two API processes (blue and green during a flip) flushing the same day
+	// both land.
+	// An account deleted between the request and the flush has nothing left to count against.
+	AddAPIUsage(ctx context.Context, arg AddAPIUsageParams) error
 	// Add a batch all-or-nothing: when the new slugs would take the list past the limit nothing
 	// is written. Slugs already stored are skipped and do not count toward it. `fresh` is how
 	// many were new and `inserted` how many were written, so fresh > 0 with inserted = 0 is the
@@ -135,7 +140,7 @@ type Querier interface {
 	// The five quality counts (migration 0213) ride the same scan for the same reason: every
 	// column they read is narrow, so each FILTER costs CPU on a row already read, not a second
 	// pass. "Has no description" is deliberately NOT among them — see above. An unseen posting
-	// is measured from last_seen_at, which a crawl refreshes for every posting it lists, so a
+	// is measured from job_activity.last_seen_at, which a crawl refreshes for every posting it lists, so a
 	// source whose crawl never re-lists (telegram) reads high here permanently; the alert rule
 	// watches the change, not the level.
 	AggregateOpenJobsBySource(ctx context.Context) ([]AggregateOpenJobsBySourceRow, error)
@@ -234,7 +239,13 @@ type Querier interface {
 	// covers unknown, expired, and revoked-by-version-bump alike; the caller reads
 	// that as 401, same as AuthenticateAPIKey's contract. It also keeps
 	// users.last_active_at current, as AuthenticateAPIKey does.
-	AuthenticateOAuthGrant(ctx context.Context, accessTokenHash string) (int64, error)
+	//
+	// endpoint is the MCP resource PATH the caller serves, or NULL for a caller that
+	// is not an MCP endpoint (REST). A grant bound to a different path does not
+	// match, so a wrong-endpoint token is refused like an unknown one and never
+	// touches last_used_at / last_active_at; an unbound grant (resource NULL) matches
+	// every endpoint.
+	AuthenticateOAuthGrant(ctx context.Context, arg AuthenticateOAuthGrantParams) (AuthenticateOAuthGrantRow, error)
 	// Same idea as SearchOutboxMetrics, but this queue has THREE terminal-ish states rather
 	// than two, so it cannot be a copy of it.
 	//
@@ -920,6 +931,8 @@ type Querier interface {
 	//
 	// Both predicates fail CLOSED on an empty list and on a NULL cutoff, exactly as the
 	// statement above does.
+	//
+	// last_seen_at is job_activity's; locking and freshness recheck: see CloseUnseenJobs.
 	CloseStaleUnseenUnprobeableJobs(ctx context.Context, arg CloseStaleUnseenUnprobeableJobsParams) (int64, error)
 	// Age rule (see job-lifecycle): close open jobs from the sources that carry NO close
 	// signal at all — no re-crawl that could stop seeing them, no change feed, and no posting
@@ -958,7 +971,14 @@ type Querier interface {
 	// Row-by-row sweep fallback (see UnseenJobIDs): closes with the same 'unseen' reason
 	// as the bulk sweep, one id at a time, so a single row's error (e.g. corrupted index
 	// entry) can be caught and skipped by the caller without losing the rest of the batch.
-	CloseUnseenJobByID(ctx context.Context, id int64) (int64, error)
+	//
+	// cutoff is the crawl cutoff the candidates were listed by. The listing and this close are
+	// separate statements, so a crawl can list the posting again between them: the close re-checks
+	// the activity row's freshness under the same locks as the bulk sweep (CloseUnseenJobs, in
+	// jobs_close_unseen.sql: jobs then job_activity, FOR NO KEY UPDATE, recheck after waiting) and
+	// writes nothing, queues no removal, for a row that is fresh now. Private postings are excluded
+	// from this catalogue close.
+	CloseUnseenJobByID(ctx context.Context, arg CloseUnseenJobByIDParams) (int64, error)
 	// skipped_board_patterns (externalid.BoardPattern of every board the run SKIPPED — in quiet pause
 	// or failure cooldown) are excluded: a skipped board was not looked at, so its rows' age since
 	// last seen says nothing about them, and a quiet pause outlasts the 48h window. COALESCE because a
@@ -981,6 +1001,17 @@ type Querier interface {
 	// :one rather than :execrows because the CTE moves the row count out of the command tag.
 	// count(*) over the closed rows is the same int64 the caller already had, so no call site
 	// changes.
+	// Observation state lives in job_activity (release A of the job_activity split), so the candidates
+	// are chosen by a locking SELECT over jobs JOIN job_activity: FOR NO KEY UPDATE OF j, a locks the
+	// jobs tuple first and the activity row second (the one global lock order, which the bridge trigger
+	// and every writer share) and RE-EVALUATES `a.last_seen_at < cutoff` on the LATEST version of each
+	// row after waiting for a concurrent writer. A plain UPDATE jobs ... FROM job_activity would not: the
+	// activity row is not the UPDATE's target, so Postgres would keep the snapshot version and close a
+	// posting a crawl had just freshened. NO KEY UPDATE, never FOR UPDATE: a foreign-key child insert
+	// (enrichment_outbox, apply_forms, search_outbox) holds KEY SHARE on the jobs tuple while a cheap
+	// toucher already holds the activity row, and FOR UPDATE would deadlock against it. ORDER BY j.id
+	// takes the locks in one order across overlapping sweeps. INNER JOIN: the lock needs the row, and
+	// every job has one (insert trigger + backfill gate).
 	CloseUnseenJobs(ctx context.Context, arg CloseUnseenJobsParams) (int64, error)
 	// skipped_board_patterns: the boards the run skipped are excluded, as in CloseUnseenJobs.
 	//
@@ -997,6 +1028,7 @@ type Querier interface {
 	// company-scoped CloseUnseenJobs cannot reach. cmd/ingest calls this ONLY after a zero-Failed run
 	// of a fullCatalog provider (a truncated crawl, which such adapters surface as an error, would
 	// otherwise mass-close everything it never reached); a partial run falls back to CloseUnseenJobs.
+	// Locking and freshness recheck: see CloseUnseenJobs (jobs_close_unseen.sql).
 	CloseUnseenJobsBySource(ctx context.Context, arg CloseUnseenJobsBySourceParams) (int64, error)
 	// Board-scoped post-ingest sweep (see job-lifecycle spec, freehire#2328): close every open
 	// job of ONE board not seen since the cutoff, regardless of which company_slug the run wrote
@@ -1038,6 +1070,7 @@ type Querier interface {
 	//
 	// :one rather than :execrows because the CTE moves the row count out of the command tag.
 	// count(*) over the closed rows is the same int64 the caller already had.
+	// Locking and freshness recheck: see CloseUnseenJobs.
 	CloseUnseenJobsForBoard(ctx context.Context, arg CloseUnseenJobsForBoardParams) (int64, error)
 	// CloseUnseenJobsForBoard for every qualifying board of one run in ONE statement, so the
 	// board-scoped sweep is one scan of the provider's open rows instead of one statement per
@@ -1055,6 +1088,8 @@ type Querier interface {
 	//
 	// url_pattern is CloseUnseenJobsForBoard's: '' for every provider but a region-scoped one, whose
 	// caller issues one statement per region, all of that region's boards in it.
+	// Locking and freshness recheck: see CloseUnseenJobs. The scan joins one primary-key probe on
+	// job_activity per open row of the provider: re-EXPLAIN it on workday-sized data.
 	CloseUnseenJobsForBoards(ctx context.Context, arg CloseUnseenJobsForBoardsParams) (int64, error)
 	// Company slugs with at least one OPEN aggregator posting — the drive list for the
 	// cross-source aggregator suppression pass. An open aggregator row is a candidate whether
@@ -1093,10 +1128,16 @@ type Querier interface {
 	// real coverage. They are absent from the index because they are not worth SEARCHING, which is
 	// a different question from whether we still crawl the company.
 	//
-	// last_seen_at carries NO index, and must not gain one: RefreshUnchangedJob writes that column
-	// alone on the hot re-crawl path precisely because it is unindexed, which keeps the update
-	// heap-only. It is a recheck here, over the few open rows the folded index already selected,
-	// and EXISTS stops at the first fresh one so a large employer costs no more than a small one.
+	// last_seen_at is job_activity's and carries NO index, and must not gain one: the re-crawl's
+	// liveness write updates that column alone precisely because it is unindexed, which keeps the
+	// update heap-only. It is a recheck here, over the few open rows the folded index already
+	// selected (one primary-key probe on job_activity each), and EXISTS stops at the first fresh one
+	// so a large employer costs no more than a small one.
+	//
+	// countries scopes the answer to a national-market aggregator's countries (sources.MarketCountries;
+	// empty = unscoped): a covering row must hire in one of them or state no country, the same rule
+	// SuppressAggregatorDuplicatesForCompanies matches twins by. Matching on the name alone let a
+	// foreign employer of the same name discard a local one's postings (issue #4412).
 	CompaniesWithFreshNonAggregatorCoverage(ctx context.Context, arg CompaniesWithFreshNonAggregatorCoverageParams) ([]string, error)
 	// Company slugs worth running the fuzzy-description pass over: a company that still has more
 	// than one open CANONICAL posting after the exact role-cluster and aggregator passes, so there
@@ -1652,6 +1693,8 @@ type Querier interface {
 	// Issue the long-lived access token for an approved client. issued_token_version
 	// is the caller's users.token_version at this moment — see the table comment in
 	// the migration for how that makes revocation free.
+	// resource is the RFC 8707 MCP resource the grant is bound to; NULL is unbound
+	// and valid on every MCP endpoint.
 	CreateOAuthGrant(ctx context.Context, arg CreateOAuthGrantParams) (CreateOAuthGrantRow, error)
 	// Record a member's offer to refer into a company. The UNIQUE (user_id, company_slug)
 	// constraint rejects a second offer for the same company; the repository maps that unique
@@ -2348,8 +2391,9 @@ type Querier interface {
 	//     is never withheld on this ground.
 	// Nothing else would ever queue them, so without this pass they waited for a full rebuild.
 	// A posting crosses at created_at + age (or last_seen_at + window), hence the bands below.
-	// One sequential pass over the open rows: last_seen_at is deliberately in no index (the
-	// liveness touch must stay heap-only), so the caller runs this a few times a day.
+	// One sequential pass over the open rows: last_seen_at (job_activity's, joined by primary key) is
+	// deliberately in no index (the liveness touch must stay heap-only), so the caller runs this a
+	// few times a day.
 	// DO NOTHING and id order, unlike the per-row writers' re-stamp: this one statement upserts
 	// thousands of entries while every ingest transaction upserts its own, and the re-stamp's row
 	// locks taken in scan order deadlocked against them on its first prod run (2026-11-05). An
@@ -2468,6 +2512,9 @@ type Querier interface {
 	// posting would otherwise cost a detail request on every crawl for good. Written as an OR over
 	// the kept cases rather than NOT over the withheld one: a NULL deadline (every source but EURES)
 	// would make the NOT form NULL and drop the row from the set.
+	//
+	// hydrated_at is job_activity's. LEFT JOIN, so a job without an activity row reads as never
+	// checked (NULL, the same "stale" answer a legacy NULL gave) instead of vanishing from the set.
 	ExistingExternalIDs(ctx context.Context, arg ExistingExternalIDsParams) ([]ExistingExternalIDsRow, error)
 	// Seen-set of ONE board of a multi-board provider. The lookup runs once per crawled board, so a
 	// provider-wide read is unaffordable where the provider is large: on workday it returns 1.27M ids
@@ -2484,6 +2531,8 @@ type Querier interface {
 	// and the body_refresh_* arm withholds one whose stored body has gone stale so an employer's
 	// edit is re-read, and the deadline arm re-reads a posting whose stored deadline has just
 	// passed; see ExistingExternalIDs for all three.
+	//
+	// hydrated_at is job_activity's, read through a LEFT JOIN as in ExistingExternalIDs.
 	ExistingExternalIDsByBoard(ctx context.Context, arg ExistingExternalIDsByBoardParams) ([]ExistingExternalIDsByBoardRow, error)
 	// Ends the sequence for good for an account that turned the letters off. The unsubscribe
 	// link writes news_email_enabled = false without a session; a missing settings row is
@@ -2606,6 +2655,9 @@ type Querier interface {
 	// The moderator's lookup: one account by id, exact email (case-insensitive) or username,
 	// with its ban state. The query is matched against all three; an id only when numeric.
 	FindUserForModeration(ctx context.Context, arg FindUserForModerationParams) (FindUserForModerationRow, error)
+	// The smallest job id created on each UTC day. Ids are allocated in creation order, so this
+	// dates a row that no longer carries created_at (pruned_jobs) by the day its id falls in.
+	FirstJobIDPerDay(ctx context.Context) ([]FirstJobIDPerDayRow, error)
 	// The (id, title) of one company's open canonical postings — deliberately WITHOUT the
 	// description. The caller groups these into buckets with the same normalized-title function the
 	// rest of the codebase uses (jobhash.RoleKey), then loads descriptions for the buckets that
@@ -3642,7 +3694,7 @@ type Querier interface {
 	// caller supplies content_hash/role_fingerprint precomputed the same way every other
 	// write path does (job.Fields.UpsertParams), so a private job's fingerprints are
 	// comparable if it were ever to matter, even though it is never indexed or clustered.
-	InsertPrivateJob(ctx context.Context, arg InsertPrivateJobParams) (Job, error)
+	InsertPrivateJob(ctx context.Context, arg InsertPrivateJobParams) (int64, error)
 	InsertRemoteAuditJudgement(ctx context.Context, arg InsertRemoteAuditJudgementParams) error
 	// First report wins, and only for an account created in the last ten minutes: the
 	// table records how an account ARRIVED, so a report from a years-old session would
@@ -3808,6 +3860,9 @@ type Querier interface {
 	// A user's API keys, newest first. Metadata only — never the token_hash. scope is
 	// included so a user can see what each credential is allowed to do.
 	ListAPIKeysByUser(ctx context.Context, userID int64) ([]ListAPIKeysByUserRow, error)
+	// The account's daily counts from `since` (a UTC date) on, oldest first. Days with no
+	// requests have no row.
+	ListAPIUsage(ctx context.Context, arg ListAPIUsageParams) ([]ListAPIUsageRow, error)
 	// The boards cmd/ingest crawls for one provider: pending (unproven, still crawled) and
 	// active. Ordered by id for a stable crawl order across runs.
 	ListActiveBoardsForProvider(ctx context.Context, provider string) ([]Board, error)
@@ -4187,6 +4242,9 @@ type Querier interface {
 	// Every slug already elected canonical. The merge worker holds these out of a new election,
 	// which is what "frozen" means in practice.
 	ListCanonicalCompanySlugs(ctx context.Context) ([]string, error)
+	// The whole catalogue-size series, oldest first: one row a day, so it stays small. Days with
+	// no row are absent, not zero.
+	ListCatalogSize(ctx context.Context) ([]ListCatalogSizeRow, error)
 	// The boards that have proven unreachable for at least `age_window`, not merely cooled down from
 	// a recent run of failures (openspec change close-chronically-unreachable-boards, issue #2017).
 	// A board that has succeeded at least once is measured from last_success_at; one that never has
@@ -5436,6 +5494,12 @@ type Querier interface {
 	// Go type across every query here. Matching the nullable foreign key instead makes sqlc infer a
 	// nullable UUID, and the handler would carry two spellings of one id.
 	ListTracerLinkStats(ctx context.Context, arg ListTracerLinkStatsParams) ([]ListTracerLinkStatsRow, error)
+	// Keyset page (by id) of the open, canonical, public, bodied postings RefreshCompanyFacets'
+	// category predicate would drop: no column category, no enrichment answer, not confirmed
+	// technical. cmd/recount-companies runs search.TitleKeepsUncategorized over their titles and
+	// hands the ids it keeps back as kept_ids, so the count follows search on the one branch
+	// this SQL cannot derive (#4503). Paged so a run never holds the whole set at once.
+	ListUncategorizedOpenJobTitles(ctx context.Context, arg ListUncategorizedOpenJobTitlesParams) ([]ListUncategorizedOpenJobTitlesRow, error)
 	// The worst $1 boards currently failing or cooled down, worst first — the source of the
 	// per-run summary log. Every row also carries the FULL unhealthy count: count(*) OVER () is
 	// evaluated over the whole filtered set, before the LIMIT, so the caller reports how many
@@ -5604,6 +5668,10 @@ type Querier interface {
 	// Verified accounts inside the window that have not been greeted yet. This is the
 	// only step with no waiting period: it goes out on the next pass after signup.
 	ListWelcomeCandidates(ctx context.Context, arg ListWelcomeCandidatesParams) ([]ListWelcomeCandidatesRow, error)
+	// Per UTC day, how many listed postings (catalogstats' predicate minus closed_at) were
+	// created and how many closed, for the one-off history reconstruction. A full scan: run it
+	// on the analytics replica, never on a request path.
+	ListedJobDailyFlow(ctx context.Context) ([]ListedJobDailyFlowRow, error)
 	// Serializes one user's get-or-create of a blank session for the transaction, so two parallel calls cannot both find none and both insert.
 	LockAssistantSessionCreation(ctx context.Context, userID int64) error
 	// The leave's half of the buddy_members lock protocol (see LockBuddyMembersForMock): lock
@@ -5814,23 +5882,26 @@ type Querier interface {
 	// count and closed_at so the worker can log the outcome.
 	//
 	// The removal enqueue rides this statement like every other close (see CloseUnseenJobs),
-	// and it is gated on the close actually happening: most calls only advance a strike and
-	// must queue nothing. The gate reads the PRE-update row — every CTE and the statement
-	// itself see one snapshot — and repeats the CASE's own close condition, because
-	// RETURNING cannot answer the question: it reports the new value, and a closed_at this
-	// statement left alone looks exactly like one it just wrote.
-	//
-	// The two can disagree only if another transaction closes this row between the snapshot
-	// and the UPDATE's row lock, in which case the enqueue happens and the close does not.
-	// That is the harmless direction: whoever closed it queued the same removal, and the
-	// queue is ON CONFLICT DO NOTHING on job_id.
+	// gated on the close actually happening: most calls only advance a strike and must queue
+	// nothing. The gate reads the rows AS LOCKED below, so it is exact.
 	//
 	// seen_before, when set, is the staleness cutoff the caller selected its candidates by. A
 	// probe answers minutes after that read, and a crawl that listed the posting again in between
-	// (UpsertJob/RefreshUnchangedJob stamp last_seen_at = now()) has just proved it live; the
-	// verdict was reached on a stale read and must write nothing — no strike, no close, no
-	// queued removal — so the statement matches no row (pgx.ErrNoRows). NULL keeps the old
-	// behaviour for a caller whose candidates no crawl re-lists.
+	// has just proved it live; the verdict was reached on a stale read and must write nothing — no
+	// strike, no close, no queued removal — so the statement matches no row (pgx.ErrNoRows). NULL
+	// keeps the old behaviour for a caller whose candidates no crawl re-lists.
+	//
+	// Locking and the compare-and-set: see CloseUnseenJobs. `locked` reads the strike count from the
+	// LOCKED activity row, the one value every writer keeps current.
+	//
+	// Release A writes the count to BOTH places: job_activity explicitly, and the legacy jobs column
+	// for readers older than release A. The one-way bridge fires only when the legacy value CHANGES,
+	// and while writers move to job_activity the legacy value goes stale, so a computed count that
+	// happens to equal the stale legacy one would never reach job_activity through it. Both writes
+	// carry the same value, so the bridge firing as well is idempotent.
+	// FROM bumped, not FROM locked: the data dependency makes the activity write happen before the jobs
+	// write (and before the triggers that jobs write fires), instead of relying on the order Postgres
+	// happens to run independent data-modifying CTEs in.
 	MarkLivenessExpired(ctx context.Context, arg MarkLivenessExpiredParams) (MarkLivenessExpiredRow, error)
 	// Stamp notified_at on the jobs that were just delivered for a subscription, so
 	// they leave the pending queue and are never sent again.
@@ -6031,6 +6102,17 @@ type Querier interface {
 	// count. The classifier calls this whenever it confidently labels an email as
 	// application mail, so a recurring unknown ATS domain accrues hits toward promotion.
 	ObserveLearnedDomain(ctx context.Context, domain string) (int32, error)
+	// Every open posting's title for a batch of folded company keys (normalize.CompanyKey) —
+	// cmd/catalog-coverage matches an outside sample against these by jobhash.RoleKey. Duplicates
+	// are kept on purpose: a posting we hold twice is still one we hold. Private postings (a
+	// user's pasted JD) are not catalogue. Served by
+	// jobs_open_company_slug_folded_col_idx, whose predicate the last two conditions repeat: drop
+	// one and the planner scans the whole table.
+	OpenJobTitlesByFoldedCompany(ctx context.Context, companyKeys []string) ([]OpenJobTitlesByFoldedCompanyRow, error)
+	// One board's open postings: the namespaced id (whose native part an apply link to the posting
+	// carries) and the title. board_pattern is externalid.BoardPattern of the stored board name, so
+	// the (source, external_id text_pattern_ops) index serves it as a range scan.
+	OpenJobsOnBoard(ctx context.Context, arg OpenJobsOnBoardParams) ([]OpenJobsOnBoardRow, error)
 	// Companies the catalogue holds ONLY through aggregators — the worklist cmd/harvest-orphans
 	// turns into candidate ATS boards. A company qualifies when it has an open posting from one
 	// of the REQUESTED aggregators and no open posting from any source outside the FULL
@@ -6209,6 +6291,8 @@ type Querier interface {
 	// The `count = 1` condition is what makes this safe: a phrase two people have searched
 	// survives however old it is, so a seasonal query does not vanish between seasons.
 	PruneSearchQueries(ctx context.Context, before pgtype.Timestamptz) (int64, error)
+	// Every pruned posting's id and the day it was deleted, for the history reconstruction.
+	PrunedJobIDs(ctx context.Context) ([]PrunedJobIDsRow, error)
 	// Depth and age only: this queue carries neither attempts nor failed_at, because
 	// DeletePushTickets removes a ticket on every terminal receipt outcome and an
 	// unprocessed batch (Expo unreachable) simply stays queued for the next run. There is no
@@ -6362,6 +6446,9 @@ type Querier interface {
 	// Burns the step after a definite send failure: the row stays, with the error, and the
 	// step is never retried on its own — re-arming one is a deliberate DELETE.
 	RecordCVLifecycleSendError(ctx context.Context, arg RecordCVLifecycleSendErrorParams) error
+	// Store one day's measured catalogue size. Replaces whatever the day held, a reconstructed
+	// estimate included: a measurement always beats a reconstruction.
+	RecordCatalogSize(ctx context.Context, arg RecordCatalogSizeParams) error
 	// Record that this company page was announced to this engine. Idempotent, for the same
 	// reason its job sibling is: the row is what stops a re-run after a partial failure from
 	// spending a bounded budget twice.
@@ -6510,6 +6597,11 @@ type Querier interface {
 	// file for the distinction.
 	RecordPlanLimitHit(ctx context.Context, arg RecordPlanLimitHitParams) error
 	RecordProblemReport(ctx context.Context, arg RecordProblemReportParams) (RecordProblemReportRow, error)
+	// Fill the days before the catalogue was first measured. A day already holding a row keeps
+	// it, so a rerun does not move the past it already published. Days from the first measured
+	// one on are left alone even when a run was missed: reconstructed days stay one leading run,
+	// before every measurement, which is what lets a reader tell the estimate from the record.
+	RecordReconstructedCatalogSize(ctx context.Context, arg RecordReconstructedCatalogSizeParams) error
 	// Count a failed send: bump attempts, record the error, and dead-letter (failed_at)
 	// once attempts reach the max. claimed_at is left in place — its expiry gates the
 	// retry to a later pass and doubles as the crash reaper, mirroring subscription_matches.
@@ -6821,6 +6913,11 @@ type Querier interface {
 	// drain must bring it back; prev carries the last_seen_at the update replaces. The cutoff is
 	// search.UnseenWindow, the shortest window — a source with a longer one gets a harmless
 	// extra push.
+	// Lock order: `prev` locks the jobs row and then the activity row, FOR NO KEY UPDATE, and the UPDATE
+	// joins it, so both are held before the statement queues anything. Release A took the activity row
+	// last, through the legacy bridge trigger at the end of the statement, AFTER the search_outbox write
+	// below; a writer that takes the activity row first and then queues (release B) interleaved with it
+	// and the two deadlocked. A row without an activity row does not match this cheap path.
 	RefreshUnchangedJob(ctx context.Context, arg RefreshUnchangedJobParams) (RefreshUnchangedJobRow, error)
 	// Dynamic client registration (RFC 7591). client_id is server-generated, random,
 	// and not a secret — it identifies the client, it does not authenticate it (PKCE
@@ -6891,7 +6988,9 @@ type Querier interface {
 	// externalid.BoardPattern(board), the board's external_id namespace, so only this board's rows
 	// move. Needed beside the board write because a crawl only REWRITES a posting that changed — an
 	// unchanged one is refreshed for liveness and keeps the placeholder, and a closed one is never
-	// seen again. Guarded on the old name, so a re-run writes nothing.
+	// seen again. Guarded on the old name, so a re-run writes nothing. The moved rows' indexed
+	// company and slug change, so an open, canonical, public one is queued for search in the same
+	// statement, as every other writer of indexed job content does.
 	//
 	// Returns the company_slug each moved job carried BEFORE the write, one row per job: the rows
 	// are matched by board and name, not by slug, and an alias the merge worker recorded may have
@@ -6977,7 +7076,13 @@ type Querier interface {
 	RequeueTelegramPost(ctx context.Context, arg RequeueTelegramPostParams) (int64, error)
 	// A healthy (not-expired) probe clears any accumulated strikes, so only CONSECUTIVE
 	// expired probes can close a job. Guarded to the non-zero case so probing an
-	// already-clean job does not churn the row.
+	// already-clean job does not churn the row or lock it.
+	//
+	// The guard reads job_activity, the current count, and both places are written (see
+	// MarkLivenessExpired for why): a legacy column that is already 0 while job_activity holds 4 must
+	// still reset job_activity, and the bridge would not fire for a legacy 0 -> 0. The legacy column is
+	// written only when it is not already 0, so the wide jobs tuple is untouched in that case. Locking:
+	// see CloseUnseenJobs.
 	ResetLivenessStrikes(ctx context.Context, id int64) error
 	// Complete a reset-by-emailed-code: set the new hash, revoke every session, and mark
 	// the address verified — receiving the code IS proof of control, so a reset doubles as
@@ -7914,6 +8019,15 @@ type Querier interface {
 	// (not newly saved) would drop out of the sweep and its removed offers would never close.
 	// Lock the prior state before updating: after waiting for a concurrent close,
 	// transition detection must observe the committed closed row, not an older snapshot.
+	// FOR NO KEY UPDATE, not FOR UPDATE: a foreign-key child insert (enrichment_outbox, apply_forms,
+	// search_outbox) holds KEY SHARE on this tuple while a toucher already holds other locks of its
+	// own, and FOR UPDATE conflicts with KEY SHARE (a deadlock waiting to happen); a plain UPDATE's
+	// lock does not, and it is all this statement needs. The jobs tuple AND the activity row are locked
+	// here, in that order, before anything is queued: release A still writes the legacy columns and its
+	// one-way bridge would take the activity row only at the end of the statement, AFTER the
+	// search_outbox writes below, while a writer that locks the activity row first and then queues
+	// (release B) deadlocks with that. last_seen_at, the previous stamp the withheld-then-seen requeue
+	// compares, is the locked activity row's.
 	// A touch writes no content, so a posting closed under an older dictionary would reopen
 	// carrying it. With allow_reopen false a touch that WOULD reopen writes nothing and reports
 	// deferred; the caller repeats it with allow_reopen true inside the transaction that re-derives
@@ -8029,7 +8143,7 @@ type Querier interface {
 	// identity (internal/ingest/employer never lets them vary per edit), so company_upsert here
 	// only ever re-affirms the same row UpdateManualJob's would. closed_at is deliberately NOT
 	// touched, matching UpdateManualJob: an edit is a content fix, not a lifecycle change.
-	UpdateEmployerJob(ctx context.Context, arg UpdateEmployerJobParams) (Job, error)
+	UpdateEmployerJob(ctx context.Context, arg UpdateEmployerJobParams) (int64, error)
 	// Owner-scoped edit. claim_key moves with the claim, so the uniqueness guarantee holds after
 	// an edit as well as after an insert.
 	UpdateExperienceAtom(ctx context.Context, arg UpdateExperienceAtomParams) (ExperienceAtom, error)
@@ -8094,7 +8208,7 @@ type Querier interface {
 	// closed_at is deliberately NOT touched: an edit is a content fix, not a lifecycle change.
 	// Reopening a closed posting is the re-create (same-URL UpsertManualJob) path's job, so a
 	// content edit never resurrects a job the sweep/liveness worker closed.
-	UpdateManualJob(ctx context.Context, arg UpdateManualJobParams) (Job, error)
+	UpdateManualJob(ctx context.Context, arg UpdateManualJobParams) (int64, error)
 	// The mentor edits their own profile. The user_id guard scopes it to the owner, so a
 	// foreign id updates zero rows and the repository reports "not found" rather than
 	// revealing that the profile exists. Editing does NOT reset moderation: a mentor
@@ -8331,6 +8445,11 @@ type Querier interface {
 	// A substituted body was read before this statement took the row lock. If another write stored
 	// a newer body in between, writing the facets of the older one over it would regress the row,
 	// so the update is refused (no row returned) and the next crawl retries the posting.
+	// Narrow on purpose, and never sqlc.embed(jobs): that expands to every jobs column, the
+	// liveness stamps included, which the activity split moves to job_activity. A caller reads the
+	// id, the identity the sweep scope and the index-push gate need, and whether the write left the
+	// row closed; one that needs the whole row (linkimport builds a search document) re-reads it
+	// through GetJob, which reads the jobs_read view.
 	UpsertJob(ctx context.Context, arg UpsertJobParams) (UpsertJobRow, error)
 	// Schedule a one-shot reminder for a saved job, or replace the pending one if the
 	// job is re-saved with a new choice. The arbiter is the partial unique index on
@@ -8360,7 +8479,7 @@ type Querier interface {
 	// shows its salary immediately, before any enrichment pass runs (the pass then preserves
 	// it via SetJobEnrichment's overlay). The conflict reopens a previously closed posting
 	// (closed_at = NULL) since the moderator is re-asserting it.
-	UpsertManualJob(ctx context.Context, arg UpsertManualJobParams) (Job, error)
+	UpsertManualJob(ctx context.Context, arg UpsertManualJobParams) (int64, error)
 	// One row per synced busy interval, source fixed to 'google_calendar' (the only writer
 	// of this source). external_id is not Google's — a free/busy period carries no
 	// identifier — but the interval's own bounds, concatenated (see busysync.externalID), so

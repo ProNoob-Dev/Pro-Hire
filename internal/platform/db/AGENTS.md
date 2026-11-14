@@ -9,6 +9,22 @@ The `internal/platform/db` package — generated sqlc code, hand-written SQL que
 - Handlers use `*db.Queries`, built once in `handler.Register`. Never construct `*db.Queries` inside a handler.
 - `migrations/` is the single source of truth for schema — the same dir feeds both sqlc and Postgres initdb.
 - `jobs.UNIQUE (source, external_id)` is the dedup key; `UpsertJob` is `ON CONFLICT` on it.
+- Complete posting reads use `jobs_read` (`db.Job`), which joins observation state from
+  `job_activity`. The physical `jobs` model is `db.JobRow`. Return explicit columns from
+  base-table writes; `RETURNING *` or `sqlc.embed(jobs)` would expand legacy columns and
+  prevent their later removal. A new `jobs` column also needs a replacement `jobs_read`
+  projection; `TestJobsReadCoversEveryJobsColumn` checks it. Read observation predicates
+  from activity, including inside writers, so compatible workers can overlap a writer
+  cutover. Freshness-dependent closers lock jobs then activity with `FOR NO KEY UPDATE`.
+- Writers that need both a posting/activity lock and a search queue entry take the
+  activity lock before the queue lock. A legacy `AFTER` bridge runs at statement end,
+  after data-modifying outbox CTEs; it cannot establish this order for them. Lock both
+  rows explicitly before queueing while legacy and activity-only writers overlap.
+- Size backfill batches by actual rows, using a stable keyset, and inspect a representative
+  plan on production-sized data before shipping. Numeric ID spans are not row counts:
+  `jobs.id` is sparse because conflict updates consume sequence values. Small ID spans
+  can produce excessive transactions and random heap reads. Preserve committed progress
+  and migration immutability if a running one-off copy proves slower than estimated.
 - Fresh volumes get the whole `migrations/` dir via Postgres initdb (mounted into `/docker-entrypoint-initdb.d`, applied once on first init, in filename order). Every existing database (prod included) is migrated by `cmd/migrate` (`go run ./cmd/migrate`), which applies only files not yet recorded in `schema_migrations` (version = filename) — one transaction per file, under a session advisory lock. Changing an already-applied migration does NOT re-apply it; add a new file instead.
 - **An EXPANSIVE migration is applied before the deploy that reads it, not with it.** Adding
   a nullable column is safe to run ahead of time and unreadable by the previous binary, but
@@ -65,4 +81,4 @@ checks, after a no-transaction file applies, whether any index THAT FILE NAMES i
 and fails without recording rather than stepping over it.
 
 ## Limitations
-- Historical parallel branches produced duplicate number prefixes (`0009_*`×2, `0034_*`×4, …). Harmless: initdb and the runner both order by full filename, and `schema_migrations.version` is the filename, not the number. New files take the next free number; never renumber old files (their versions are already recorded on migrated databases).
+- Historical parallel branches produced duplicate number prefixes (`0009_*`×2, `0034_*`×4, …). Harmless: initdb and the runner both order by full filename, and `schema_migrations.version` is the filename, not the number. New files normally take the next free number; never renumber old files (their versions are already recorded on migrated databases). A corrective file that must run before an immutable failed migration may reuse the preceding prefix: document its filename ordering and prove the retry path with the migration runner. It must not repeat an already recorded data copy.

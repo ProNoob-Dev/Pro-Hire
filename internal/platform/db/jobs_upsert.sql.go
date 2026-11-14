@@ -13,15 +13,19 @@ import (
 
 const refreshUnchangedJob = `-- name: RefreshUnchangedJob :one
 WITH prev AS MATERIALIZED (
-    SELECT j.last_seen_at FROM jobs j
+    SELECT j.id, a.last_seen_at FROM jobs j
+    JOIN job_activity a ON a.job_id = j.id
     WHERE j.source = $1 AND j.external_id = $2
+    FOR NO KEY UPDATE OF j, a
 ), refreshed AS (
 UPDATE jobs
 SET last_seen_at = now(),
     -- Not when the "identical" body is the stored one the pipeline substituted for a failed
     -- fetch (job.Draft.BodyFromCatalogue): that body was not read.
     hydrated_at  = CASE WHEN $3::boolean THEN jobs.hydrated_at ELSE now() END
-WHERE jobs.source = $1
+FROM prev p
+WHERE jobs.id = p.id
+  AND jobs.source = $1
   AND jobs.external_id = $2
   AND jobs.content_hash = $4
   AND jobs.cities = COALESCE($5::text[], '{}')
@@ -36,7 +40,7 @@ WHERE jobs.source = $1
   AND (jobs.application_deadline IS NULL OR jobs.application_deadline >= (now() AT TIME ZONE 'UTC')::date)
   AND jobs.closed_at IS NULL
 RETURNING jobs.id, jobs.source, jobs.company_slug, jobs.duplicate_of, jobs.is_private,
-          (SELECT p.last_seen_at FROM prev p) AS prev_seen_at, COALESCE(jobs.posted_at, jobs.created_at) AS eff_posted_at
+          p.last_seen_at AS prev_seen_at, COALESCE(jobs.posted_at, jobs.created_at) AS eff_posted_at
 ), requeued AS (
     INSERT INTO search_outbox (job_id, job_posted_at)
     SELECT id, eff_posted_at FROM refreshed
@@ -146,6 +150,11 @@ type RefreshUnchangedJobRow struct {
 // drain must bring it back; prev carries the last_seen_at the update replaces. The cutoff is
 // search.UnseenWindow, the shortest window — a source with a longer one gets a harmless
 // extra push.
+// Lock order: `prev` locks the jobs row and then the activity row, FOR NO KEY UPDATE, and the UPDATE
+// joins it, so both are held before the statement queues anything. Release A took the activity row
+// last, through the legacy bridge trigger at the end of the statement, AFTER the search_outbox write
+// below; a writer that takes the activity row first and then queues (release B) interleaved with it
+// and the two deadlocked. A row without an activity row does not match this cheap path.
 func (q *Queries) RefreshUnchangedJob(ctx context.Context, arg RefreshUnchangedJobParams) (RefreshUnchangedJobRow, error) {
 	row := q.db.QueryRow(ctx, refreshUnchangedJob,
 		arg.Source,
@@ -254,8 +263,8 @@ ON CONFLICT (source, external_id) DO UPDATE SET
     -- upserts the job, so writing EXCLUDED unconditionally would let a transient
     -- failure wipe a good description. Keep the stored value when the incoming one is
     -- empty; a non-empty description still overwrites, so real edits propagate.
-    -- (content_hash below stays the incoming fingerprint; the incremental indexer
-    -- rebuilds its doc from the RETURNING row, which carries this preserved value.)
+    -- content_hash below stays the incoming fingerprint; the search drain rebuilds
+    -- its document from the stored row, including the preserved description.
     description  = COALESCE(NULLIF(EXCLUDED.description, ''), jobs.description),
     posted_at    = EXCLUDED.posted_at,
     application_deadline = COALESCE(EXCLUDED.application_deadline, jobs.application_deadline),
@@ -349,7 +358,7 @@ ON CONFLICT (source, external_id) DO UPDATE SET
     hydrated_at  = CASE WHEN $40::boolean THEN jobs.hydrated_at ELSE now() END,
     updated_at   = now()
 WHERE NOT $40::boolean OR jobs.description = EXCLUDED.description
-RETURNING jobs.id, jobs.source, jobs.external_id, jobs.url, jobs.title, jobs.company, jobs.location, jobs.remote, jobs.description, jobs.posted_at, jobs.created_at, jobs.updated_at, jobs.company_slug, jobs.enrichment, jobs.enriched_at, jobs.enrichment_version, jobs.public_slug, jobs.last_seen_at, jobs.closed_at, jobs.countries, jobs.regions, jobs.work_mode, jobs.liveness_strikes, jobs.skills, jobs.seniority, jobs.category, jobs.created_by, jobs.updated_by, jobs.posting_language, jobs.employment_type, jobs.education_level, jobs.experience_years_min, jobs.collections, jobs.content_hash, jobs.english_level, jobs.cities, jobs.view_count, jobs.applied_count, jobs.role_fingerprint, jobs.semantic_embedded_model, jobs.semantic_embedded_hash, jobs.duplicate_of, jobs.is_tech, jobs.salary_min_manual, jobs.salary_max_manual, jobs.salary_currency_manual, jobs.salary_period_manual, jobs.upvote_count, jobs.downvote_count, jobs.ats_absent_at, jobs.closed_reason, jobs.is_private, jobs.salary_min_source, jobs.salary_max_source, jobs.salary_currency_source, jobs.salary_period_source, jobs.company_slug_folded, jobs.duplicate_of_aggregator, jobs.duplicate_of_role, jobs.duplicate_of_fuzzy, jobs.requires_clearance, jobs.requirements_derived, jobs.hydrated_at, jobs.ai_interview_reports, jobs.metros, jobs.semantic_embedded_input_hash, jobs.via_recruiter, jobs.clearance_levels, jobs.equity, jobs.perks, jobs.application_deadline, jobs.engagement,
+RETURNING jobs.id, jobs.source, jobs.company_slug, jobs.duplicate_of, jobs.is_private, jobs.closed_at,
     NOT COALESCE((SELECT existed FROM existing), false) AS inserted,
     -- The deadline rides the search document without changing the global content-hash
     -- format. Compare the resulting stored date: a missing incoming date preserves it.
@@ -404,9 +413,14 @@ type UpsertJobParams struct {
 }
 
 type UpsertJobRow struct {
-	Job      Job         `json:"job"`
-	Inserted pgtype.Bool `json:"inserted"`
-	Changed  bool        `json:"changed"`
+	ID          int64              `json:"id"`
+	Source      string             `json:"source"`
+	CompanySlug string             `json:"company_slug"`
+	DuplicateOf pgtype.Int8        `json:"duplicate_of"`
+	IsPrivate   bool               `json:"is_private"`
+	ClosedAt    pgtype.Timestamptz `json:"closed_at"`
+	Inserted    pgtype.Bool        `json:"inserted"`
+	Changed     bool               `json:"changed"`
 }
 
 // Single atomic write: upsert the company (only when the slug is non-empty,
@@ -435,6 +449,11 @@ type UpsertJobRow struct {
 // A substituted body was read before this statement took the row lock. If another write stored
 // a newer body in between, writing the facets of the older one over it would regress the row,
 // so the update is refused (no row returned) and the next crawl retries the posting.
+// Narrow on purpose, and never sqlc.embed(jobs): that expands to every jobs column, the
+// liveness stamps included, which the activity split moves to job_activity. A caller reads the
+// id, the identity the sweep scope and the index-push gate need, and whether the write left the
+// row closed; one that needs the whole row (linkimport builds a search document) re-reads it
+// through GetJob, which reads the jobs_read view.
 func (q *Queries) UpsertJob(ctx context.Context, arg UpsertJobParams) (UpsertJobRow, error) {
 	row := q.db.QueryRow(ctx, upsertJob,
 		arg.Source,
@@ -480,78 +499,12 @@ func (q *Queries) UpsertJob(ctx context.Context, arg UpsertJobParams) (UpsertJob
 	)
 	var i UpsertJobRow
 	err := row.Scan(
-		&i.Job.ID,
-		&i.Job.Source,
-		&i.Job.ExternalID,
-		&i.Job.URL,
-		&i.Job.Title,
-		&i.Job.Company,
-		&i.Job.Location,
-		&i.Job.Remote,
-		&i.Job.Description,
-		&i.Job.PostedAt,
-		&i.Job.CreatedAt,
-		&i.Job.UpdatedAt,
-		&i.Job.CompanySlug,
-		&i.Job.Enrichment,
-		&i.Job.EnrichedAt,
-		&i.Job.EnrichmentVersion,
-		&i.Job.PublicSlug,
-		&i.Job.LastSeenAt,
-		&i.Job.ClosedAt,
-		&i.Job.Countries,
-		&i.Job.Regions,
-		&i.Job.WorkMode,
-		&i.Job.LivenessStrikes,
-		&i.Job.Skills,
-		&i.Job.Seniority,
-		&i.Job.Category,
-		&i.Job.CreatedBy,
-		&i.Job.UpdatedBy,
-		&i.Job.PostingLanguage,
-		&i.Job.EmploymentType,
-		&i.Job.EducationLevel,
-		&i.Job.ExperienceYearsMin,
-		&i.Job.Collections,
-		&i.Job.ContentHash,
-		&i.Job.EnglishLevel,
-		&i.Job.Cities,
-		&i.Job.ViewCount,
-		&i.Job.AppliedCount,
-		&i.Job.RoleFingerprint,
-		&i.Job.SemanticEmbeddedModel,
-		&i.Job.SemanticEmbeddedHash,
-		&i.Job.DuplicateOf,
-		&i.Job.IsTech,
-		&i.Job.SalaryMinManual,
-		&i.Job.SalaryMaxManual,
-		&i.Job.SalaryCurrencyManual,
-		&i.Job.SalaryPeriodManual,
-		&i.Job.UpvoteCount,
-		&i.Job.DownvoteCount,
-		&i.Job.AtsAbsentAt,
-		&i.Job.ClosedReason,
-		&i.Job.IsPrivate,
-		&i.Job.SalaryMinSource,
-		&i.Job.SalaryMaxSource,
-		&i.Job.SalaryCurrencySource,
-		&i.Job.SalaryPeriodSource,
-		&i.Job.CompanySlugFolded,
-		&i.Job.DuplicateOfAggregator,
-		&i.Job.DuplicateOfRole,
-		&i.Job.DuplicateOfFuzzy,
-		&i.Job.RequiresClearance,
-		&i.Job.RequirementsDerived,
-		&i.Job.HydratedAt,
-		&i.Job.AiInterviewReports,
-		&i.Job.Metros,
-		&i.Job.SemanticEmbeddedInputHash,
-		&i.Job.ViaRecruiter,
-		&i.Job.ClearanceLevels,
-		&i.Job.Equity,
-		&i.Job.Perks,
-		&i.Job.ApplicationDeadline,
-		&i.Job.Engagement,
+		&i.ID,
+		&i.Source,
+		&i.CompanySlug,
+		&i.DuplicateOf,
+		&i.IsPrivate,
+		&i.ClosedAt,
 		&i.Inserted,
 		&i.Changed,
 	)

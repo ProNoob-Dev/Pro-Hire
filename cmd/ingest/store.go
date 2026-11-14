@@ -95,12 +95,14 @@ func newDBStore(pool *pgxpool.Pool, targetVersion int, crawled *crawledSet, tall
 // written is what save needs back from whichever of the two writes ran, so the rest of the
 // function does not care which did.
 //
-// row is the persisted job, and it is present ONLY when the full upsert ran. The cheap write
-// returns four narrow columns on purpose — embedding the row would detoast the description and
-// ship the semantic vector back for every re-seen posting, which is read amplification on the
-// path built to remove write amplification. Nothing on the cheap branch needs more: the fuller
-// row is read only to BUILD a search document, and needsIndex gates that to the full branch. A
-// pointer rather than a zeroed struct so a mistaken read panics instead of quietly serving "".
+// Both writes return narrow columns on purpose. An embedded row would detoast the description
+// and ship the semantic vector back for every re-seen posting, and the complete job is the
+// jobs_read view, which a base-table `sqlc.embed(jobs)` would bypass. Nothing here needs more:
+// the fuller row is read only to BUILD a search document, which cmd/search-drain does from the
+// queue.
+//
+// full is which write ran. leftClosed is the full write's report that it left the row closed;
+// the cheap write never changes closed_at, so it stays false there.
 type written struct {
 	id          int64
 	source      string
@@ -108,18 +110,20 @@ type written struct {
 	duplicateOf pgtype.Int8
 	inserted    bool
 	changed     bool
-	row         *db.Job
+	full        bool
+	leftClosed  bool
 }
 
 func fullWrite(r db.UpsertJobRow) written {
 	return written{
-		id:          r.Job.ID,
-		source:      r.Job.Source,
-		companySlug: r.Job.CompanySlug,
-		duplicateOf: r.Job.DuplicateOf,
+		id:          r.ID,
+		source:      r.Source,
+		companySlug: r.CompanySlug,
+		duplicateOf: r.DuplicateOf,
 		inserted:    r.Inserted.Bool,
 		changed:     r.Changed,
-		row:         &r.Job,
+		full:        true,
+		leftClosed:  r.ClosedAt.Valid,
 	}
 }
 
@@ -183,13 +187,12 @@ func needsIndex(w written) bool {
 	return w.changed || w.inserted
 }
 
-// closed reports whether the write left the row closed — only the full write carries the row,
-// and the cheap write never changes closed_at.
-func (w written) closed() bool { return w.row != nil && w.row.ClosedAt.Valid }
+// closed reports whether the write left the row closed.
+func (w written) closed() bool { return w.leftClosed }
 
-// tookCheapWrite reports which of the two writes produced this. The narrow write is the only
-// one that carries no row, so this is exact rather than a heuristic.
-func (w written) tookCheapWrite() bool { return w.row == nil }
+// tookCheapWrite reports which of the two writes produced this, exactly rather than by
+// inference from a missing field.
+func (w written) tookCheapWrite() bool { return !w.full }
 
 // clustersByRole reports whether a persisted write is worth asking the role-cluster
 // question about — the gate in front of jobdedup.CanonicalForRole.
@@ -487,19 +490,24 @@ func (s *dbStore) ExistingExternalIDs(ctx context.Context, source, board string)
 // Touch refreshes an already-ingested posting's liveness (last_seen_at, reopen if closed) by
 // its (source, external_id) identity, without rewriting content — the path a HydratingSource
 // (justjoin) uses for an offer it re-listed but did not re-fetch, so its hydrated description
-// and facets are preserved. Implements pipeline.toucher.
-func (s *dbStore) Touch(ctx context.Context, source, externalID string) (string, error) {
-	touched, err := s.q.TouchJob(ctx, db.TouchJobParams{
+// and facets are preserved. A stated listing deadline is updated alongside liveness.
+// Implements pipeline.Toucher.
+func (s *dbStore) Touch(ctx context.Context, source, externalID string, deadline *time.Time) (string, error) {
+	params := db.TouchJobParams{
 		Source:               source,
 		ExternalID:           externalID,
 		WithheldIfSeenBefore: withheldIfSeenBefore(),
-	})
+	}
+	if deadline != nil {
+		params.ApplicationDeadline = pgtype.Date{Time: *deadline, Valid: true}
+	}
+	touched, err := s.q.TouchJob(ctx, params)
 	if err != nil {
 		return "", fmt.Errorf("touch job %s/%s: %w", source, externalID, err)
 	}
 	companySlug := touched.CompanySlug
 	if touched.Deferred {
-		if companySlug, err = s.reopenAndRederive(ctx, source, externalID); err != nil {
+		if companySlug, err = s.reopenAndRederive(ctx, params); err != nil {
 			return "", fmt.Errorf("reopen job %s/%s: %w", source, externalID, err)
 		}
 	}
@@ -526,16 +534,15 @@ func (s *dbStore) Touch(ctx context.Context, source, externalID string) (string,
 // locked by the touch, so the derive reads the version it writes over. The company slug and
 // fingerprint stay as stored: moving them needs the companies reconcile only backfill-derive
 // runs. The row is requeued with a re-stamp, superseding the touch's own entry.
-func (s *dbStore) reopenAndRederive(ctx context.Context, source, externalID string) (string, error) {
+func (s *dbStore) reopenAndRederive(ctx context.Context, params db.TouchJobParams) (string, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return "", err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.q.WithTx(tx)
-	touched, err := qtx.TouchJob(ctx, db.TouchJobParams{
-		Source: source, ExternalID: externalID, AllowReopen: true, WithheldIfSeenBefore: withheldIfSeenBefore(),
-	})
+	params.AllowReopen = true
+	touched, err := qtx.TouchJob(ctx, params)
 	if err != nil {
 		return "", err
 	}
@@ -551,8 +558,8 @@ func (s *dbStore) reopenAndRederive(ctx context.Context, source, externalID stri
 				return "", err
 			}
 		}
-		// Unconditionally: the touch's own enqueue is DO NOTHING, which leaves a dead-lettered
-		// entry dead and the reopened posting out of search.
+		// Re-stamp after writing the final facets. Touch also re-arms its entry;
+		// this keeps the re-derived row's search publication explicit in this transaction.
 		if err := qtx.RequeueSearchOutbox(ctx, touched.ID); err != nil {
 			return "", err
 		}

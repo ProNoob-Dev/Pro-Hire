@@ -62,6 +62,23 @@ a new action goes in the same way or zizmor fails. `actions/checkout` takes
 `# zizmor: ignore[<audit>]` with the reason beside it. Nothing else reads a workflow until
 GitHub runs it, so a mistake in one that fires on a tag or a schedule surfaces late.
 
+### Automated code review
+
+`code-review.yml` runs OpenCodeReview on new non-draft PRs and pushes. A repository
+owner, member or collaborator can request another review with a standalone `@codereview`
+mention in a PR comment. Manual dispatch accepts an open PR number, including a draft.
+Unrelated comments never cancel a running review. Findings appear with file/line locations
+in a sticky PR summary; they do not approve or merge the PR.
+
+Actions secrets `OCR_LLM_URL` (the complete chat-completions endpoint) and
+`OCR_LLM_AUTH_TOKEN` supply the private gateway connection. The optional Actions variable
+`OCR_LLM_MODEL` defaults to `mid`. Never put the endpoint or credential in this repository.
+The CLI version is pinned. Checkout uses the trusted workflow commit; PR changes are read
+from git objects without executing PR code. The runner captures all provider output,
+redacts connection settings from findings, and publishes a generic message on failure.
+Incomplete reviews fail the check. No raw result/log artifacts are uploaded. Automatic
+and comment triggers only become active after the workflow is on the default branch.
+
 ## Instruction files and Markdown: agnix, rumdl, `pnpm check:links`
 
 - **agnix** `--strict` (the `docs` CI job) lints every AGENTS.md: an unclosed code fence
@@ -97,7 +114,9 @@ a Go test (the `llmkey` binding, the layering table).
 
 `scripts/check-openapi-breaking.sh` (the `api-breaking` CI job) runs oasdiff over
 `web/static/openapi.yaml` against main and fails on a change that would break an existing
-client — a removed field, a narrowed bound, a weaker response promise. A deliberate break
+client — a removed field, a narrowed bound, a weaker response promise. The file is generated
+from the contract (`pnpm run gen:api-docs`), so a break there starts in `typespec/`,
+`web/src/lib/docs/filters.ts` or the supplement. A deliberate break
 passes with an `API-Break: <reason>` commit trailer.
 
 ## Contract fuzzing: Schemathesis
@@ -109,6 +128,30 @@ may make the server fail. `schemathesis.toml` names the refusals a valid request
 get (404 for a token or handle that names nothing, 401 without a session). Run it locally
 against a running server: `uvx schemathesis==4.33.2 run openapi/api.openapi.json --url
 http://localhost:<port>/api/v1`. The signed-in routes answer 401 until the run gets a session.
+
+## MCP protocol conformance: `@modelcontextprotocol/conformance`
+
+The `mcp-conformance` job in `.github/workflows/contract.yml` boots the API like the
+Schemathesis job and runs the official MCP conformance suite (`server` mode, spec 2025-06-18
+and 2025-11-25 scenarios) against `/api/v1/ojcp/mcp`. It checks the
+protocol: initialize, ping, logging, completion, `tools/list` and `prompts/list` structure,
+and the rest of what a client depends on. It does not exercise sign-in: the suite's `auth/*`
+scenarios test CLIENTS. It cannot send a credential either, and since 2026-11-13 `/api/v1/mcp`
+answers every request without one 401, so the hosted MCP is not covered.
+
+Many scenarios call the suite's reference "everything-server" tools, prompts and resources,
+which a product server does not have. `.github/mcp-conformance/ojcp.yml`
+lists the scenarios that cannot apply, with the reason beside each. The suite exits non-zero
+on a failure that is not listed and on a listed scenario that now passes, so remove an entry
+the moment its scenario passes. To exclude a scenario, add it to `server:` in that file with
+a comment saying why; never to hide a real failure. The package version is pinned in the
+workflow; bump it deliberately, since a new release adds scenarios. Scenarios the suite marks
+"pending" are not in its active set and do not run — notably `json-schema-2020-12`, which checks
+`$schema`/`$defs` handling in tool schemas; pick it up when a bump graduates it.
+
+Run it locally against a server of your own (never production: scenarios call tools):
+`npx @modelcontextprotocol/conformance@0.1.16 server --url http://localhost:<port>/api/v1/ojcp/mcp
+--expected-failures .github/mcp-conformance/ojcp.yml`.
 
 ## Changed-line coverage: diff-cover
 
@@ -158,8 +201,10 @@ have their own runner, so `unittest discover` would report "Ran 0 tests" and pas
 The `artifacts` CI job: `web/static/install.sh` is served at `freehire.me/install.sh` to be
 piped into `sh`, so shellcheck covers every tracked `*.sh`; both Dockerfiles go through
 hadolint (`.hadolint.yaml` argues its two exclusions, and a finding wrong for one line
-carries `# hadolint ignore=` beside it); and `web/static/openapi.yaml` is validated against
-the OpenAPI specification, since it is a static asset nothing else parses.
+carries `# hadolint ignore=` beside it); and `web/static/openapi.yaml` (generated from the
+contract, see above) is linted with Redocly’s `recommended-strict` preset: the recommended
+rules with warnings promoted to errors, including missing client-error responses and licence
+metadata. The broader API references retain the `minimal` parsing gate.
 
 ## Shared JS dependencies: `pnpm check:deps`
 

@@ -3,6 +3,7 @@
 // Routes move here one group at a time; the rest are still hand-written Fiber.
 import "@typespec/http";
 import "./common.tsp";
+import "./onboarding.tsp";
 import "./email-prefs.tsp";
 import "./talent.tsp";
 import "./watchlist.tsp";
@@ -35,6 +36,7 @@ import "./billing.tsp";
 import "./plan.tsp";
 import "./direct-apply.tsp";
 import "./jobs.tsp";
+import "./job-wire.tsp";
 import "./companies.tsp";
 import "./search.tsp";
 import "./resume.tsp";

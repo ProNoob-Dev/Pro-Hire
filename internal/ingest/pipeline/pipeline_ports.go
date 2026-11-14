@@ -55,7 +55,8 @@ type Closer interface {
 // for it and drops the refresh when a Store lacks it (test fakes), like Closer.
 type Toucher interface {
 	// Touch reports the refreshed row's stored company slug ("" when there was no row).
-	Touch(ctx context.Context, source, externalID string) (companySlug string, err error)
+	// A non-nil deadline updates the listing's last application date; nil preserves it.
+	Touch(ctx context.Context, source, externalID string, deadline *time.Time) (companySlug string, err error)
 }
 
 // CoveredRefresher refreshes the liveness of OPEN stored rows a board listed but did
@@ -220,8 +221,12 @@ type BoardHealth interface {
 // content_hash moves, and the write that stamps the column on the common path
 // (RefreshUnchangedJob) deliberately writes nothing else and enqueues nothing — so an indexed
 // copy would be most wrong for exactly the actively-crawled rows the gate must credit.
+//
+// countries, when non-empty, narrows coverage to postings in one of those countries or in none
+// stated: a national-market aggregator's postings (sources.MarketCountries) are covered only by
+// an employer board that hires there, not by a foreign employer of the same name (issue #4412).
 type CoverageLookup interface {
-	NonAggregatorCompanies(ctx context.Context, companySlugs, aggregators []string) (map[string]bool, error)
+	NonAggregatorCompanies(ctx context.Context, companySlugs, aggregators, countries []string) (map[string]bool, error)
 }
 
 // aggregatorCoverage answers whether a company (keyed by the company_slug normalize.Slug

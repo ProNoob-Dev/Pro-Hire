@@ -952,6 +952,46 @@ func (s *ApiKeyPlanTier) UnmarshalText(data []byte) error {
 	}
 }
 
+// The account's API requests on one UTC day.
+// Ref: #/components/schemas/ApiUsageDay
+type ApiUsageDay struct {
+	Day time.Time `json:"day"`
+	// Requests that reached the API with one of the account's credentials.
+	Requests int64 `json:"requests"`
+	// The part of `requests` answered with a 4xx or 5xx.
+	Errors int64 `json:"errors"`
+}
+
+// GetDay returns the value of Day.
+func (s *ApiUsageDay) GetDay() time.Time {
+	return s.Day
+}
+
+// GetRequests returns the value of Requests.
+func (s *ApiUsageDay) GetRequests() int64 {
+	return s.Requests
+}
+
+// GetErrors returns the value of Errors.
+func (s *ApiUsageDay) GetErrors() int64 {
+	return s.Errors
+}
+
+// SetDay sets the value of Day.
+func (s *ApiUsageDay) SetDay(val time.Time) {
+	s.Day = val
+}
+
+// SetRequests sets the value of Requests.
+func (s *ApiUsageDay) SetRequests(val int64) {
+	s.Requests = val
+}
+
+// SetErrors sets the value of Errors.
+func (s *ApiUsageDay) SetErrors(val int64) {
+	s.Errors = val
+}
+
 // Ref: #/components/schemas/ApplyJob
 type ApplyJob struct {
 	// The day the application was sent, `2026-07-29`. Absent, null or empty means now.
@@ -1457,6 +1497,8 @@ type AuthUser struct {
 	Tier AuthUserTier `json:"tier"`
 	// Whether the account holds a live API key or MCP grant.
 	AgentConnected bool `json:"agent_connected"`
+	// The API product tier the account holds (see ApiKeyPlan); empty for none.
+	APITier AuthUserAPITier `json:"api_tier"`
 }
 
 // GetID returns the value of ID.
@@ -1519,6 +1561,11 @@ func (s *AuthUser) GetAgentConnected() bool {
 	return s.AgentConnected
 }
 
+// GetAPITier returns the value of APITier.
+func (s *AuthUser) GetAPITier() AuthUserAPITier {
+	return s.APITier
+}
+
 // SetID sets the value of ID.
 func (s *AuthUser) SetID(val int64) {
 	s.ID = val
@@ -1577,6 +1624,60 @@ func (s *AuthUser) SetTier(val AuthUserTier) {
 // SetAgentConnected sets the value of AgentConnected.
 func (s *AuthUser) SetAgentConnected(val bool) {
 	s.AgentConnected = val
+}
+
+// SetAPITier sets the value of APITier.
+func (s *AuthUser) SetAPITier(val AuthUserAPITier) {
+	s.APITier = val
+}
+
+// The API product tier the account holds (see ApiKeyPlan); empty for none.
+type AuthUserAPITier string
+
+const (
+	AuthUserAPITierEmpty   AuthUserAPITier = ""
+	AuthUserAPITierAPI     AuthUserAPITier = "api"
+	AuthUserAPITierAPIData AuthUserAPITier = "api_data"
+)
+
+// AllValues returns all AuthUserAPITier values.
+func (AuthUserAPITier) AllValues() []AuthUserAPITier {
+	return []AuthUserAPITier{
+		AuthUserAPITierEmpty,
+		AuthUserAPITierAPI,
+		AuthUserAPITierAPIData,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AuthUserAPITier) MarshalText() ([]byte, error) {
+	switch s {
+	case AuthUserAPITierEmpty:
+		return []byte(s), nil
+	case AuthUserAPITierAPI:
+		return []byte(s), nil
+	case AuthUserAPITierAPIData:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AuthUserAPITier) UnmarshalText(data []byte) error {
+	switch AuthUserAPITier(data) {
+	case AuthUserAPITierEmpty:
+		*s = AuthUserAPITierEmpty
+		return nil
+	case AuthUserAPITierAPI:
+		*s = AuthUserAPITierAPI
+		return nil
+	case AuthUserAPITierAPIData:
+		*s = AuthUserAPITierAPIData
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // Ref: #/components/schemas/AuthUserTier
@@ -4309,6 +4410,21 @@ func (s *CancelSessionOK) SetData(val MentorshipBooking) {
 // CancelSupportTurnNoContent is response for CancelSupportTurn operation.
 type CancelSupportTurnNoContent struct{}
 
+// A single item: `{"data": ...}`.
+type CatalogHistoryOK struct {
+	Data []CatalogSizePoint `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CatalogHistoryOK) GetData() []CatalogSizePoint {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CatalogHistoryOK) SetData(val []CatalogSizePoint) {
+	s.Data = val
+}
+
 // The size of the catalogue, from one published snapshot.
 // Ref: #/components/schemas/CatalogScale
 type CatalogScale struct {
@@ -4419,6 +4535,47 @@ func (s *CatalogScaleOK) SetData(val CatalogScale) {
 	s.Data = val
 }
 
+// Ref: #/components/schemas/CatalogSizePoint
+type CatalogSizePoint struct {
+	// YYYY-MM-DD (UTC).
+	Date string `json:"date"`
+	// Open postings the public listings could page through at the end of that day.
+	OpenJobs int64 `json:"open_jobs"`
+	// True for a day estimated after the fact from today's records rather than measured that day. Such a
+	// day applies today's duplicate verdicts to the past.
+	Reconstructed bool `json:"reconstructed"`
+}
+
+// GetDate returns the value of Date.
+func (s *CatalogSizePoint) GetDate() string {
+	return s.Date
+}
+
+// GetOpenJobs returns the value of OpenJobs.
+func (s *CatalogSizePoint) GetOpenJobs() int64 {
+	return s.OpenJobs
+}
+
+// GetReconstructed returns the value of Reconstructed.
+func (s *CatalogSizePoint) GetReconstructed() bool {
+	return s.Reconstructed
+}
+
+// SetDate sets the value of Date.
+func (s *CatalogSizePoint) SetDate(val string) {
+	s.Date = val
+}
+
+// SetOpenJobs sets the value of OpenJobs.
+func (s *CatalogSizePoint) SetOpenJobs(val int64) {
+	s.OpenJobs = val
+}
+
+// SetReconstructed sets the value of Reconstructed.
+func (s *CatalogSizePoint) SetReconstructed(val bool) {
+	s.Reconstructed = val
+}
+
 // Ref: #/components/schemas/CategoryMeta
 type CategoryMeta struct {
 	Category string `json:"category"`
@@ -4451,7 +4608,8 @@ func (s *CheckUsernameOK) SetData(val AccountUsernameAvailability) {
 
 // Ref: #/components/schemas/CityMatch
 type CityMatch struct {
-	// The city's canonical name, the value the filters take.
+	// Canonical city name — pass it verbatim to the `cities` facet, which matches nothing on a near
+	// miss.
 	Value string `json:"value"`
 	// ISO 3166-1 alpha-2, lower case.
 	Country string `json:"country"`
@@ -10203,6 +10361,21 @@ func (s *GetApiPlanOK) GetData() ApiKeyPlan {
 
 // SetData sets the value of Data.
 func (s *GetApiPlanOK) SetData(val ApiKeyPlan) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetApiUsageOK struct {
+	Data []ApiUsageDay `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetApiUsageOK) GetData() []ApiUsageDay {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetApiUsageOK) SetData(val []ApiUsageDay) {
 	s.Data = val
 }
 
@@ -17711,6 +17884,91 @@ func (s *OnboardingCompleted) GetOnboardingComplete() bool {
 // SetOnboardingComplete sets the value of OnboardingComplete.
 func (s *OnboardingCompleted) SetOnboardingComplete(val bool) {
 	s.OnboardingComplete = val
+}
+
+// One matching posting with how well its skills match the given ones.
+// Ref: #/components/schemas/OnboardingMatch
+type OnboardingMatch struct {
+	// The jobview wire shape `/jobs/search` answers with.
+	Job jx.Raw `json:"job"`
+	// The share of the posting's skills the given skills cover, 0-100.
+	MatchPercent int32 `json:"match_percent"`
+}
+
+// GetJob returns the value of Job.
+func (s *OnboardingMatch) GetJob() jx.Raw {
+	return s.Job
+}
+
+// GetMatchPercent returns the value of MatchPercent.
+func (s *OnboardingMatch) GetMatchPercent() int32 {
+	return s.MatchPercent
+}
+
+// SetJob sets the value of Job.
+func (s *OnboardingMatch) SetJob(val jx.Raw) {
+	s.Job = val
+}
+
+// SetMatchPercent sets the value of MatchPercent.
+func (s *OnboardingMatch) SetMatchPercent(val int32) {
+	s.MatchPercent = val
+}
+
+// A list: `{"data": [...], "meta": {...}}`.
+type OnboardingMatchesOK struct {
+	Data []OnboardingMatch `json:"data"`
+	Meta ListMeta          `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *OnboardingMatchesOK) GetData() []OnboardingMatch {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *OnboardingMatchesOK) GetMeta() ListMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *OnboardingMatchesOK) SetData(val []OnboardingMatch) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *OnboardingMatchesOK) SetMeta(val ListMeta) {
+	s.Meta = val
+}
+
+// What the onboarding searches with: the CV's skills and the answers as a jobs-search query.
+// Ref: #/components/schemas/OnboardingMatchesRequest
+type OnboardingMatchesRequest struct {
+	// Canonical skill tags, at most 50. They rank the answer; they do not filter it.
+	Skills []string `json:"skills"`
+	// A `/jobs/search` query string (`work_mode=remote&posted_within_days=7`, ...). An unknown param is
+	// named in `meta.ignored_params`.
+	Query OptString `json:"query"`
+}
+
+// GetSkills returns the value of Skills.
+func (s *OnboardingMatchesRequest) GetSkills() []string {
+	return s.Skills
+}
+
+// GetQuery returns the value of Query.
+func (s *OnboardingMatchesRequest) GetQuery() OptString {
+	return s.Query
+}
+
+// SetSkills sets the value of Skills.
+func (s *OnboardingMatchesRequest) SetSkills(val []string) {
+	s.Skills = val
+}
+
+// SetQuery sets the value of Query.
+func (s *OnboardingMatchesRequest) SetQuery(val OptString) {
+	s.Query = val
 }
 
 // Ref: #/components/schemas/OneClickResult
@@ -25804,9 +26062,14 @@ func (s *SuggestOK) SetMeta(val SuggestMeta) {
 
 // Ref: #/components/schemas/Suggestion
 type Suggestion struct {
-	Text  string           `json:"text"`
+	// The whole phrase the row names — the recognised prefix plus the completion, e.g. "Senior Software
+	// Engineer Google".
+	Text string `json:"text"`
+	// Every part the row applies. Apply ALL of them: a row naming a role and a company that is applied as
+	// only one of the two silently discards what the caller typed.
 	Parts []SuggestionPart `json:"parts"`
-	// How many open jobs the suggestion finds.
+	// Open postings behind the completion. Never zero — a suggestion that leads to an empty page is
+	// withheld.
 	Jobs int64 `json:"jobs"`
 }
 
@@ -25899,10 +26162,14 @@ func (s *SuggestionKind) UnmarshalText(data []byte) error {
 // One recognised piece of the query: a dictionary term, or text still being typed.
 // Ref: #/components/schemas/SuggestionPart
 type SuggestionPart struct {
+	// Which vocabulary the part comes from, and so which parameter it applies to: `skill` → `skills`,
+	// `category` → `category`, `company` → `company_slug`. A `title` names no facet and is applied as
+	// `q`.
 	Kind SuggestionKind `json:"kind"`
-	// The dictionary slug, when the part is one.
+	// The facet value to apply. Absent for a `title`.
 	Slug OptString `json:"slug"`
-	Text string    `json:"text"`
+	// How this part reads on its own.
+	Text string `json:"text"`
 }
 
 // GetKind returns the value of Kind.

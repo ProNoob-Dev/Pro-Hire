@@ -24,7 +24,8 @@ const accountProfileInstructions = " and keeps the job-search profile. Call get_
 const accountSetupInstructions = "get_setup_status: the next setup step. "
 
 // The capability line already says auto-apply prepares applications for review.
-const accountAutoApplyInstructions = "Auto-apply: saved answers may be sent to employers. "
+const accountAutoApplyInstructions = "Auto-apply: saved answers may be sent to employers. " +
+	"Check get_setup_status before the first auto_apply_start; its refusals are final for that call, so relay the reason instead of retrying. "
 
 // accountPlanInstructions is kept to one clause: the tool's own description says what the
 // plan carries and that the free plan includes no AI. Only for a session served auto-apply,
@@ -84,7 +85,7 @@ func accountInstructions(tools []assistant.Tool) string {
 // accountAnnotations declares what a tool does to the account, from the effect the tool
 // itself carries. A client reads these to decide whether to ask the person before a call,
 // so they are not decoration: unset, every search is a confirmation prompt. Every tool is
-// open-world for the same reason the anonymous server's are: the catalogue and the
+// open-world for the same reason the catalogue tools are: the catalogue and the
 // tracking board both change outside this conversation, on the website.
 func accountAnnotations(t assistant.Tool) *mcp.ToolAnnotations {
 	destructive, openWorld := t.Effect == assistant.EffectOverwrites, true
@@ -98,7 +99,7 @@ func accountAnnotations(t assistant.Tool) *mcp.ToolAnnotations {
 }
 
 // accountToolHandler closes over the request's resolved userID — set once, when
-// newMixedServer is built per request — so
+// newServer is built per request — so
 // every call this session makes runs as that user and no other. The JSON error
 // envelope mirrors assistant.Registry.Call's own failure rendering, reproduced
 // here rather than reused directly since the SDK's CallToolResult shape differs
@@ -113,6 +114,11 @@ func accountToolHandler(t assistant.Tool, userID int64) mcp.ToolHandler {
 			}
 			result := errorResult(agentErrorText(err))
 			diagnostics := map[string]any{"error_code": code}
+			// Only a reason the call site wrote as a constant is logged: the agent-facing text
+			// of other errors can interpolate what the caller sent (a slug, a search text).
+			if reason := assistant.LogReason(err); reason != "" {
+				diagnostics[reasonKey] = reason
+			}
 			if field := assistant.ArgField(err); field != "" && code == "invalid_request" {
 				diagnostics[badArgsKey] = []string{field}
 			}
@@ -130,9 +136,9 @@ func accountToolHandler(t assistant.Tool, userID int64) mcp.ToolHandler {
 // agentErrorText is what an agent is told when a tool fails. A *fiber.Error and a bad
 // argument are written for the caller, so their text is shown; anything else is an internal
 // fault whose text may name accounts, rows or personal data, so the agent gets a generic
-// sentence, as an HTTP caller gets a generic 500. Not logged either, for the same reason the
-// tool logs carry no error text: the result's diagnostics (request id, error code) are the
-// correlation.
+// sentence, as an HTTP caller gets a generic 500. This text is not logged: it can echo the
+// caller's input. The log carries only a constant reason an error opted in with
+// (assistant.WithLogReason).
 func agentErrorText(err error) string {
 	var fe *fiber.Error
 	switch {
@@ -152,10 +158,10 @@ func errorResult(text string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{IsError: true, Content: []mcp.Content{&mcp.TextContent{Text: text}}}
 }
 
-// AccountUserIDHeader is the internal, request-scoped header MixedHandler
+// AccountUserIDHeader is the internal, request-scoped header Handler
 // trusts for the caller's resolved user id. It is set by the Fiber middleware
 // that authenticates the bearer token BEFORE this handler ever runs (see
-// mountMCPServer in internal/api/handler) — never read from, or trusted from,
+// mcpAuthenticate in internal/api/handler) — never read from, or trusted from,
 // an external caller.
 //
 // Authentication lives in that middleware rather than here because a bare

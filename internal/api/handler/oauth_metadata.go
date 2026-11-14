@@ -1,6 +1,12 @@
 package handler
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"strings"
+
+	"github.com/gofiber/fiber/v2"
+
+	"github.com/strelov1/freehire/internal/identity/auth/oauth2server"
+)
 
 // authorizationServerMetadata is RFC 8414's document: where the three OAuth
 // endpoints live and what this server supports. An MCP client fetches this
@@ -48,22 +54,29 @@ type protectedResourceMetadata struct {
 	AuthorizationServers []string `json:"authorization_servers"`
 }
 
-// OAuthProtectedResourceMetadata renders RFC 9728's document, naming the
-// signed-in MCP server as the protected resource and this deployment as its
-// authorization server. Public. Mounted internally and proxied, same reasoning
-// as OAuthAuthorizationServerMetadata above.
+// OAuthProtectedResourceMetadata renders RFC 9728's document, naming the MCP server at
+// /api/v1/mcp as the protected resource and this deployment as its authorization server.
+// Public. Both the root well-known path and the path-inserted one (mcpapp.ResourceMetadataPath)
+// proxy here, since they describe the one resource. Mounted internally and proxied, same
+// reasoning as OAuthAuthorizationServerMetadata above.
 func (h *authHandlers) OAuthProtectedResourceMetadata(c *fiber.Ctx) error {
-	origin := h.frontendOrigin
-	return c.JSON(protectedResourceMetadata{
-		Resource:             origin + "/api/v1/mcp/account",
-		AuthorizationServers: []string{origin},
-	})
+	return h.protectedResource(c, oauth2server.MCPResourcePath)
 }
 
-// OAuthMixedResourceMetadata describes the canonical mixed-auth MCP endpoint.
-func (h *authHandlers) OAuthMixedResourceMetadata(c *fiber.Ctx) error {
+// OAuthAccountProtectedResourceMetadata is the same document for the saved
+// /api/v1/mcp/account URL. RFC 9728 §3.3 has the client compare `resource` with the URL it
+// derived the metadata URL from, so a client connected with that address is told that
+// address, not /api/v1/mcp. The path-inserted form proxies here from SvelteKit.
+func (h *authHandlers) OAuthAccountProtectedResourceMetadata(c *fiber.Ctx) error {
+	return h.protectedResource(c, oauth2server.MCPAccountResourcePath)
+}
+
+// protectedResource serves the document for one resource path. Each path used is one
+// CanonicalResource accepts, so the client can send the resource back on /authorize.
+func (h *authHandlers) protectedResource(c *fiber.Ctx, path string) error {
+	origin := h.frontendOrigin
 	return c.JSON(protectedResourceMetadata{
-		Resource:             h.frontendOrigin + "/api/v1/mcp",
-		AuthorizationServers: []string{h.frontendOrigin},
+		Resource:             strings.TrimSuffix(origin, "/") + path,
+		AuthorizationServers: []string{origin},
 	})
 }

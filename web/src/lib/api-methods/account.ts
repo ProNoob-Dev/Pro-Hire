@@ -3,6 +3,7 @@ import type {
   AiUsage,
   ApiKey,
   ApiPlan,
+  ApiUsageDay,
   BillingOverview,
   CheckoutSession,
   CreatedApiKey,
@@ -222,6 +223,12 @@ export function accountApi({ call, request, requestData }: Http) {
     return requestData<ApiPlan>('/api/v1/me/api-plan');
   }
 
+  /** The caller's API requests per UTC day over the last 30 days, oldest first; a day
+   *  without requests is absent (cookie-only). */
+  async function getApiUsage(): Promise<ApiUsageDay[]> {
+    return requestData<ApiUsageDay[]>('/api/v1/me/api-usage');
+  }
+
   /** The current user's API keys (metadata only — no secret). */
   async function listApiKeys(): Promise<ApiKey[]> {
     return requestData<ApiKey[]>('/api/v1/me/api-keys');
@@ -235,7 +242,7 @@ export function accountApi({ call, request, requestData }: Http) {
   async function createApiKey(name: string, expiresAt?: string, scope?: string): Promise<CreatedApiKey> {
     return requestData<CreatedApiKey>(
       '/api/v1/me/api-keys',
-      jsonBody('POST', { name, expires_at: expiresAt ?? null, scope: scope ?? null }),
+      jsonBody('POST', { name, expires_at: expiresAt ?? null, scope }),
     );
   }
 
@@ -358,6 +365,7 @@ export function accountApi({ call, request, requestData }: Http) {
     markNotificationRead,
     markAllNotificationsRead,
     getApiPlan,
+    getApiUsage,
     listApiKeys,
     createApiKey,
     revokeApiKey,

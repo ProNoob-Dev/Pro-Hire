@@ -134,15 +134,16 @@ func (q *Queries) CloseJobsPastApplicationDeadline(ctx context.Context, source s
 }
 
 const existingExternalIDs = `-- name: ExistingExternalIDs :many
-SELECT external_id, is_tech FROM jobs
-WHERE source = $1
-  AND (description <> '' OR created_at < $2)
-  AND (hydrated_at >= $3
-       OR abs(hashtext(external_id)::bigint) % $4::bigint
+SELECT j.external_id, j.is_tech FROM jobs j
+LEFT JOIN job_activity a ON a.job_id = j.id
+WHERE j.source = $1
+  AND (j.description <> '' OR j.created_at < $2)
+  AND (a.hydrated_at >= $3
+       OR abs(hashtext(j.external_id)::bigint) % $4::bigint
           <> $5::bigint)
-  AND (application_deadline IS NULL
-       OR application_deadline >= (now() AT TIME ZONE 'UTC')::date
-       OR application_deadline < $6::date)
+  AND (j.application_deadline IS NULL
+       OR j.application_deadline >= (now() AT TIME ZONE 'UTC')::date
+       OR j.application_deadline < $6::date)
 `
 
 type ExistingExternalIDsParams struct {
@@ -196,6 +197,9 @@ type ExistingExternalIDsRow struct {
 // posting would otherwise cost a detail request on every crawl for good. Written as an OR over
 // the kept cases rather than NOT over the withheld one: a NULL deadline (every source but EURES)
 // would make the NOT form NULL and drop the row from the set.
+//
+// hydrated_at is job_activity's. LEFT JOIN, so a job without an activity row reads as never
+// checked (NULL, the same "stale" answer a legacy NULL gave) instead of vanishing from the set.
 func (q *Queries) ExistingExternalIDs(ctx context.Context, arg ExistingExternalIDsParams) ([]ExistingExternalIDsRow, error) {
 	rows, err := q.db.Query(ctx, existingExternalIDs,
 		arg.Source,
@@ -224,16 +228,17 @@ func (q *Queries) ExistingExternalIDs(ctx context.Context, arg ExistingExternalI
 }
 
 const existingExternalIDsByBoard = `-- name: ExistingExternalIDsByBoard :many
-SELECT external_id, is_tech FROM jobs
-WHERE source = $1
-  AND external_id LIKE $2
-  AND (description <> '' OR created_at < $3)
-  AND (hydrated_at >= $4
-       OR abs(hashtext(external_id)::bigint) % $5::bigint
+SELECT j.external_id, j.is_tech FROM jobs j
+LEFT JOIN job_activity a ON a.job_id = j.id
+WHERE j.source = $1
+  AND j.external_id LIKE $2
+  AND (j.description <> '' OR j.created_at < $3)
+  AND (a.hydrated_at >= $4
+       OR abs(hashtext(j.external_id)::bigint) % $5::bigint
           <> $6::bigint)
-  AND (application_deadline IS NULL
-       OR application_deadline >= (now() AT TIME ZONE 'UTC')::date
-       OR application_deadline < $7::date)
+  AND (j.application_deadline IS NULL
+       OR j.application_deadline >= (now() AT TIME ZONE 'UTC')::date
+       OR j.application_deadline < $7::date)
 `
 
 type ExistingExternalIDsByBoardParams struct {
@@ -266,6 +271,8 @@ type ExistingExternalIDsByBoardRow struct {
 // and the body_refresh_* arm withholds one whose stored body has gone stale so an employer's
 // edit is re-read, and the deadline arm re-reads a posting whose stored deadline has just
 // passed; see ExistingExternalIDs for all three.
+//
+// hydrated_at is job_activity's, read through a LEFT JOIN as in ExistingExternalIDs.
 func (q *Queries) ExistingExternalIDsByBoard(ctx context.Context, arg ExistingExternalIDsByBoardParams) ([]ExistingExternalIDsByBoardRow, error) {
 	rows, err := q.db.Query(ctx, existingExternalIDsByBoard,
 		arg.Source,
@@ -300,6 +307,7 @@ SET last_seen_at = now()
 WHERE source = $1
   AND external_id = ANY($2::text[])
   AND closed_at IS NULL
+  AND NOT is_private
 RETURNING company_slug
 `
 
@@ -339,49 +347,49 @@ func (q *Queries) RefreshCoveredJobs(ctx context.Context, arg RefreshCoveredJobs
 
 const touchJob = `-- name: TouchJob :one
 WITH existing AS MATERIALIZED (
-    SELECT id, closed_at, is_private, duplicate_of, last_seen_at,
+    SELECT j.id, j.closed_at, j.is_private, j.duplicate_of, a.last_seen_at, j.application_deadline AS previous_deadline,
+           COALESCE($1::date, j.application_deadline) AS deadline,
            -- The touch would reopen this row: closed, and its deadline (if any) not passed.
-           (closed_at IS NOT NULL AND (application_deadline IS NULL
-                                       OR application_deadline >= (now() AT TIME ZONE 'UTC')::date)) AS would_reopen
-    FROM jobs
-    WHERE jobs.source = $1 AND jobs.external_id = $2
-    FOR UPDATE
+           (j.closed_at IS NOT NULL AND (COALESCE($1::date, j.application_deadline) IS NULL
+                                         OR COALESCE($1::date, j.application_deadline) >= (now() AT TIME ZONE 'UTC')::date)) AS would_reopen
+    FROM jobs j
+    JOIN job_activity a ON a.job_id = j.id
+    WHERE j.source = $2 AND j.external_id = $3
+    FOR NO KEY UPDATE OF j, a
 ), touched AS (
     UPDATE jobs
     SET last_seen_at = now(),
-        closed_at = CASE WHEN application_deadline < (now() AT TIME ZONE 'UTC')::date
+        application_deadline = e.deadline,
+        closed_at = CASE WHEN e.deadline < (now() AT TIME ZONE 'UTC')::date
                          THEN COALESCE(jobs.closed_at, now()) ELSE NULL END,
-        closed_reason = CASE WHEN application_deadline < (now() AT TIME ZONE 'UTC')::date
+        closed_reason = CASE WHEN e.deadline < (now() AT TIME ZONE 'UTC')::date
                              THEN 'expired' ELSE '' END,
         liveness_strikes = CASE WHEN jobs.closed_at IS NOT NULL THEN 0 ELSE liveness_strikes END,
         -- Stamp a lifecycle transition, not another observation of an expired posting.
         updated_at = CASE
             WHEN (jobs.closed_at IS NULL) IS DISTINCT FROM
-                 (application_deadline IS NULL OR application_deadline >= (now() AT TIME ZONE 'UTC')::date)
+                 (e.deadline IS NULL OR e.deadline >= (now() AT TIME ZONE 'UTC')::date)
+            OR jobs.application_deadline IS DISTINCT FROM e.deadline
             THEN now() ELSE updated_at END
     FROM existing e
-    WHERE jobs.id = e.id AND ($3::boolean OR NOT e.would_reopen)
+    WHERE jobs.id = e.id AND ($4::boolean OR NOT e.would_reopen)
     RETURNING jobs.id, jobs.company_slug, jobs.closed_at,
-              COALESCE(jobs.posted_at, jobs.created_at) AS job_posted_at
+              jobs.application_deadline, COALESCE(jobs.posted_at, jobs.created_at) AS job_posted_at
 ), queued AS (
     INSERT INTO search_delete_outbox (job_id)
     SELECT t.id FROM touched t JOIN existing e ON e.id = t.id
     WHERE t.closed_at IS NOT NULL AND e.closed_at IS NULL AND NOT e.is_private
     ON CONFLICT (job_id) DO NOTHING
-), reopened_queued AS (
+), changed_queued AS (
+    -- Reopen, changed listing metadata, or re-seen after search withheld it.
     INSERT INTO search_outbox (job_id, job_posted_at)
     SELECT t.id, t.job_posted_at
     FROM touched t JOIN existing e ON e.id = t.id
-    WHERE t.closed_at IS NULL AND e.closed_at IS NOT NULL AND NOT e.is_private
-    ON CONFLICT (job_id) DO NOTHING
-), returned_queued AS (
-    -- Re-seen after search withheld it for going unseen: see RefreshUnchangedJob.
-    INSERT INTO search_outbox (job_id, job_posted_at)
-    SELECT t.id, t.job_posted_at
-    FROM touched t JOIN existing e ON e.id = t.id
-    WHERE t.closed_at IS NULL AND e.closed_at IS NULL AND NOT e.is_private
-      AND e.duplicate_of IS NULL
-      AND e.last_seen_at < $4::timestamptz
+    WHERE t.closed_at IS NULL AND NOT e.is_private
+      AND (e.closed_at IS NOT NULL
+           OR t.application_deadline IS DISTINCT FROM e.previous_deadline
+           OR (e.duplicate_of IS NULL
+               AND e.last_seen_at < $5::timestamptz))
     ON CONFLICT (job_id) DO UPDATE
         SET id = DEFAULT, created_at = now(), attempts = 0, last_error = '', failed_at = NULL
 )
@@ -392,6 +400,7 @@ FROM existing e LEFT JOIN touched t ON t.id = e.id
 `
 
 type TouchJobParams struct {
+	ApplicationDeadline  pgtype.Date        `json:"application_deadline"`
 	Source               string             `json:"source"`
 	ExternalID           string             `json:"external_id"`
 	AllowReopen          bool               `json:"allow_reopen"`
@@ -419,6 +428,15 @@ type TouchJobRow struct {
 // (not newly saved) would drop out of the sweep and its removed offers would never close.
 // Lock the prior state before updating: after waiting for a concurrent close,
 // transition detection must observe the committed closed row, not an older snapshot.
+// FOR NO KEY UPDATE, not FOR UPDATE: a foreign-key child insert (enrichment_outbox, apply_forms,
+// search_outbox) holds KEY SHARE on this tuple while a toucher already holds other locks of its
+// own, and FOR UPDATE conflicts with KEY SHARE (a deadlock waiting to happen); a plain UPDATE's
+// lock does not, and it is all this statement needs. The jobs tuple AND the activity row are locked
+// here, in that order, before anything is queued: release A still writes the legacy columns and its
+// one-way bridge would take the activity row only at the end of the statement, AFTER the
+// search_outbox writes below, while a writer that locks the activity row first and then queues
+// (release B) deadlocks with that. last_seen_at, the previous stamp the withheld-then-seen requeue
+// compares, is the locked activity row's.
 // A touch writes no content, so a posting closed under an older dictionary would reopen
 // carrying it. With allow_reopen false a touch that WOULD reopen writes nothing and reports
 // deferred; the caller repeats it with allow_reopen true inside the transaction that re-derives
@@ -426,6 +444,7 @@ type TouchJobRow struct {
 // crawl to retry instead of open on stale facets. reopened is the transition this call made.
 func (q *Queries) TouchJob(ctx context.Context, arg TouchJobParams) (TouchJobRow, error) {
 	row := q.db.QueryRow(ctx, touchJob,
+		arg.ApplicationDeadline,
 		arg.Source,
 		arg.ExternalID,
 		arg.AllowReopen,

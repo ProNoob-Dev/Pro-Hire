@@ -1,5 +1,5 @@
 /** The freehire iPhone app's App Store listing — the only push-notification receiver.
- *  Read by the footer's store button and the onboarding tour's push channel.
+ *  Read by the footer's store button and the parked product introduction.
  *
  *  NO country segment, on purpose. The listing's own share link is `/br/app/...`, which
  *  pins every visitor to the Brazilian storefront; without one Apple redirects each visitor
@@ -7,11 +7,10 @@
  *  A wrong-country page still loads, so nothing downstream could catch it. */
 export const APP_STORE_URL = 'https://apps.apple.com/app/freehire-open-job-search/id6801885119';
 
-/** The original Freehire listing in ChatGPT. Public search and OAuth account tools
- *  share this app and the canonical MCP endpoint. */
+/** The original Freehire listing in ChatGPT, served by the MCP endpoint below. */
 export const CHATGPT_APP_URL = 'https://chatgpt.com/plugins/plugin_asdk_app_6ad004e028cc8191a9a7e9b32ccbdf93';
 
-/** Canonical hosted MCP path for both public search and OAuth account tools. */
+/** The hosted MCP path. Every tool needs OAuth sign-in; a request without it is a 401. */
 export const MCP_PATH = '/api/v1/mcp';
 
 /** OpenAI's mark for an "Add to ChatGPT" button, in the shape simple-icons gives the other
