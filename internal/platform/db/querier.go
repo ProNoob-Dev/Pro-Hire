@@ -39,6 +39,10 @@ type Querier interface {
 	// over the same events both narrate, and only the first to finish moves the cursor, so the
 	// second neither rewinds it nor skips past an event it never saw.
 	AdvanceAssistantNarratedEvent(ctx context.Context, arg AdvanceAssistantNarratedEventParams) (int64, error)
+	// Move the position and release the lease. Only a delivery the endpoint accepted clears the
+	// failure state: a run that sent nothing (nothing matched, or the feed read failed) proves
+	// nothing about the endpoint.
+	AdvanceChangeWebhook(ctx context.Context, arg AdvanceChangeWebhookParams) error
 	// Move an application forward to a new stage (the worker only calls this after
 	// checking the transition is strictly forward and high-confidence), and record the
 	// transition in the ledger under the same predicate that moves the column — exactly as
@@ -171,7 +175,7 @@ type Querier interface {
 	// and add the same delta to jobs.view_count. `uniques` is written as 0 on insert (it is
 	// NOT NULL with no default) and never touched on conflict, so the nginx figures and
 	// GET /api/v1/stats/catalog keep their meaning.
-	// Queued for the drain for the same reason as ApplyDailyView: view_count is sortable.
+	// Not queued for the drain, for the same reason as ApplyDailyView.
 	ApplyDailyAgentView(ctx context.Context, arg []ApplyDailyAgentViewParams) *ApplyDailyAgentViewBatchResults
 	// Apply one (day, job) unique count additively: upsert the daily rollup and add the
 	// total delta to jobs.view_count, in one statement. The data-modifying CTE runs even
@@ -186,8 +190,10 @@ type Querier interface {
 	// bot-filtered signal of the two.
 	// A visitor who did both is one visitor in each, so the two do not sum with an API
 	// count; the only relation between them is page_delta <= total_delta.
-	// view_count is a sortable attribute of the search document, so the moved figure is
-	// queued for the drain; without it the most-viewed sort waited for a full rebuild.
+	// view_count is a sortable attribute of the search document, but it is NOT queued for
+	// the drain: cmd/rollup-views writes the new figures to the index itself at the end of
+	// the run (search.SetViewCounts). Queuing them re-built ~1.7M whole documents a day and
+	// kept search_outbox from ever emptying (2026-11-14).
 	ApplyDailyView(ctx context.Context, arg []ApplyDailyViewParams) *ApplyDailyViewBatchResults
 	// Same shape and same reasoning as SearchOutboxMetrics. The depth here is the one that
 	// carries information rather than the dead letters: cmd/capture-apply-form takes
@@ -495,6 +501,9 @@ type Querier interface {
 	// No row back (pgx.ErrNoRows) means do not send. The row is written before SES is called,
 	// so a crash or a concurrent run can never send the same step twice.
 	ClaimCVLifecycleSend(ctx context.Context, arg ClaimCVLifecycleSendParams) (int64, error)
+	// The worker's pick: enabled subscriptions that are due, leased for lease_secs so a second
+	// run does not deliver the same ones, and only for accounts with a live API plan. SKIP LOCKED keeps concurrent claimers apart. due_at is the run's start, so a row this run just delivered (next_attempt_at = now()) is not claimed again by it.
+	ClaimDueChangeWebhooks(ctx context.Context, arg ClaimDueChangeWebhooksParams) ([]ClaimDueChangeWebhooksRow, error)
 	// Take up to max_runs due runs, exactly once each, from the HEAVY pool only. See
 	// ClaimDueLightRuns for the sibling that claims from the other pool: the scheduler calls
 	// both every tick, each against its own budget (ingestsched.DefaultHeavyCap /
@@ -569,6 +578,8 @@ type Querier interface {
 	// Claim a batch of live, unleased entries by stamping claimed_at; the lease predicate
 	// reclaims entries whose worker died. No jobs join: a missing job is a delete to send.
 	ClaimFacetdOutboxBatch(ctx context.Context, arg ClaimFacetdOutboxBatchParams) ([]ClaimFacetdOutboxBatchRow, error)
+	// Recheck live consent and recipient eligibility immediately before reserving the day.
+	ClaimInboxDigest(ctx context.Context, arg ClaimInboxDigestParams) (int64, error)
 	// The shared one-optional-letter-a-day claim (internal/engage/maildaily). Every sender of
 	// optional mail takes it before calling SES, so an account gets at most one such letter
 	// per UTC day whichever worker reaches it first. See migration 0248.
@@ -1264,6 +1275,10 @@ type Querier interface {
 	// clock skew) still count as answered but are kept out of the median, where they would
 	// contribute a negative duration.
 	ComputeInsightsCompanyResponse(ctx context.Context) ([]ComputeInsightsCompanyResponseRow, error)
+	// Per-company Trends & Insights rollups (insights_company_*) and their reads, split out of
+	// insights.sql for size. Its header states the rules every rollup here keeps too: a prior-
+	// window count asks whether a posting EXISTED at @prev_ts (from LEAST(posted_at,
+	// created_at)), and the rule tests in this package read every queries/insights*.sql file.
 	// ---------------------------------------------------------------------------
 	// Per-company hiring signal
 	// ---------------------------------------------------------------------------
@@ -1486,6 +1501,7 @@ type Querier interface {
 	// The predicate is the one the public listings apply, so the totals describe exactly the
 	// set a visitor can page through.
 	CountCatalogueScale(ctx context.Context) (CountCatalogueScaleRow, error)
+	CountChangeWebhooks(ctx context.Context, userID int64) (int64, error)
 	// What CloseChronicBoardJobs would close, for the safety-net worker's dry-run report — same
 	// predicate (including the board_health re-validation, so a dry run cannot report a count for
 	// a board that has already recovered), no write.
@@ -1543,6 +1559,10 @@ type Querier interface {
 	//
 	// Soft-deleted mail is excluded, so these counts and the listing's agree.
 	CountEmailsByState(ctx context.Context, userID int64) ([]CountEmailsByStateRow, error)
+	// How many delivered applications sit at each stage, under the same vacancy narrowing as
+	// ListEmployerApplications but never its stage one: the inbox shows every stage's count
+	// beside the stage it is filtered to. A stage with no application is absent.
+	CountEmployerApplicationsByStage(ctx context.Context, arg CountEmployerApplicationsByStageParams) ([]CountEmployerApplicationsByStageRow, error)
 	// What CloseEmptyFeedBoardJobs would close, for the safety-net worker's dry-run report — same
 	// predicate including the board_health re-validation, so a dry run cannot report a count for a
 	// board that has already yielded again, and no write.
@@ -1641,6 +1661,9 @@ type Querier interface {
 	// be inferred from a NULL job_id — an absence deleting the vacancy also produces. Users may own several of
 	// these. Returns the metadata the list and detail responses need.
 	CreateCV(ctx context.Context, arg CreateCVParams) (CreateCVRow, error)
+	// A new subscription starts at the oldest transaction still in flight (the same bound the
+	// feed serves below), so it delivers changes made from now on, none of the history.
+	CreateChangeWebhook(ctx context.Context, arg CreateChangeWebhookParams) (CreateChangeWebhookRow, error)
 	CreateExperienceEmployment(ctx context.Context, arg CreateExperienceEmploymentParams) (CreateExperienceEmploymentRow, error)
 	// File one person's claim that they applied to a posting and were never answered.
 	//
@@ -1878,6 +1901,7 @@ type Querier interface {
 	// Delete a CV owned by the user. Returns the affected-row count so the handler can 404
 	// when nothing was deleted (foreign or missing id).
 	DeleteCV(ctx context.Context, arg DeleteCVParams) (int64, error)
+	DeleteChangeWebhook(ctx context.Context, arg DeleteChangeWebhookParams) (int64, error)
 	// A moderator's rejection of a pending claim. Scoped to status='pending' so this can never
 	// be used to erase an active or revoked account's record — rejection is a claim-time verdict,
 	// not a way to un-revoke.
@@ -2148,6 +2172,7 @@ type Querier interface {
 	// posted to Discord and then failed on LinkedIn must, next time, skip Discord and
 	// retry LinkedIn.
 	DigestPublishedForChannel(ctx context.Context, arg DigestPublishedForChannelParams) (bool, error)
+	DisableChangeWebhook(ctx context.Context, arg DisableChangeWebhookParams) error
 	// Disables the destination, stamping disabled_at. Used both by the settings
 	// API (user-initiated) and by the notify delivery engine when a send gets a
 	// definitive 410 Gone from the destination (see internal/engage/webhooknotify).
@@ -2555,6 +2580,8 @@ type Querier interface {
 	ExpireStaleSubscriptionMatches(ctx context.Context, arg ExpireStaleSubscriptionMatchesParams) (int64, error)
 	// Queue depth (live entries) and dead letters, for the depth metric.
 	FacetdOutboxStats(ctx context.Context) (FacetdOutboxStatsRow, error)
+	// A delivery failed: count it and schedule the retry. The caller decides when to give up.
+	FailChangeWebhook(ctx context.Context, arg FailChangeWebhookParams) error
 	// Record a failed attempt: bump attempts, store the error, and dead-letter (set
 	// failed_at) once the applicable bound is reached. The lease (claimed_at) is
 	// intentionally left in place — its expiry gates the retry to a later run and
@@ -2690,6 +2717,20 @@ type Querier interface {
 	// stage on an existing row and no row at all are both "not on the board" and both call for
 	// the same preparing default: the difference does not matter to the caller.
 	GetApplicationStage(ctx context.Context, arg GetApplicationStageParams) (pgtype.Text, error)
+	// The candidate's own record of an application, as an employer's pipeline move needs it:
+	// its stage, and who set that stage last — the source of the most recently WRITTEN live
+	// stage_set event, ordered by id, not occurred_at: mail events are dated by the message's
+	// received_at, so a stage mail set after the employer's can carry an earlier date. The event
+	// counts only while its signal still IS the live stage, and — when that stage is 'applied',
+	// the one an apply seeds — only if it was written after the newest live 'applied' event:
+	// re-applying after clearing progress seeds 'applied' with no stage_set event, and an older
+	// employer event whose signal was 'applied' must not then pass for the author of the
+	// candidate's fresh record. An apply that keeps a stage already set (interview stays
+	// interview) leaves its author in place. '' — nobody known — otherwise, or with no event. MirrorEmployerStage compares against
+	// the same expression. No row: the candidate has no record of this application, took it off their board,
+	// or cleared its progress (stage and applied_at both NULL, ClearJobProgress) — each a
+	// statement that they are not pursuing it, which an employer's move must not undo.
+	GetApplicationStageForMirror(ctx context.Context, arg GetApplicationStageForMirrorParams) (GetApplicationStageForMirrorRow, error)
 	// Read one job's captured form for display. The only read path over this store, and it
 	// is by primary key — the display surface asks for exactly one posting's form, never a
 	// page of them, which is also why nothing here joins jobs.
@@ -2807,6 +2848,8 @@ type Querier interface {
 	// has answered nothing yet, which is a normal state and not an error — the service turns it
 	// into an all-unstated record rather than a 404.
 	GetCandidateSurvey(ctx context.Context, userID int64) (CandidateSurvey, error)
+	// Scoped to its owner, like every account-owned row.
+	GetChangeWebhook(ctx context.Context, arg GetChangeWebhookParams) (ChangeWebhook, error)
 	// Community discussion threads (see the add-community-threads change). Read paths
 	// join community_personas so a row carries the author's handle, never their user_id.
 	// Every such join is a LEFT JOIN: content outlives its author (a deleted account
@@ -2913,6 +2956,9 @@ type Querier interface {
 	// The nudge queries coalesce the other way, and that is not a contradiction: their
 	// MATCH step already inner-joins an enabled row, so a nudge cannot exist without one.
 	GetEmailPrefs(ctx context.Context, id int64) (GetEmailPrefsRow, error)
+	// The CV file a delivered application sent, as the employer received it. No row for an
+	// application that is not the employer's, and for one written before the copy was kept.
+	GetEmployerApplicationCV(ctx context.Context, arg GetEmployerApplicationCVParams) (GetEmployerApplicationCVRow, error)
 	// The caller's newest session of one preset that has not received a message yet. The support
 	// panel reuses it instead of minting another, which bounds the sessions an account can create
 	// by the messages it actually sent. Owner-scoped like every other read in this file.
@@ -3007,6 +3053,9 @@ type Querier interface {
 	// grant actually covers what this caller wants to do with it. `status` is read too so a
 	// row already marked needs_reconsent can be treated as unusable without a second query.
 	GetGoogleGrantForWrite(ctx context.Context, userID int64) (GetGoogleGrantForWriteRow, error)
+	// Retire the entire covered window on success, including overflow. Display only the newest
+	// message in each provider conversation; messages without a thread remain separate.
+	GetInboxDigestSnapshot(ctx context.Context, arg GetInboxDigestSnapshotParams) (GetInboxDigestSnapshotRow, error)
 	// One category's open count in the all-countries cell: every open canonical public
 	// posting of the category, whatever its seniority. No row means nothing open at either
 	// point; the caller serves zero.
@@ -3061,6 +3110,9 @@ type Querier interface {
 	// columns over the wire on every silent view. GetJobBySlug (SELECT *) stays for the
 	// public detail handler that renders the whole row.
 	GetJobIDBySlug(ctx context.Context, publicSlug string) (int64, error)
+	// The current view_count of the jobs a rollup run touched, for the index write that
+	// replaces the old per-view search_outbox enqueue.
+	GetJobViewCounts(ctx context.Context, ids []int64) ([]GetJobViewCountsRow, error)
 	// The caller's current vote for a job (0 when none), for my_vote on auth-aware
 	// detail reads. Always returns one row via the COALESCE'd scalar subquery.
 	GetJobVote(ctx context.Context, arg GetJobVoteParams) (int16, error)
@@ -3293,7 +3345,8 @@ type Querier interface {
 	// when none has been computed. Derived only — never the raw CV text.
 	GetUserATSAnalysis(ctx context.Context, id int64) ([]byte, error)
 	// The caller's interaction row for one job (the application-detail header).
-	// last_activity_at and has_pending_suggestion mirror ListUserJobs deliberately: the follow-up gate
+	// last_activity_at (apply date, linked mail, the employer's freehire pipeline moves) and
+	// has_pending_suggestion mirror ListUserJobs deliberately: the follow-up gate
 	// must reach the same silence verdict as the badge on the board, and two derivations of one rule
 	// drift. See the column comment in 0059 for why followed_up_at is NOT part of the activity.
 	GetUserApplication(ctx context.Context, arg GetUserApplicationParams) (GetUserApplicationRow, error)
@@ -3750,6 +3803,16 @@ type Querier interface {
 	// alias of it counts: the person added the company under its old spelling. An alias slug a
 	// company row still holds is its own company, as in the reads above, and does not count.
 	IsWatchingCompany(ctx context.Context, arg IsWatchingCompanyParams) (bool, error)
+	// When the log begins (job_changes_at_idx). NULL while it is empty.
+	JobChangesAvailableSince(ctx context.Context) (pgtype.Timestamptz, error)
+	// Where a `since` begins, in ONE statement: below the LOWEST transaction id among the entries
+	// recorded at or after it (job_changes_at_idx range) AND below the oldest transaction still in
+	// flight. The earliest entry's xid is not enough (a transaction that took its xid first and
+	// logged later has a lower xid), and neither is the committed minimum alone: a writer still
+	// open here may commit before the page query takes its snapshot. Computing both together means
+	// no such writer is skipped. The start can reach a little before `since` (a boundary entry may
+	// repeat), which a client absorbs through seq. With nothing recorded it is the in-flight bound.
+	JobChangesStartXID(ctx context.Context, since pgtype.Timestamptz) (int64, error)
 	// Board lookups behind the "contribute a board" flow: does the catalogue already crawl
 	// this board, and which board does a pasted job id belong to. Named after
 	// link_contributions for historical reasons — that table is gone (migration 0131), and
@@ -4027,8 +4090,9 @@ type Querier interface {
 	ListAutoApplyBlockedCandidates(ctx context.Context, windowDays int32) ([]ListAutoApplyBlockedCandidatesRow, error)
 	// The caller's live attempts, newest first, with what a status derivation and a list row
 	// need. last_event_at is when anything last happened to the pair, which is what an agent
-	// polling for progress compares.
-	ListAutoApplyEntries(ctx context.Context, userID int64) ([]ListAutoApplyEntriesRow, error)
+	// polling for progress compares. A NULL max_entries returns the complete browser list;
+	// the assistant keeps its bounded response by supplying a limit.
+	ListAutoApplyEntries(ctx context.Context, arg ListAutoApplyEntriesParams) ([]ListAutoApplyEntriesRow, error)
 	// The most recent history of one (user, job) pair, newest first; the caller reverses it.
 	ListAutoApplyEvents(ctx context.Context, arg ListAutoApplyEventsParams) ([]ListAutoApplyEventsRow, error)
 	// One (user, job) pair's events newer than a cursor, OLDEST first, a page at a time: the
@@ -4245,6 +4309,7 @@ type Querier interface {
 	// The whole catalogue-size series, oldest first: one row a day, so it stays small. Days with
 	// no row are absent, not zero.
 	ListCatalogSize(ctx context.Context) ([]ListCatalogSizeRow, error)
+	ListChangeWebhooks(ctx context.Context, userID int64) ([]ListChangeWebhooksRow, error)
 	// The boards that have proven unreachable for at least `age_window`, not merely cooled down from
 	// a recent run of failures (openspec change close-chronically-unreachable-boards, issue #2017).
 	// A board that has succeeded at least once is measured from last_success_at; one that never has
@@ -4573,6 +4638,17 @@ type Querier interface {
 	// inbox and seven assistant tools: one shared statement grown for one reader is how the
 	// two drift.
 	ListEmailsForRecall(ctx context.Context, arg ListEmailsForRecallParams) ([]ListEmailsForRecallRow, error)
+	// The employer's inbox. Every statement below reaches an application only through the
+	// vacancy it was sent to, and only when that vacancy is the employer's own on-site posting
+	// (created_by = employer AND source = 'employer') — the same ownership predicate the
+	// employer's vacancy writes use (jobs_manual.sql). An application not yet delivered
+	// (sent_at NULL) is not the employer's to see: they were never sent it, and it may still be
+	// replaced by the candidate's retry. The vacancy is read from the base table, not jobs_read:
+	// these are identity columns, not a posting read.
+	// One page of the employer's delivered applications, newest first, optionally narrowed to
+	// one vacancy and one stage — or to the one application `id` names, which is how a single
+	// application is read. Reached through jobs_created_by_idx.
+	ListEmployerApplications(ctx context.Context, arg ListEmployerApplicationsParams) ([]ListEmployerApplicationsRow, error)
 	// An employer's own dashboard list: every vacancy this actor created through this path,
 	// newest first, open and closed both (the dashboard shows a closed one with its own badge
 	// rather than dropping it — the employer's own re-Create-to-reopen path needs the closed
@@ -4627,6 +4703,8 @@ type Querier interface {
 	// backlog as nudges). Returns the raw ingredients for silence.StateFor —
 	// the silence verdict itself is a Go-side decision, not a SQL one, same as every
 	// other silence-state reader in this codebase.
+	// The employer's newest move in their freehire pipeline counts as activity, as in
+	// ListUserJobs; a stage the candidate typed does not.
 	ListFollowUpCandidates(ctx context.Context, windowDays int32) ([]ListFollowUpCandidatesRow, error)
 	// Candidate applications for the ghost signal, for a page of jobs at a time.
 	//
@@ -4644,8 +4722,9 @@ type Querier interface {
 	// the employer answered somewhere we cannot see. Absence of a reply is evidence only
 	// where a reply would have been observed.
 	//
-	// last_activity_at and has_pending_suggestion mirror ListTrackedJobs deliberately:
-	// one definition of "when did this application last move", not two.
+	// last_activity_at (apply date, linked incoming mail, the employer's freehire pipeline moves)
+	// and has_pending_suggestion mirror ListTrackedJobs deliberately: one definition of "when did
+	// this application last move", not two.
 	// job_id is nullable on applications, but the filter below matches it against a page of
 	// real ids, so a row that reaches the select always carries one.
 	ListGhostApplicationEvidence(ctx context.Context, jobIds []int64) ([]ListGhostApplicationEvidenceRow, error)
@@ -4654,6 +4733,9 @@ type Querier interface {
 	// silence ladder it reads from, so both channels clear the same bar from the same
 	// source.
 	ListGhostReportEvidence(ctx context.Context, jobIds []int64) ([]ListGhostReportEvidenceRow, error)
+	// Known hiring conversations are the boundary for sent-message body retrieval.
+	// Newest conversation first: the first sent-mail scan expands only the head of this list.
+	ListGmailThreadIDs(ctx context.Context, userID int64) ([]string, error)
 	// The caller's hidden application ids, for the tracker's visibility switch.
 	ListHiddenBuddyApplications(ctx context.Context, userID int64) ([]int64, error)
 	// The companies carrying searchable jobs whose slug folds to one of the given keys, or IS one
@@ -4685,6 +4767,8 @@ type Querier interface {
 	// The LIGHT pool's half of ListInFlightHeavyRuns: identical query, opposite gate. See that
 	// query's header for why the fleet's claimed runs are counted apart by pool.
 	ListInFlightLightRuns(ctx context.Context, defaultTimeoutSec int32) ([]ListInFlightLightRunsRow, error)
+	// Filter due accounts before the limit; empty and non-due accounts cannot starve others.
+	ListInboxDigestCandidates(ctx context.Context, arg ListInboxDigestCandidatesParams) ([]ListInboxDigestCandidatesRow, error)
 	// The referrer inbox: open (sent) requests for every company the referrer has an approved
 	// offer for. Joins the request pool to the caller's approved offers on company_slug, and
 	// the catalogue for the company's display name (LEFT so a request survives an unknown
@@ -4764,6 +4848,24 @@ type Querier interface {
 	// requested bucket (day/week/month) so empty buckets still appear as zeros. `unit`
 	// is a caller-validated date_trunc field (day/week/month), never raw user input.
 	ListJobActivity(ctx context.Context, arg ListJobActivityParams) ([]ListJobActivityRow, error)
+	// One keyset page of the public change feed, oldest first, after the (xid, id) position
+	// the caller holds. The walk is job_changes_xid_id_idx; each entry is joined to its job by
+	// primary key, so the cost of a page is its limit, never the size of the log or of jobs.
+	//
+	// Only entries whose transaction is finished are served: xid below the oldest in-flight
+	// transaction (pg_snapshot_xmin). An entry can therefore never commit behind a cursor a
+	// client already holds. Ordering by id alone would not give that, because ids are taken
+	// inside the trigger, long before a bulk close commits.
+	//
+	// Visibility was judged when the change was logged (migration 0264: canonical, public, open
+	// all feed one "listed" flag), so it is not re-judged here, with one privacy guard: a job
+	// that is private NOW serves only `closed` entries. Those carry just a slug the client was
+	// already given while it was public, and withholding them would leave the copy listed.
+	ListJobChanges(ctx context.Context, arg ListJobChangesParams) ([]ListJobChangesRow, error)
+	// One page of the public feed (ListJobChanges, same order, same finished-transactions bound,
+	// same privacy rule) plus company_slug, which the worker filters on. Kept separate so the
+	// public feed's row stays exactly what GET /jobs/changes serves.
+	ListJobChangesForWebhook(ctx context.Context, arg ListJobChangesForWebhookParams) ([]ListJobChangesForWebhookRow, error)
 	// The open postings the anchor's OWNER represents — the "N openings across cities" list for a
 	// collapsed role. Each copy keeps its own location and apply URL, so a seeker picks their city;
 	// the owner itself is included (it is one of the openings). Ordered by location.
@@ -5700,6 +5802,12 @@ type Querier interface {
 	// Each approval checks the registry and company_parents and then writes them, and two
 	// approvals checked against the same state could each pass while together making a chain.
 	LockCompanyRelationDecisions(ctx context.Context) error
+	// Serialises everything one employer move does to one application — the stage write, the
+	// candidate's tracking and the letter — against another move of the same application, so
+	// an older move can never mirror or mail after a newer one. Session-scoped, because the
+	// letter goes out after the move's transaction commits and must still be inside the lock;
+	// the caller releases it with UnlockDirectApplication on the same connection.
+	LockDirectApplication(ctx context.Context, id int64) error
 	// Take the job row's lock so concurrent applies on the same job serialize. Without
 	// it, two applies in the same window under READ COMMITTED each read a snapshot
 	// missing the other's user_jobs row and both bump applied_count. Called first in
@@ -5830,6 +5938,7 @@ type Querier interface {
 	// Scoped to the company and to open rows, so a row the exact pass claimed in the meantime is
 	// left alone. The IS DISTINCT FROM guard makes a re-run free.
 	MarkFuzzyDuplicatesForCompany(ctx context.Context, arg MarkFuzzyDuplicatesForCompanyParams) (int64, error)
+	MarkInboxDigestSent(ctx context.Context, arg MarkInboxDigestSentParams) (int64, error)
 	// Stamp a reward as placed on the referrer's balance. Guarded on the stamp being absent, so
 	// a repeat affects no rows. The credit itself carries an idempotency key on the provider's
 	// side, so the two guards fail in the same direction: never twice.
@@ -5894,11 +6003,9 @@ type Querier interface {
 	// Locking and the compare-and-set: see CloseUnseenJobs. `locked` reads the strike count from the
 	// LOCKED activity row, the one value every writer keeps current.
 	//
-	// Release A writes the count to BOTH places: job_activity explicitly, and the legacy jobs column
-	// for readers older than release A. The one-way bridge fires only when the legacy value CHANGES,
-	// and while writers move to job_activity the legacy value goes stale, so a computed count that
-	// happens to equal the stale legacy one would never reach job_activity through it. Both writes
-	// carry the same value, so the bridge firing as well is idempotent.
+	// The strike count lives only in job_activity (release B); jobs carries none. The statement still
+	// stamps jobs.updated_at on every strike, as it always has, and closes the row once the threshold
+	// is reached.
 	// FROM bumped, not FROM locked: the data dependency makes the activity write happen before the jobs
 	// write (and before the triggers that jobs write fires), instead of relying on the order Postgres
 	// happens to run independent data-modifying CTEs in.
@@ -6011,6 +6118,14 @@ type Querier interface {
 	// after normalisation, so a private title merges into a public one's count rather than
 	// standing alone under it.
 	MineJobTitles(ctx context.Context) ([]MineJobTitlesRow, error)
+	// Sets the candidate's stage to what the employer's pipeline says, but only if it still
+	// holds the stage the caller read (`expected`, NULL for none) AND that stage still has the
+	// author the caller read (`expected_source`, GetApplicationStageForMirror's expression): a
+	// compare-and-set on both, so a candidate who changed the stage in between — even away and
+	// back to the same value — is never overwritten. Records the `stage_set`
+	// ledger event with source 'employer' in the same statement. Never creates a record: an
+	// application the candidate took off their board stays off it.
+	MirrorEmployerStage(ctx context.Context, arg MirrorEmployerStageParams) (bool, error)
 	// Record one non-job sighting (classified `other`) against the learned domain that covers
 	// this sender host: the domain itself or a parent, the way from:domain matches. Updates only
 	// — a host no learned domain covers is not inserted, so newsletters never enter the table.
@@ -6098,6 +6213,23 @@ type Querier interface {
 	// since the point is to compare them with the mailed ones. A granted tier is deliberately
 	// not here: it is not a payment (see ObserveCVLifecycleEntitled).
 	ObserveCVLifecyclePaid(ctx context.Context, windowDays int32) (int64, error)
+	// The crawl's observation of one posting, written to job_activity: the SECOND command of every
+	// full write (job.Upsert) and of the full TouchJob, in the transaction that wrote the jobs row.
+	// jobs first, activity second is the global lock order, and a separate command (not a CTE of the
+	// write) is what makes the row visible: the insert trigger creates the activity row AFTER the
+	// insert statement's snapshot, so a same-statement CTE cannot see it.
+	//
+	// last_seen_at never moves backwards (GREATEST with the stored value: a release-A writer or a
+	// clock skew between hosts must not age a row that was just seen). hydrated_at advances only when
+	// the write READ a body (body_read); a NULL stays NULL otherwise, which is how a raw, manual or
+	// private row keeps "never checked". liveness_strikes is cleared only when the caller says so
+	// (reset_strikes): a reopen is reset by the state trigger, so this is for the one case the
+	// trigger cannot see, a full touch of an expired posting that stays closed. state_version is
+	// never touched: an observation must not fence another observation.
+	//
+	// :execrows because exactly one row is the invariant (the insert trigger gives every job its
+	// row); the caller treats any other count as an error instead of silently dropping the stamp.
+	ObserveJobActivity(ctx context.Context, arg ObserveJobActivityParams) (int64, error)
 	// Record one confident job-mail sighting for a sender domain, returning its running
 	// count. The classifier calls this whenever it confidently labels an email as
 	// application mail, so a recurring unknown ATS domain accrues hits toward promotion.
@@ -6830,16 +6962,35 @@ type Querier interface {
 	// {other} or a retired vocabulary value) simply produces no rows here and reads as
 	// '{}' below, with no special case.
 	RefreshCompanyFacets(ctx context.Context, arg RefreshCompanyFacetsParams) (int64, error)
+	// RefreshCoveredJobs for ONE posting, the retry of a row the bulk statement could not write. It
+	// is an autocommit statement WITHOUT SKIP LOCKED: it waits for the writer that held the row,
+	// under the caller's deadline, holding nothing else while it waits. No row = the posting is
+	// closed, private or absent (pgx.ErrNoRows, a no-op as for the bulk statement). refreshed = true:
+	// stamped. refreshed = false: the state fence moved while it waited; the statement has ended, so
+	// the lock is gone, and the caller runs one fresh statement, a few times at most, and reports an
+	// error if it keeps losing rather than recording the company as seen.
+	RefreshCoveredJob(ctx context.Context, arg RefreshCoveredJobParams) (RefreshCoveredJobRow, error)
 	// Liveness refresh for the postings an aggregator board listed but the coverage gate kept out
 	// of the write path (pipeline.CoveredRefresher): the employer is already crawled first-hand, so
 	// nothing is written — but a row stored before that began must not be left with the
 	// last_seen_at of its last write, or it stays open whether or not the aggregator still lists it
 	// (4dayweek, 2026-10-30: 17,306 of 23,046 open rows unseen for a week, 98% of them covered).
-	// last_seen_at is the ONLY column written, for RefreshUnchangedJob's reason: it is in no index,
-	// so the update is heap-only. Open rows only, and never a reopen: reopening is a write the gate
-	// has already declined. An id the catalogue does not hold matches nothing. RETURNING
-	// company_slug so the caller puts the company in the sweep's crawled scope, as TouchJob does.
-	RefreshCoveredJobs(ctx context.Context, arg RefreshCoveredJobsParams) ([]string, error)
+	// last_seen_at is job_activity's, and it is the ONLY thing written: no jobs tuple is touched or
+	// locked. Open, public rows only, and never a reopen: reopening is a write the gate has already
+	// declined. An id the catalogue does not hold, or holds closed or private, comes back as no row.
+	//
+	// One row per listed posting with its outcome: refreshed = false is a row this chunk could not
+	// write, and the caller retries just those with RefreshCoveredJob.
+	//   * SKIP LOCKED: a bulk statement waiting for activity rows, in plan order, can close a cycle
+	//     with an unsorted multi-row writer of jobs (the dedup and close passes lock the activity row
+	//     through the state trigger in plan order). A refresher that never waits is never a victim
+	//     and never makes the writer one.
+	//   * Fenced like every activity-only write: the snapshot version in `hit`, the latest version
+	//     in the sorted locking `locked`, compared in the UPDATE. A locking select INSIDE `hit` would
+	//     return the post-wait version and defeat the fence.
+	// company_slug rides along so the caller puts the company in the sweep's crawled scope, as
+	// TouchJob does, but only for the rows that were refreshed.
+	RefreshCoveredJobs(ctx context.Context, arg RefreshCoveredJobsParams) ([]RefreshCoveredJobsRow, error)
 	// The cheap half of the ingest write path, tried before UpsertJob: a crawl that re-sees a
 	// posting identical to the stored row refreshes its liveness and writes NOTHING else. Matching
 	// nothing (pgx.ErrNoRows) is the signal to run the full upsert — which is also what a brand-new
@@ -6849,8 +7000,10 @@ type Querier interface {
 	// tuple — re-TOASTing a ~2.5KB description and touching every index on the table — to move a
 	// timestamp.
 	//
-	// last_seen_at is the ONLY column written, and it is deliberately in no index, so the update is
-	// heap-only and maintains none of them.
+	// The ONLY write is to job_activity (last_seen_at and hydrated_at); the jobs tuple is read,
+	// never written and never locked, which is what the split is for. The match key is read from jobs
+	// in `hit`; the target of the UPDATE is the activity row, so a writer that changed the row while
+	// this statement waited for the activity lock is detected by state_version (see FENCE below).
 	//
 	// updated_at is deliberately NOT stamped, so the column comes to mean "content last changed"
 	// rather than "last crawled". Two live readers see that: the jobs sitemap serves it as <lastmod>
@@ -6906,18 +7059,23 @@ type Querier interface {
 	// that cannot fetch a posting's detail drops the posting rather than writing a body-less row
 	// (echojobs.FetchNew, workday.detail) — and that the body was identical to the stored one,
 	// which is precisely the case a staleness check over updated_at would misread as never-read.
-	// Like last_seen_at it is in no index, so the update stays heap-only.
+	//
+	// FENCE. A refresh that waits for the activity row (a closer, a content write, a metadata
+	// rekey holds it) is re-evaluated on the LATEST version of that row but against the SNAPSHOT of
+	// jobs, so a predicate on jobs cannot notice the change. job_activity.state_version is bumped by
+	// the state trigger (migration 0258) on every write to a column this match key reads, so
+	// comparing it with the version read in the same snapshot catches exactly that. A snapshot hit
+	// the fence rejected comes back with fenced = true and writes and enqueues nothing; no row at
+	// all means nothing matched (pgx.ErrNoRows, the signal for the full upsert). A fenced statement
+	// has ALREADY locked the activity row and keeps the lock to the end of its transaction, so the
+	// caller must roll back and retry from a fresh transaction; falling through to UpsertJob in the
+	// same one takes the jobs tuple after the activity row, the reverse of the global lock order.
 	//
 	// One thing IS queued: a canonical posting re-seen after search had withheld it for going
 	// unseen (search.Withheld). Its content is unchanged, but its document was removed, so the
 	// drain must bring it back; prev carries the last_seen_at the update replaces. The cutoff is
 	// search.UnseenWindow, the shortest window — a source with a longer one gets a harmless
 	// extra push.
-	// Lock order: `prev` locks the jobs row and then the activity row, FOR NO KEY UPDATE, and the UPDATE
-	// joins it, so both are held before the statement queues anything. Release A took the activity row
-	// last, through the legacy bridge trigger at the end of the statement, AFTER the search_outbox write
-	// below; a writer that takes the activity row first and then queues (release B) interleaved with it
-	// and the two deadlocked. A row without an activity row does not match this cheap path.
 	RefreshUnchangedJob(ctx context.Context, arg RefreshUnchangedJobParams) (RefreshUnchangedJobRow, error)
 	// Dynamic client registration (RFC 7591). client_id is server-generated, random,
 	// and not a secret — it identifies the client, it does not authenticate it (PKCE
@@ -6971,6 +7129,8 @@ type Querier interface {
 	// usable destination on any configured channel) is retried promptly on a later
 	// pass instead of waiting out the lease.
 	ReleaseNudgeClaim(ctx context.Context, id int64) error
+	// Used only when dispatch was definitely withheld (e.g. the SES circuit breaker).
+	ReleasePausedInboxDigest(ctx context.Context, arg ReleasePausedInboxDigestParams) error
 	// Release the lease without counting an attempt, so a soft-skipped send (e.g. no
 	// usable destination on any configured channel) is retried promptly on a later pass
 	// instead of waiting out the lease.
@@ -7076,13 +7236,8 @@ type Querier interface {
 	RequeueTelegramPost(ctx context.Context, arg RequeueTelegramPostParams) (int64, error)
 	// A healthy (not-expired) probe clears any accumulated strikes, so only CONSECUTIVE
 	// expired probes can close a job. Guarded to the non-zero case so probing an
-	// already-clean job does not churn the row or lock it.
-	//
-	// The guard reads job_activity, the current count, and both places are written (see
-	// MarkLivenessExpired for why): a legacy column that is already 0 while job_activity holds 4 must
-	// still reset job_activity, and the bridge would not fire for a legacy 0 -> 0. The legacy column is
-	// written only when it is not already 0, so the wide jobs tuple is untouched in that case. Locking:
-	// see CloseUnseenJobs.
+	// already-clean job does not churn the row or lock it. The count is job_activity's, so this
+	// writes that row alone: the jobs tuple is neither written nor locked.
 	ResetLivenessStrikes(ctx context.Context, id int64) error
 	// Complete a reset-by-emailed-code: set the new hash, revoke every session, and mark
 	// the address verified — receiving the code IS proof of control, so a reset doubles as
@@ -7499,6 +7654,15 @@ type Querier interface {
 	// only widens reach, never produces a false match, so it can stay eventually
 	// consistent.
 	SetCompanyIndustries(ctx context.Context, arg SetCompanyIndustriesParams) (int64, error)
+	// Moves a delivered application to a stage in the employer's pipeline and reports what the
+	// move needs downstream: whether it changed anything (`changed` is false when it already
+	// stood there, so a repeated click notifies nobody twice), and who the candidate is and
+	// what they applied to. One UPDATE, so the comparison with the current stage is made on the
+	// row as it is when the update reaches it — a concurrent move that committed first is seen,
+	// not an older snapshot of it. stage_changed_at moves only with the stage, which is how the
+	// RETURNING tells a change from a no-op. No row: not the employer's. Callers serialise the
+	// whole move per application (LockDirectApplication).
+	SetDirectApplicationStage(ctx context.Context, arg SetDirectApplicationStageParams) (SetDirectApplicationStageRow, error)
 	// Record the outcome of examining one binding: whether the role is now held, and that it was
 	// examined just now.
 	//
@@ -8022,18 +8186,40 @@ type Querier interface {
 	// FOR NO KEY UPDATE, not FOR UPDATE: a foreign-key child insert (enrichment_outbox, apply_forms,
 	// search_outbox) holds KEY SHARE on this tuple while a toucher already holds other locks of its
 	// own, and FOR UPDATE conflicts with KEY SHARE (a deadlock waiting to happen); a plain UPDATE's
-	// lock does not, and it is all this statement needs. The jobs tuple AND the activity row are locked
-	// here, in that order, before anything is queued: release A still writes the legacy columns and its
-	// one-way bridge would take the activity row only at the end of the statement, AFTER the
-	// search_outbox writes below, while a writer that locks the activity row first and then queues
-	// (release B) deadlocks with that. last_seen_at, the previous stamp the withheld-then-seen requeue
-	// compares, is the locked activity row's.
+	// lock does not, and it is all this statement needs. The jobs tuple is locked first and the
+	// activity row second (the global lock order), and BOTH before any write of this statement: the
+	// state trigger takes the activity row only when a fenced column flips, so an unchanged open
+	// posting would otherwise queue its search_outbox entry (returned_queued) while holding no activity
+	// lock, and a TouchOpenJob that holds the activity row and waits for that entry would deadlock with
+	// the ObserveJobActivity this caller runs next. last_seen_at, the previous stamp the
+	// withheld-then-seen requeue compares, is read from the locked activity row. A job with no
+	// activity row matches nothing (the insert trigger gives every job one; ObserveJobActivity treats
+	// its absence as an error as well). This is the FULL touch: the ordinary re-listing of an open,
+	// unexpired posting takes TouchOpenJob and never reaches the jobs tuple at all.
 	// A touch writes no content, so a posting closed under an older dictionary would reopen
 	// carrying it. With allow_reopen false a touch that WOULD reopen writes nothing and reports
 	// deferred; the caller repeats it with allow_reopen true inside the transaction that re-derives
 	// the row (internal/ingest/rederive), so a failed re-derive leaves the row closed for the next
 	// crawl to retry instead of open on stale facets. reopened is the transition this call made.
+	//
+	// This statement writes lifecycle only. The observation itself (last_seen_at) is job_activity's:
+	// the caller stamps it with ObserveJobActivity in the same transaction, AFTER this statement, so
+	// the lock order is jobs then activity, and not when the touch was deferred. reset_strikes says
+	// whether that stamp must also clear the strike count: the old row was closed. A reopen is reset
+	// by the state trigger already; this covers the posting an expired deadline leaves closed.
 	TouchJob(ctx context.Context, arg TouchJobParams) (TouchJobRow, error)
+	// The ordinary touch of a hydrating source's re-listed posting: it is open and its deadline has
+	// not passed, so the crawl's sighting changes no lifecycle state and the only write is
+	// job_activity.last_seen_at. The jobs tuple is read, never written and never locked. Anything else
+	// (closed, expired, absent, or a changed listing deadline) matches nothing and the caller runs
+	// the full TouchJob. An unchanged stated deadline stays on this activity-only path.
+	// A posting search had withheld for going unseen is queued back, as TouchJob does.
+	//
+	// Fenced exactly as RefreshUnchangedJob is (read its FENCE note): a lifecycle or content change
+	// committed while this statement waited for the activity row makes it write nothing and return
+	// fenced = true. It is an autocommit statement, so its lock is gone when it returns, and the
+	// full TouchJob that follows holds nothing from it.
+	TouchOpenJob(ctx context.Context, arg TouchOpenJobParams) (TouchOpenJobRow, error)
 	// Resolve a token to where the visitor must be sent, plus what the click needs to be attributed:
 	// the link's own id and the id of the user whose CV it belongs to (so a click by that user can be
 	// marked as the owner's own). Unauthenticated read — the token IS the credential, and it grants
@@ -8091,6 +8277,8 @@ type Querier interface {
 	UnlinkDiscordAccount(ctx context.Context, userID int64) (int64, error)
 	// Clear an email's application link (leaves the classified status intact).
 	UnlinkEmail(ctx context.Context, arg UnlinkEmailParams) (int64, error)
+	// Releases LockDirectApplication; false when this session did not hold it.
+	UnlockDirectApplication(ctx context.Context, id int64) (bool, error)
 	// Clear a job's saved mark without deleting the interaction row, so view and
 	// apply history survive unsaving. No interaction row -> pgx.ErrNoRows; the
 	// handler treats that as "already not saved", never as a failure.
@@ -8369,7 +8557,9 @@ type Querier interface {
 	UpsertCoverLetter(ctx context.Context, arg UpsertCoverLetterParams) error
 	// Records a candidate's application to an on-site vacancy and CLAIMS it for delivery
 	// (sending_at), or replaces the content of one they recorded earlier that never reached the
-	// employer — the retry after a failed delivery. See migration 0187.
+	// employer — the retry after a failed delivery. See migration 0187. The CV file it sends is
+	// copied into direct_application_cvs in the same statement (migration 0270), so the copy
+	// the employer's inbox serves is always the one this attempt mails, never a stale one.
 	//
 	// Returns no row in exactly three cases, which GetDirectApplication tells apart afterwards:
 	// the application was already SENT; another request holds a live claim on it (a delivery in
@@ -8379,8 +8569,8 @@ type Querier interface {
 	// costs a second slot. Two concurrent first applications can both pass the count and land
 	// one over the cap; the cap bounds abuse, it is not a quota anyone is billed against.
 	UpsertDirectApplication(ctx context.Context, arg UpsertDirectApplicationParams) (int64, error)
-	// Store a Gmail message, idempotent by (user_id, source, external_id) with
-	// source fixed to 'gmail'; the hosted path has its own insert (InsertHostedMessage).
+	// Gmail is idempotent; sent messages are already read and never enter employer triage.
+	// Refresh provider metadata without changing deletion, bodies or incoming reader state.
 	UpsertEmail(ctx context.Context, arg UpsertEmailParams) error
 	// Issue (or replace) the outstanding code for one purpose. The composite primary key
 	// makes this the whole "at most one live code per (user, purpose)" rule: a resend
@@ -8450,6 +8640,10 @@ type Querier interface {
 	// id, the identity the sweep scope and the index-push gate need, and whether the write left the
 	// row closed; one that needs the whole row (linkimport builds a search document) re-reads it
 	// through GetJob, which reads the jobs_read view.
+	// reset_strikes: the row was closed before this write (PostgreSQL 18 RETURNING old). The old statement
+	// cleared the strike count whenever it overwrote a closed row, including one an expired deadline
+	// leaves closed; the state trigger covers only the closed-to-open flip, so the caller passes this to
+	// ObserveJobActivity and the exception stays exact without another query.
 	UpsertJob(ctx context.Context, arg UpsertJobParams) (UpsertJobRow, error)
 	// Schedule a one-shot reminder for a saved job, or replace the pending one if the
 	// job is re-saved with a new choice. The arbiter is the partial unique index on

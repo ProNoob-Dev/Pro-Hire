@@ -95,7 +95,8 @@ POST /api/v1/assistant/sessions/:id/retry
 **Files.** `runner.go` is the loop and the event shapes; `tool.go` the tool
 contract, registry and strict argument decoding; `message.go` the stored-message
 encoding and its round trip to `[]llms.MessageContent`; `store.go` the
-owner-scoped persistence; `prompt.go` the per-preset system prompts.
+owner-scoped persistence; `prompt.go` the per-preset system prompts (the CV ones in
+`prompt_cv.go`, the interview ones in `prompt_interview.go`).
 
 **Unattended runs.** `POST /assistant/sessions/:id/autopilot` starts a tailoring pass
 that walks every requirement of the vacancy in ONE turn — searching the experience
@@ -342,9 +343,8 @@ block flagged as material rather than instructions. Three rules hold it up:
   `MaxAttachmentRunes` per document: extraction truncates and says so, and the turn
   refuses anything larger — a client posting text directly cannot raise either. Because
   the text is replayed every later turn, the per-document cap is a recurring cost bound.
-- **It is not masked, on purpose.** `internal/candidate/pii` guards the STORED CV on its
-  way into the structured parse; the assistant has never masked what a candidate types or
-  pastes, and an attachment is a paste with a file picker in front of it. Masking it would
+- **It is not masked, on purpose.** The assistant has never masked what a candidate types
+  or pastes, and an attachment is a paste with a file picker in front of it. Masking it would
   also strip the very contact details a candidate attached an offer letter to ask about.
 
 **History trimming.** `trim` keeps the most recent N messages and then drops any

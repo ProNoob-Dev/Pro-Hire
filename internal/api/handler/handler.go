@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/strelov1/freehire/internal/ai/assistant"
 	"github.com/strelov1/freehire/internal/ai/browsertools"
@@ -64,116 +63,6 @@ import (
 	"github.com/strelov1/freehire/internal/job/privatejob"
 	"github.com/strelov1/freehire/internal/platform/db"
 )
-
-const (
-	defaultLimit = 20
-	maxLimit     = 100
-	// trackingMaxLimit is the higher ceiling for the caller's own tracked-jobs
-	// listing: the Kanban board is unpaginated (it fetches everything at once), so
-	// the shared 100 cap would silently hide a heavy user's older applications.
-	trackingMaxLimit = 500
-	// maxPageWindow bounds how deep pagination may reach (offset+limit) on every list
-	// endpoint, whichever store answers it. ~500 pages at the default limit, 100 at the
-	// maximum — past any real browsing, and the cost of one refused request is that the
-	// caller must narrow its filter or page by cursor instead.
-	//
-	// One number for both stores on purpose. It arrived first for the Meili-backed search,
-	// where the index's own deep-paging cost argued for it; the Postgres-backed lists were
-	// left unbounded because their OFFSET walk was slow rather than refused — which is the
-	// gap the 2026-09-14 outage went through. Why a request past it is REFUSED rather than
-	// clamped is argued at pageParamsWindowed.
-	maxPageWindow = 10000
-	// telegramLinkTTL bounds how long a deep-link token is valid — long enough to
-	// open Telegram and tap Start, short enough to limit a leaked link's window.
-	telegramLinkTTL = 10 * time.Minute
-	// matchAnalysisLLMTimeout is the per-stage LLM timeout for the fit analysis: its reasoning
-	// model spends tens of seconds thinking before answering, so a stage needs more than
-	// the shared client's default.
-	//
-	// It is a budget for ONE attempt of the stages a reader is blocked on. What each stage
-	// does with it is matchanalysis's own business — timeoutForStage doubles it for the
-	// adversarial audit, whose subject is already served, and attemptsForStage decides how
-	// many attempts each stage gets.
-	//
-	// 90s was chosen against a spread of 3–25s, which is no longer what production shows:
-	// measured 2026-09-08, healthy stages answer in 45–83s, because a call landing on the
-	// gateway's deliberating provider is slow rather than hung. That is why the retry no
-	// longer helps the stage it was written for and why the audit needed a budget of its
-	// own; the figure itself still sits past the spread for stages 1 and 2.
-	matchAnalysisLLMTimeout = 90 * time.Second
-	// resumeExtractLLMTimeout bounds the single structured-résumé extraction call. It runs
-	// off the upload response path (background) so it can be generous, but still bounded so
-	// a stalled gateway cannot leak a goroutine indefinitely.
-	resumeExtractLLMTimeout = 120 * time.Second
-	// assistantLLMTimeout bounds ONE model call in an assistant turn. The shared default of
-	// 90s was measured, on 2026-08-21, to sit inside the working range rather than past it:
-	// over three days of tailoring turns the gateway's own spend log put p95 at 58s and the
-	// slowest SUCCESSFUL call at 83.1s, with the reasoning model taking up to 51.8s before
-	// its first token on a single call. A ceiling that close to the spread cuts work that
-	// was going to finish.
-	//
-	// And a cut call does not cost a step, it costs the run: Runner.Run surfaces a model
-	// error as a failed turn, so one slow round ends an unattended pass that had thirty. On
-	// 2026-08-21 that happened to three runs, each on its SECOND call — the first round of
-	// real work, where the model writes several thousand tokens off the fit analysis.
-	//
-	// 180s is twice the slowest observed success, and still well under the gateway's own
-	// limits (its nginx reads for 300s), so a genuinely hung call is still bounded here.
-	assistantLLMTimeout = 180 * time.Second
-)
-
-// API holds the cross-cutting dependencies every route shares: the DB pool, the
-// sqlc queries, and the token issuer the auth middleware is built from. Feature
-// handlers carry their own dependencies (see the *Handlers structs) and register
-// their own routes; Register wires them onto the app.
-type API struct {
-	pool    *pgxpool.Pool
-	queries *db.Queries
-	issuer  *auth.Issuer
-	// browserTools relays browser-tool frames between a user's harness and that
-	// user's browser extension (the /tools/ws wire). In-memory and per-instance:
-	// both ends of a channel are live connections to this process.
-	browserTools *browsertools.Hub
-}
-
-// middleware bundles the auth gates the feature handlers mount their routes
-// behind. optional attaches the caller when signed in (cookie or key) but never
-// rejects, so public detail reads can overlay the caller's own state (my_vote)
-// while staying open to anonymous visitors. key accepts the session cookie or an
-// API key (RequireAuthOrKey), so a script holding a key can drive the same flow as
-// the browser. cookie is the cookie-only gate (RequireAuth) for the
-// browser-convenience surfaces where a leaked API key must not act. moderator
-// gates on the moderator role and is stacked after key or cookie.
-type middleware struct {
-	optional fiber.Handler
-	key      fiber.Handler
-	// cvKey is keyAuth widened to admit the narrow `cv` key. Only the caller's own
-	// identity read (/auth/me) mounts it; every other key-accepting route stays
-	// on key, which is full-scope-only — so a new endpoint is out of a leaked agent
-	// credential's reach unless it opts in.
-	cvKey fiber.Handler
-	// autoApplyGate is keyAuth (cookie or full-scope API key) widened with a fallback
-	// to the shared auto-apply orchestrator secret (see
-	// openspec/changes/auto-apply-inngest-orchestration/design.md) — only the two
-	// auto-apply tailor/review routes mount it; every other route stays on key.
-	autoApplyGate fiber.Handler
-	cookie        fiber.Handler
-	// optionalCookie attaches a cookie session when there is one but never rejects.
-	// It exists for provider callbacks, which are browser navigations: a 401 there
-	// renders JSON into the address bar instead of sending the user back to the app.
-	optionalCookie fiber.Handler
-	moderator      fiber.Handler
-	// paidAI is the paid-entitlement gate (paid_ai.go) every route that makes a model call
-	// for its caller mounts AFTER its authentication gate. Called with the metered feature the
-	// route draws on, so a refusal names it, or with the zero Feature for an AI action that
-	// has no allowance of its own. Free gets no AI at all: an unpaid caller is a 402 before
-	// the handler runs, and a plan that cannot be read is a 503.
-	//
-	// The binding (user_llm.go) refuses to hand out a model client without the mark this
-	// leaves, so forgetting it on a new route is a 500 in that route's first test rather
-	// than model spend nobody paid for.
-	paidAI func(plan.Feature) fiber.Handler
-}
 
 // Register wires all routes onto the application from cfg. Auth is same-origin
 // only: the SPA reaches the API under one origin (a dev Vite proxy mirrors the
@@ -308,7 +197,7 @@ func Register(app *fiber.App, cfg Config) {
 	// its reasoning model is slow (tens of seconds per stage), so the default would time
 	// out mid-stage. Nil-safe (a nil client stays nil → Analyze is a no-op).
 	matchAnalyzer := matchanalysis.NewAnalyzer(cfg.LLM.WithTimeout(matchAnalysisLLMTimeout))
-	structuredExtractor := resumeextract.NewExtractor(cmp.Or(cfg.ResumeExtractLLM, cfg.LLM).WithTimeout(resumeExtractLLMTimeout), cfg.PIIDetector)
+	structuredExtractor := resumeextract.NewExtractor(cmp.Or(cfg.ResumeExtractLLM, cfg.LLM).WithTimeout(resumeExtractLLMTimeout))
 	plans := plan.NewStore(queries, cfg.Pool, cfg.Plan)
 	// Imports fetch a user-supplied page, so they dial through ingestClient (built above,
 	// where the comment on it is). cfg.Search may be nil (no engine configured), which only
@@ -700,36 +589,10 @@ func Register(app *fiber.App, cfg Config) {
 
 	api := app.Group("/api/v1")
 
-	// optionalAuth attaches the caller when signed in (cookie or key) but never
-	// rejects, so these public detail reads can overlay the caller's own vote
-	// (my_vote) while staying open to anonymous visitors.
-	optionalAuth := auth.OptionalAuth(a.issuer, a.queries, apiKeys{a.queries})
-	// keyAuth (RequireAuthOrKey) accepts the session cookie or an API key, so a
-	// script holding a key can drive the same flow as the browser. The public job
-	// reads stay unauthenticated. Jobs are addressed by their public slug; the
-	// handlers resolve it to the internal id before writing user_jobs.
-	keyAuth := auth.RequireAuthOrKey(a.issuer, a.queries, apiKeys{a.queries})
-	cvKeyAuth := auth.RequireAuthOrScopedKey(a.issuer, a.queries, apiKeys{a.queries}, auth.ScopeCV)
-	autoApplyGate := autoApplyOrchestratorGate(cfg.AutoApplyOrchestratorSecret, keyAuth)
-	// cookieAuth is the single cookie-only gate (RequireAuth) for the
-	// browser-convenience surfaces below — key management, saved searches, the CV
-	// builder, the inbox, subscriptions — where a leaked API key must not act.
-	cookieAuth := auth.RequireAuth(a.issuer, a.queries)
+	mw := a.newMiddleware(cfg, plans)
 
 	// Before any /api/v1 route: it hands them the rewritten request (signed_in_door.go).
-	mountSignedInDoor(app, keyAuth)
-
-	requireModerator := auth.RequireRole(a.queries, "moderator")
-	mw := middleware{
-		optional:       optionalAuth,
-		key:            keyAuth,
-		cvKey:          cvKeyAuth,
-		autoApplyGate:  autoApplyGate,
-		cookie:         cookieAuth,
-		optionalCookie: auth.OptionalCookieAuth(a.issuer, a.queries),
-		moderator:      requireModerator,
-		paidAI:         paidAIGate(entitlementOf(plans)),
-	}
+	mountSignedInDoor(app, mw.key)
 
 	// The email preference centre. Its three public routes are unauthenticated on
 	// purpose — a person holding one of our mails must be able to turn it off
@@ -740,7 +603,7 @@ func Register(app *fiber.App, cfg Config) {
 	agentPermissionsH := &agentPermissionHandlers{queries: queries}
 	userModerationH := newUserModerationHandlers(queries)
 	companyRelationH := &companyRelationHandlers{relations: companyrelation.New(cfg.Pool)}
-	contract := newContract(contractHandlers{conversationHandlers: conversationH,
+	handlers := contractHandlers{conversationHandlers: conversationH,
 		authHandlers:                 authH,
 		resumeHandlers:               resumeH,
 		matchHandlers:                matchH,
@@ -793,155 +656,22 @@ func Register(app *fiber.App, cfg Config) {
 		searchHandlers:               searchH,
 		companiesHandlers:            companiesH,
 		cvHandlers:                   cvH,
-		inboxHandlers:                inboxH})
+		inboxHandlers:                inboxH}
+	contract := newContract(handlers)
 	emailPrefsH.register(api, mw, contract)
 
-	// Job search surfaces first: their literal /jobs/* routes must precede the
-	// /jobs/:slug param route so they are not read as slugs (see searchHandlers).
-	searchH.register(api, mw, contract)
-	suggestH.register(api, contract)
-	dictionaryH.register(api, mw, contract)
-	// Beside the search it builds a filter for, though it shares none of its
-	// dependencies: interpretation needs a model and the caller's profile, not the
-	// index.
-	intentH.register(api, mw, contract)
-	sitemapH.register(api, mw)
-	// Before jobsH for the same reason searchH is: /ojcp/v1/jobs/:slug is a literal path,
-	// not a slug.
-	ojcpH.register(api, mw)
-	// The MCP server (freehire#3114): bearer-gated by an MCP OAuth grant or a full-scope
-	// key, reusing assistantH's own tool set so this surface and the in-app assistant can
-	// never disagree about what a tool does.
-	mountMCP(api, assistantH, mcpappH)
-	jobsH.register(api, mw, contract)
-	companiesH.register(api, mw, contract)
-	companyRelationH.register(api, mw, contract)
-	geoH.register(api, contract)
-
-	// Saved searches + the public shared-board read (see savedSearchHandlers).
-	savedSearchH.register(api, mw, contract)
-
-	// Public catalogue-activity, member-growth, engagement, facet-snapshot, and
-	// ingest-status reads (see statsHandlers).
-	statsH.register(api, optionalAuth, contract)
-	// The homepage's live "recently added jobs" SSE feed (see recentFeedHandlers).
-	recentFeedH.register(api)
-	// The public /embeddings page's coverage figures and their live stream.
-	embedProgressH.register(api, contract)
-	// The /open and /about pages' OG preview cards (see ogHandlers) — reads the
-	// same snapshot statsH.CatalogScale serves.
-	ogH.register(api)
-
-	// Per-user job interactions, tracking reads, and reminder controls
-	// (see trackingHandlers). The interaction writes precede the vote routes,
-	// mirroring the previous registration order.
-	trackingH.register(api, mw, contract)
-	// The ledger's dated read, behind the tracking calendar. Its own namespace, not a
-	// segment under /me/tracking — see the comment on its register.
-	timelineH.register(api, mw, contract)
-	votesH.register(api, mw, contract)
-	companyWatchH.register(api, mw, contract)
-	companyFeedbackH.register(api, mw, contract)
-	// The manual account ban (see userModerationHandlers).
-	userModerationH.register(api, mw, contract)
-	companyProcessReportH.register(api, mw, contract)
-	// Per-job skill match + the on-demand LLM fit analysis (see matchHandlers).
-	matchH.register(api, mw, contract)
-	// The contact block the extension writes into forms, plain and agent-driven (see
-	// autofillHandlers).
-	autofillH.register(api, mw, contract)
-	// The bank's own management surface: list, save, delete (see me_answer_bank.go).
-	answerBankH.register(api, mw, contract)
-	agentPermissionsH.register(api, mw, contract)
-	// The browser-tool wire: a harness on one end, the caller's browser extension
-	// on the other, exchanging raw tool frames. Both ends authenticate with the
-	// session JWT (Bearer for a server-side harness, the subprotocol for the
-	// extension, which can set no headers); the relay routes strictly within one
-	// user's channel. See internal/ai/browsertools.
-	api.Get("/tools/ws", auth.RequireAuthWS(a.issuer, a.queries, apiKeys{a.queries}), a.BrowserToolsWS())
-
-	// Public job submissions + review queue (see submissionHandlers).
-	submissionsH.register(api, mw, contract)
-
-	// Verified-employer accounts: claim, curated profile, own vacancies, and the
-	// moderator/admin review surface (see employerHandlers).
-	employerH.register(api, mw, contract)
-	directApplyH.register(api, mw, contract)
-
-	// Link contributions (see contributionHandlers).
-	contributionsH.register(api, mw, contract)
-	jdResolveH.register(api, mw, contract)
-
-	// Employee referrals (see referralHandlers).
-	referralsH.register(api, mw, contract)
-
-	// Interview buddies (see buddyHandlers).
-	buddyH.register(api, mw, contract)
-
-	// Conversations of every kind (see conversationHandlers).
-	conversationH.register(api, mw, contract)
-
-	// The mentorship marketplace (see mentorshipHandlers).
-	mentorshipH.register(api, mw, contract)
-	mentorSuggestionsH.register(api, mw, contract)
-
-	// Job reports + review queue (see reportHandlers).
-	reportsH.register(api, mw, contract)
-	ghostReportsH.register(api, mw, contract)
-
-	// Community discussion threads (see communityHandlers).
-	communityH.register(api, mw, contract)
-
-	planH.register(api, mw, contract)
-	// Mounts nothing when billing is unconfigured — see billingHandlers.register.
-	billingH.register(api, mw, contract)
-	// Mounted whatever billing is doing: sharing an invite link and counting who came is
-	// not a purchase, and a deployment that sells nothing can still have a referral page.
-	promoH.register(api, mw, contract)
-	plansH.register(api, contract)
-	usageH.register(api, mw, contract)
-
-	// API-key management and the auth surface (see authHandlers).
-	authH.register(api, mw, contract)
-	authH.registerV2(app.Group("/api/v2"), mw)
-
-	// The per-user profile singleton (see profileHandlers).
-	profileH.register(api, mw, contract)
-	// The candidate's own screening answers (see screeningAnswersHandlers).
-	screeningAnswersH.register(api, mw, contract)
-	surveyH.register(api, mw, contract)
-	marketPulseH.register(api, mw, contract)
-	experienceH.register(api, mw, contract)
-	talentNetworkH.register(api, mw, contract)
-	talentCatalogH.register(api, contract)
-
-	// CV builder + AI tailoring (see cvHandlers).
-	cvH.register(api, mw, contract)
-	referralMessageH.register(api, mw)
-
-	// Mail inbox (Gmail connect + hosted mailbox) and email ↔ application linking
-	// (see inboxHandlers). Registered after the static /me/tracking/* routes so
-	// /me/tracking/:slug does not shadow them.
-	inboxH.register(api, mw, contract)
-	// Résumé/CV surfaces: verdict, ATS report, extraction, storage (see
-	// resumeHandlers).
-	resumeH.register(api, mw, contract)
-	// The headshot the photo-bearing CV templates print (see photoHandlers).
-	photoH.register(api, mw)
-	// Dictation for the assistant composer.
-	speechH.register(api, mw)
-	assistantH.register(api, mw, contract)
-	assistantH.registerSupport(api, mw, contract)
-
-	// Filter subscriptions (see subscriptionHandlers).
-	subscriptionH.register(api, mw, contract)
-	webhookH.register(api, mw)
-
-	// Telegram linking + the inbound bot webhook (see telegramHandlers).
-	telegramH.register(api, mw)
-
-	// Discord linking for the paid channels. Registers nothing when the feature is
-	// unconfigured (see discordHandlers).
-	discordH.register(api, mw)
-
+	a.mountRoutes(app, api, mw, contract, routeHandlers{
+		contractHandlers: handlers,
+		sitemap:          sitemapH,
+		ojcp:             ojcpH,
+		mcpapp:           mcpappH,
+		recentFeed:       recentFeedH,
+		og:               ogH,
+		referralMessage:  referralMessageH,
+		photo:            photoH,
+		speech:           speechH,
+		webhook:          webhookH,
+		telegram:         telegramH,
+		discord:          discordH,
+	})
 }

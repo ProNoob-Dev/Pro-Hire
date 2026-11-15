@@ -1759,6 +1759,168 @@ func (s *AutoApplyDecision) SetDecision(val string) {
 	s.Decision = val
 }
 
+// Ref: #/components/schemas/AutoApplyList
+type AutoApplyList struct {
+	Attempts []AutoApplyListItem `json:"attempts"`
+}
+
+// GetAttempts returns the value of Attempts.
+func (s *AutoApplyList) GetAttempts() []AutoApplyListItem {
+	return s.Attempts
+}
+
+// SetAttempts sets the value of Attempts.
+func (s *AutoApplyList) SetAttempts(val []AutoApplyListItem) {
+	s.Attempts = val
+}
+
+// One of the caller's automatic applications.
+// Ref: #/components/schemas/AutoApplyListItem
+type AutoApplyListItem struct {
+	// Public vacancy slug, also the posting-backed Tracking row identifier.
+	JobSlug string              `json:"job_slug"`
+	Title   string              `json:"title"`
+	Company string              `json:"company"`
+	Status  AutoApplyListStatus `json:"status"`
+	// Most recent recorded transition, or enqueue time for older attempts.
+	LastActivityAt time.Time `json:"last_activity_at"`
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *AutoApplyListItem) GetJobSlug() string {
+	return s.JobSlug
+}
+
+// GetTitle returns the value of Title.
+func (s *AutoApplyListItem) GetTitle() string {
+	return s.Title
+}
+
+// GetCompany returns the value of Company.
+func (s *AutoApplyListItem) GetCompany() string {
+	return s.Company
+}
+
+// GetStatus returns the value of Status.
+func (s *AutoApplyListItem) GetStatus() AutoApplyListStatus {
+	return s.Status
+}
+
+// GetLastActivityAt returns the value of LastActivityAt.
+func (s *AutoApplyListItem) GetLastActivityAt() time.Time {
+	return s.LastActivityAt
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *AutoApplyListItem) SetJobSlug(val string) {
+	s.JobSlug = val
+}
+
+// SetTitle sets the value of Title.
+func (s *AutoApplyListItem) SetTitle(val string) {
+	s.Title = val
+}
+
+// SetCompany sets the value of Company.
+func (s *AutoApplyListItem) SetCompany(val string) {
+	s.Company = val
+}
+
+// SetStatus sets the value of Status.
+func (s *AutoApplyListItem) SetStatus(val AutoApplyListStatus) {
+	s.Status = val
+}
+
+// SetLastActivityAt sets the value of LastActivityAt.
+func (s *AutoApplyListItem) SetLastActivityAt(val time.Time) {
+	s.LastActivityAt = val
+}
+
+// A live attempt status, or a confirmed submission whose queue entry was retired.
+// Ref: #/components/schemas/AutoApplyListStatus
+type AutoApplyListStatus string
+
+const (
+	AutoApplyListStatusTailoring     AutoApplyListStatus = "tailoring"
+	AutoApplyListStatusPendingReview AutoApplyListStatus = "pending_review"
+	AutoApplyListStatusApproved      AutoApplyListStatus = "approved"
+	AutoApplyListStatusBlocked       AutoApplyListStatus = "blocked"
+	AutoApplyListStatusDeclined      AutoApplyListStatus = "declined"
+	AutoApplyListStatusFailed        AutoApplyListStatus = "failed"
+	AutoApplyListStatusTailorFailed  AutoApplyListStatus = "tailor_failed"
+	AutoApplyListStatusSubmitted     AutoApplyListStatus = "submitted"
+)
+
+// AllValues returns all AutoApplyListStatus values.
+func (AutoApplyListStatus) AllValues() []AutoApplyListStatus {
+	return []AutoApplyListStatus{
+		AutoApplyListStatusTailoring,
+		AutoApplyListStatusPendingReview,
+		AutoApplyListStatusApproved,
+		AutoApplyListStatusBlocked,
+		AutoApplyListStatusDeclined,
+		AutoApplyListStatusFailed,
+		AutoApplyListStatusTailorFailed,
+		AutoApplyListStatusSubmitted,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s AutoApplyListStatus) MarshalText() ([]byte, error) {
+	switch s {
+	case AutoApplyListStatusTailoring:
+		return []byte(s), nil
+	case AutoApplyListStatusPendingReview:
+		return []byte(s), nil
+	case AutoApplyListStatusApproved:
+		return []byte(s), nil
+	case AutoApplyListStatusBlocked:
+		return []byte(s), nil
+	case AutoApplyListStatusDeclined:
+		return []byte(s), nil
+	case AutoApplyListStatusFailed:
+		return []byte(s), nil
+	case AutoApplyListStatusTailorFailed:
+		return []byte(s), nil
+	case AutoApplyListStatusSubmitted:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *AutoApplyListStatus) UnmarshalText(data []byte) error {
+	switch AutoApplyListStatus(data) {
+	case AutoApplyListStatusTailoring:
+		*s = AutoApplyListStatusTailoring
+		return nil
+	case AutoApplyListStatusPendingReview:
+		*s = AutoApplyListStatusPendingReview
+		return nil
+	case AutoApplyListStatusApproved:
+		*s = AutoApplyListStatusApproved
+		return nil
+	case AutoApplyListStatusBlocked:
+		*s = AutoApplyListStatusBlocked
+		return nil
+	case AutoApplyListStatusDeclined:
+		*s = AutoApplyListStatusDeclined
+		return nil
+	case AutoApplyListStatusFailed:
+		*s = AutoApplyListStatusFailed
+		return nil
+	case AutoApplyListStatusTailorFailed:
+		*s = AutoApplyListStatusTailorFailed
+		return nil
+	case AutoApplyListStatusSubmitted:
+		*s = AutoApplyListStatusSubmitted
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
 // One resolved question and answer in an auto-apply answer preview.
 // Ref: #/components/schemas/AutoApplyPreviewField
 type AutoApplyPreviewField struct {
@@ -10440,6 +10602,21 @@ func (s *GetAuthMeOK) SetData(val AuthUser) {
 }
 
 // A single item: `{"data": ...}`.
+type GetAutoApplyListOK struct {
+	Data AutoApplyList `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetAutoApplyListOK) GetData() AutoApplyList {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetAutoApplyListOK) SetData(val AutoApplyList) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type GetAutofillProfileOK struct {
 	Data jx.Raw `json:"data"`
 }
@@ -11746,6 +11923,9 @@ func (s *InboxApplicationDetail) SetAutoApply(val OptAutoApplyReviewInfo) {
 type InboxApplicationEmail struct {
 	ID           int64     `json:"id"`
 	Source       string    `json:"source"`
+	Direction    OptString `json:"direction"`
+	ToAddrs      OptString `json:"to_addrs"`
+	CcAddrs      OptString `json:"cc_addrs"`
 	FromAddr     string    `json:"from_addr"`
 	FromName     string    `json:"from_name"`
 	Subject      string    `json:"subject"`
@@ -11763,6 +11943,21 @@ func (s *InboxApplicationEmail) GetID() int64 {
 // GetSource returns the value of Source.
 func (s *InboxApplicationEmail) GetSource() string {
 	return s.Source
+}
+
+// GetDirection returns the value of Direction.
+func (s *InboxApplicationEmail) GetDirection() OptString {
+	return s.Direction
+}
+
+// GetToAddrs returns the value of ToAddrs.
+func (s *InboxApplicationEmail) GetToAddrs() OptString {
+	return s.ToAddrs
+}
+
+// GetCcAddrs returns the value of CcAddrs.
+func (s *InboxApplicationEmail) GetCcAddrs() OptString {
+	return s.CcAddrs
 }
 
 // GetFromAddr returns the value of FromAddr.
@@ -11810,6 +12005,21 @@ func (s *InboxApplicationEmail) SetSource(val string) {
 	s.Source = val
 }
 
+// SetDirection sets the value of Direction.
+func (s *InboxApplicationEmail) SetDirection(val OptString) {
+	s.Direction = val
+}
+
+// SetToAddrs sets the value of ToAddrs.
+func (s *InboxApplicationEmail) SetToAddrs(val OptString) {
+	s.ToAddrs = val
+}
+
+// SetCcAddrs sets the value of CcAddrs.
+func (s *InboxApplicationEmail) SetCcAddrs(val OptString) {
+	s.CcAddrs = val
+}
+
 // SetFromAddr sets the value of FromAddr.
 func (s *InboxApplicationEmail) SetFromAddr(val string) {
 	s.FromAddr = val
@@ -11851,6 +12061,10 @@ type InboxEmail struct {
 	ID               int64     `json:"id"`
 	Source           string    `json:"source"`
 	ExternalID       string    `json:"external_id"`
+	Direction        OptString `json:"direction"`
+	ToAddrs          OptString `json:"to_addrs"`
+	CcAddrs          OptString `json:"cc_addrs"`
+	ThreadID         OptString `json:"thread_id"`
 	FromAddr         string    `json:"from_addr"`
 	FromName         string    `json:"from_name"`
 	Subject          string    `json:"subject"`
@@ -11879,6 +12093,26 @@ func (s *InboxEmail) GetSource() string {
 // GetExternalID returns the value of ExternalID.
 func (s *InboxEmail) GetExternalID() string {
 	return s.ExternalID
+}
+
+// GetDirection returns the value of Direction.
+func (s *InboxEmail) GetDirection() OptString {
+	return s.Direction
+}
+
+// GetToAddrs returns the value of ToAddrs.
+func (s *InboxEmail) GetToAddrs() OptString {
+	return s.ToAddrs
+}
+
+// GetCcAddrs returns the value of CcAddrs.
+func (s *InboxEmail) GetCcAddrs() OptString {
+	return s.CcAddrs
+}
+
+// GetThreadID returns the value of ThreadID.
+func (s *InboxEmail) GetThreadID() OptString {
+	return s.ThreadID
 }
 
 // GetFromAddr returns the value of FromAddr.
@@ -11959,6 +12193,26 @@ func (s *InboxEmail) SetSource(val string) {
 // SetExternalID sets the value of ExternalID.
 func (s *InboxEmail) SetExternalID(val string) {
 	s.ExternalID = val
+}
+
+// SetDirection sets the value of Direction.
+func (s *InboxEmail) SetDirection(val OptString) {
+	s.Direction = val
+}
+
+// SetToAddrs sets the value of ToAddrs.
+func (s *InboxEmail) SetToAddrs(val OptString) {
+	s.ToAddrs = val
+}
+
+// SetCcAddrs sets the value of CcAddrs.
+func (s *InboxEmail) SetCcAddrs(val OptString) {
+	s.CcAddrs = val
+}
+
+// SetThreadID sets the value of ThreadID.
+func (s *InboxEmail) SetThreadID(val OptString) {
+	s.ThreadID = val
 }
 
 // SetFromAddr sets the value of FromAddr.
@@ -12089,6 +12343,10 @@ type InboxMessage struct {
 	ID               int64     `json:"id"`
 	Source           string    `json:"source"`
 	ExternalID       string    `json:"external_id"`
+	Direction        OptString `json:"direction"`
+	ToAddrs          OptString `json:"to_addrs"`
+	CcAddrs          OptString `json:"cc_addrs"`
+	ThreadID         OptString `json:"thread_id"`
 	FromAddr         string    `json:"from_addr"`
 	FromName         string    `json:"from_name"`
 	Subject          string    `json:"subject"`
@@ -12117,6 +12375,26 @@ func (s *InboxMessage) GetSource() string {
 // GetExternalID returns the value of ExternalID.
 func (s *InboxMessage) GetExternalID() string {
 	return s.ExternalID
+}
+
+// GetDirection returns the value of Direction.
+func (s *InboxMessage) GetDirection() OptString {
+	return s.Direction
+}
+
+// GetToAddrs returns the value of ToAddrs.
+func (s *InboxMessage) GetToAddrs() OptString {
+	return s.ToAddrs
+}
+
+// GetCcAddrs returns the value of CcAddrs.
+func (s *InboxMessage) GetCcAddrs() OptString {
+	return s.CcAddrs
+}
+
+// GetThreadID returns the value of ThreadID.
+func (s *InboxMessage) GetThreadID() OptString {
+	return s.ThreadID
 }
 
 // GetFromAddr returns the value of FromAddr.
@@ -12197,6 +12475,26 @@ func (s *InboxMessage) SetSource(val string) {
 // SetExternalID sets the value of ExternalID.
 func (s *InboxMessage) SetExternalID(val string) {
 	s.ExternalID = val
+}
+
+// SetDirection sets the value of Direction.
+func (s *InboxMessage) SetDirection(val OptString) {
+	s.Direction = val
+}
+
+// SetToAddrs sets the value of ToAddrs.
+func (s *InboxMessage) SetToAddrs(val OptString) {
+	s.ToAddrs = val
+}
+
+// SetCcAddrs sets the value of CcAddrs.
+func (s *InboxMessage) SetCcAddrs(val OptString) {
+	s.CcAddrs = val
+}
+
+// SetThreadID sets the value of ThreadID.
+func (s *InboxMessage) SetThreadID(val OptString) {
+	s.ThreadID = val
 }
 
 // SetFromAddr sets the value of FromAddr.
@@ -12640,6 +12938,206 @@ func (s *JobApplyFormOK) GetData() jx.Raw {
 // SetData sets the value of Data.
 func (s *JobApplyFormOK) SetData(val jx.Raw) {
 	s.Data = val
+}
+
+// One transition of a posting, as the change feed reports it.
+// Ref: #/components/schemas/JobChange
+type JobChange struct {
+	PublicSlug string `json:"public_slug"`
+	// The change's order for this posting. Changes to different postings are not ordered by it, and the
+	// feed can serve one posting's changes out of order: apply a change only when its `seq` is greater
+	// than the last one you applied for that `public_slug`, and skip it otherwise (which also makes a
+	// repeated change harmless).
+	Seq int64 `json:"seq"`
+	// `opened`: the posting entered the catalogue. `closed`: it stopped being listed (taken down, or it
+	// became a duplicate or private). `reopened`: it is listed again (its source listed it again, a
+	// moderator reopened it, or it is no longer a duplicate).
+	Kind JobChangeKind `json:"kind"`
+	// When the change was recorded.
+	At time.Time `json:"at"`
+	// Why a `closed` change happened (e.g. `unseen`, `expired`, `duplicate`, `private`); absent on the
+	// other kinds.
+	ClosedReason OptString `json:"closed_reason"`
+}
+
+// GetPublicSlug returns the value of PublicSlug.
+func (s *JobChange) GetPublicSlug() string {
+	return s.PublicSlug
+}
+
+// GetSeq returns the value of Seq.
+func (s *JobChange) GetSeq() int64 {
+	return s.Seq
+}
+
+// GetKind returns the value of Kind.
+func (s *JobChange) GetKind() JobChangeKind {
+	return s.Kind
+}
+
+// GetAt returns the value of At.
+func (s *JobChange) GetAt() time.Time {
+	return s.At
+}
+
+// GetClosedReason returns the value of ClosedReason.
+func (s *JobChange) GetClosedReason() OptString {
+	return s.ClosedReason
+}
+
+// SetPublicSlug sets the value of PublicSlug.
+func (s *JobChange) SetPublicSlug(val string) {
+	s.PublicSlug = val
+}
+
+// SetSeq sets the value of Seq.
+func (s *JobChange) SetSeq(val int64) {
+	s.Seq = val
+}
+
+// SetKind sets the value of Kind.
+func (s *JobChange) SetKind(val JobChangeKind) {
+	s.Kind = val
+}
+
+// SetAt sets the value of At.
+func (s *JobChange) SetAt(val time.Time) {
+	s.At = val
+}
+
+// SetClosedReason sets the value of ClosedReason.
+func (s *JobChange) SetClosedReason(val OptString) {
+	s.ClosedReason = val
+}
+
+// `opened`: the posting entered the catalogue. `closed`: it stopped being listed (taken down, or it
+// became a duplicate or private). `reopened`: it is listed again (its source listed it again, a
+// moderator reopened it, or it is no longer a duplicate).
+type JobChangeKind string
+
+const (
+	JobChangeKindOpened   JobChangeKind = "opened"
+	JobChangeKindClosed   JobChangeKind = "closed"
+	JobChangeKindReopened JobChangeKind = "reopened"
+)
+
+// AllValues returns all JobChangeKind values.
+func (JobChangeKind) AllValues() []JobChangeKind {
+	return []JobChangeKind{
+		JobChangeKindOpened,
+		JobChangeKindClosed,
+		JobChangeKindReopened,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s JobChangeKind) MarshalText() ([]byte, error) {
+	switch s {
+	case JobChangeKindOpened:
+		return []byte(s), nil
+	case JobChangeKindClosed:
+		return []byte(s), nil
+	case JobChangeKindReopened:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *JobChangeKind) UnmarshalText(data []byte) error {
+	switch JobChangeKind(data) {
+	case JobChangeKindOpened:
+		*s = JobChangeKindOpened
+		return nil
+	case JobChangeKindClosed:
+		*s = JobChangeKindClosed
+		return nil
+	case JobChangeKindReopened:
+		*s = JobChangeKindReopened
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Ref: #/components/schemas/JobChangesMeta
+type JobChangesMeta struct {
+	Limit int64 `json:"limit"`
+	// True when more changes are waiting; fetch again with `next_cursor`.
+	HasMore bool `json:"has_more"`
+	// Pass back as `cursor` for the next page. Always present, even on an empty page: store it and resume
+	// from it later, however long the feed stays quiet.
+	NextCursor string `json:"next_cursor"`
+	// The oldest change the feed holds: it starts when it was introduced, and `since` cannot reach before
+	// it.
+	AvailableSince OptDateTime `json:"available_since"`
+}
+
+// GetLimit returns the value of Limit.
+func (s *JobChangesMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetHasMore returns the value of HasMore.
+func (s *JobChangesMeta) GetHasMore() bool {
+	return s.HasMore
+}
+
+// GetNextCursor returns the value of NextCursor.
+func (s *JobChangesMeta) GetNextCursor() string {
+	return s.NextCursor
+}
+
+// GetAvailableSince returns the value of AvailableSince.
+func (s *JobChangesMeta) GetAvailableSince() OptDateTime {
+	return s.AvailableSince
+}
+
+// SetLimit sets the value of Limit.
+func (s *JobChangesMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetHasMore sets the value of HasMore.
+func (s *JobChangesMeta) SetHasMore(val bool) {
+	s.HasMore = val
+}
+
+// SetNextCursor sets the value of NextCursor.
+func (s *JobChangesMeta) SetNextCursor(val string) {
+	s.NextCursor = val
+}
+
+// SetAvailableSince sets the value of AvailableSince.
+func (s *JobChangesMeta) SetAvailableSince(val OptDateTime) {
+	s.AvailableSince = val
+}
+
+// Ref: #/components/schemas/JobChangesPage
+type JobChangesPage struct {
+	Data []JobChange    `json:"data"`
+	Meta JobChangesMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *JobChangesPage) GetData() []JobChange {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *JobChangesPage) GetMeta() JobChangesMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *JobChangesPage) SetData(val []JobChange) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *JobChangesPage) SetMeta(val JobChangesMeta) {
+	s.Meta = val
 }
 
 // Ref: #/components/schemas/JobCopiesMeta
@@ -17691,14 +18189,21 @@ func (s *NotificationPage) SetMeta(val NotificationListMeta) {
 
 // Ref: #/components/schemas/NotificationSettings
 type NotificationSettings struct {
-	Enabled         bool     `json:"enabled"`
-	Channels        []string `json:"channels"`
-	DigestFrequency string   `json:"digest_frequency"`
+	// Opt-in daily summary of classified hiring mail. Uses digest_time.
+	InboxDigestEnabled bool     `json:"inbox_digest_enabled"`
+	Enabled            bool     `json:"enabled"`
+	Channels           []string `json:"channels"`
+	DigestFrequency    string   `json:"digest_frequency"`
 	// `HH:MM`.
 	DigestTime          NilString `json:"digest_time"`
 	DigestIntervalHours int64     `json:"digest_interval_hours"`
 	QuietHoursStart     NilString `json:"quiet_hours_start"`
 	QuietHoursEnd       NilString `json:"quiet_hours_end"`
+}
+
+// GetInboxDigestEnabled returns the value of InboxDigestEnabled.
+func (s *NotificationSettings) GetInboxDigestEnabled() bool {
+	return s.InboxDigestEnabled
 }
 
 // GetEnabled returns the value of Enabled.
@@ -17734,6 +18239,11 @@ func (s *NotificationSettings) GetQuietHoursStart() NilString {
 // GetQuietHoursEnd returns the value of QuietHoursEnd.
 func (s *NotificationSettings) GetQuietHoursEnd() NilString {
 	return s.QuietHoursEnd
+}
+
+// SetInboxDigestEnabled sets the value of InboxDigestEnabled.
+func (s *NotificationSettings) SetInboxDigestEnabled(val bool) {
+	s.InboxDigestEnabled = val
 }
 
 // SetEnabled sets the value of Enabled.
@@ -17774,6 +18284,8 @@ func (s *NotificationSettings) SetQuietHoursEnd(val NilString) {
 // Every field is read as its zero value when left out. Times are `HH:MM`.
 // Ref: #/components/schemas/NotificationSettingsUpdate
 type NotificationSettingsUpdate struct {
+	// Omitted or null preserves the current inbox digest choice.
+	InboxDigestEnabled OptNilBool `json:"inbox_digest_enabled"`
 	// Turn notifications on or off.
 	Enabled OptNilBool `json:"enabled"`
 	// Delivery channels: `email`, `telegram`, `push`. Adding `push` needs a device the mobile app has
@@ -17784,6 +18296,11 @@ type NotificationSettingsUpdate struct {
 	DigestIntervalHours OptNilInt64       `json:"digest_interval_hours"`
 	QuietHoursStart     OptNilString      `json:"quiet_hours_start"`
 	QuietHoursEnd       OptNilString      `json:"quiet_hours_end"`
+}
+
+// GetInboxDigestEnabled returns the value of InboxDigestEnabled.
+func (s *NotificationSettingsUpdate) GetInboxDigestEnabled() OptNilBool {
+	return s.InboxDigestEnabled
 }
 
 // GetEnabled returns the value of Enabled.
@@ -17819,6 +18336,11 @@ func (s *NotificationSettingsUpdate) GetQuietHoursStart() OptNilString {
 // GetQuietHoursEnd returns the value of QuietHoursEnd.
 func (s *NotificationSettingsUpdate) GetQuietHoursEnd() OptNilString {
 	return s.QuietHoursEnd
+}
+
+// SetInboxDigestEnabled sets the value of InboxDigestEnabled.
+func (s *NotificationSettingsUpdate) SetInboxDigestEnabled(val OptNilBool) {
+	s.InboxDigestEnabled = val
 }
 
 // SetEnabled sets the value of Enabled.
@@ -19402,6 +19924,52 @@ func (o OptRejectSubmissionRequest) Get() (v RejectSubmissionRequest, ok bool) {
 
 // Or returns value if set, or given parameter if does not.
 func (o OptRejectSubmissionRequest) Or(d RejectSubmissionRequest) RejectSubmissionRequest {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
+// NewOptReplyRateBenchmark returns new OptReplyRateBenchmark with value set to v.
+func NewOptReplyRateBenchmark(v ReplyRateBenchmark) OptReplyRateBenchmark {
+	return OptReplyRateBenchmark{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptReplyRateBenchmark is optional ReplyRateBenchmark.
+type OptReplyRateBenchmark struct {
+	Value ReplyRateBenchmark
+	Set   bool
+}
+
+// IsSet returns true if OptReplyRateBenchmark was set.
+func (o OptReplyRateBenchmark) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptReplyRateBenchmark) Reset() {
+	var v ReplyRateBenchmark
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptReplyRateBenchmark) SetTo(v ReplyRateBenchmark) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptReplyRateBenchmark) Get() (v ReplyRateBenchmark, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptReplyRateBenchmark) Or(d ReplyRateBenchmark) ReplyRateBenchmark {
 	if v, ok := o.Get(); ok {
 		return v
 	}
@@ -22330,6 +22898,60 @@ func (s *ReplaceResumeContactsFromCvOK) SetData(val jx.Raw) {
 
 // ReplaceWeeklyAvailabilityNoContent is response for ReplaceWeeklyAvailability operation.
 type ReplaceWeeklyAvailabilityNoContent struct{}
+
+// The caller's own reply rate against everyone else's, counted the same way.
+// Ref: #/components/schemas/ReplyRateBenchmark
+type ReplyRateBenchmark struct {
+	You    ReplyRateSide `json:"you"`
+	Global ReplyRateSide `json:"global"`
+}
+
+// GetYou returns the value of You.
+func (s *ReplyRateBenchmark) GetYou() ReplyRateSide {
+	return s.You
+}
+
+// GetGlobal returns the value of Global.
+func (s *ReplyRateBenchmark) GetGlobal() ReplyRateSide {
+	return s.Global
+}
+
+// SetYou sets the value of You.
+func (s *ReplyRateBenchmark) SetYou(val ReplyRateSide) {
+	s.You = val
+}
+
+// SetGlobal sets the value of Global.
+func (s *ReplyRateBenchmark) SetGlobal(val ReplyRateSide) {
+	s.Global = val
+}
+
+// Observable applications (a connected mailbox would have seen a reply) and how many were answered.
+// Ref: #/components/schemas/ReplyRateSide
+type ReplyRateSide struct {
+	Applications int64 `json:"applications"`
+	Answered     int64 `json:"answered"`
+}
+
+// GetApplications returns the value of Applications.
+func (s *ReplyRateSide) GetApplications() int64 {
+	return s.Applications
+}
+
+// GetAnswered returns the value of Answered.
+func (s *ReplyRateSide) GetAnswered() int64 {
+	return s.Answered
+}
+
+// SetApplications sets the value of Applications.
+func (s *ReplyRateSide) SetApplications(val int64) {
+	s.Applications = val
+}
+
+// SetAnswered sets the value of Answered.
+func (s *ReplyRateSide) SetAnswered(val int64) {
+	s.Answered = val
+}
 
 // ReportCompanyFeedbackNoContent is response for ReportCompanyFeedback operation.
 type ReportCompanyFeedbackNoContent struct{}
@@ -27865,7 +28487,7 @@ type TrackingPipeline struct {
 	Applications int64                  `json:"applications"`
 	Stages       TrackingPipelineStages `json:"stages"`
 	// The reply-rate benchmark, only when it clears its sample gate.
-	ReplyRate jx.Raw `json:"reply_rate"`
+	ReplyRate OptReplyRateBenchmark `json:"reply_rate"`
 }
 
 // GetApplications returns the value of Applications.
@@ -27879,7 +28501,7 @@ func (s *TrackingPipeline) GetStages() TrackingPipelineStages {
 }
 
 // GetReplyRate returns the value of ReplyRate.
-func (s *TrackingPipeline) GetReplyRate() jx.Raw {
+func (s *TrackingPipeline) GetReplyRate() OptReplyRateBenchmark {
 	return s.ReplyRate
 }
 
@@ -27894,7 +28516,7 @@ func (s *TrackingPipeline) SetStages(val TrackingPipelineStages) {
 }
 
 // SetReplyRate sets the value of ReplyRate.
-func (s *TrackingPipeline) SetReplyRate(val jx.Raw) {
+func (s *TrackingPipeline) SetReplyRate(val OptReplyRateBenchmark) {
 	s.ReplyRate = val
 }
 

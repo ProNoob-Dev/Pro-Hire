@@ -12,10 +12,16 @@ The `internal/platform/db` package — generated sqlc code, hand-written SQL que
 - Complete posting reads use `jobs_read` (`db.Job`), which joins observation state from
   `job_activity`. The physical `jobs` model is `db.JobRow`. Return explicit columns from
   base-table writes; `RETURNING *` or `sqlc.embed(jobs)` would expand legacy columns and
-  prevent their later removal. A new `jobs` column also needs a replacement `jobs_read`
+  keep the base row independent of observation fields. A new `jobs` column also needs a replacement `jobs_read`
   projection; `TestJobsReadCoversEveryJobsColumn` checks it. Read observation predicates
   from activity, including inside writers, so compatible workers can overlap a writer
   cutover. Freshness-dependent closers lock jobs then activity with `FOR NO KEY UPDATE`.
+- Full posting writes go through `job.Upsert` in a `pgx.Tx`: `UpsertJob` then
+  `ObserveJobActivity` as a second command. An INSERT trigger's new activity row is
+  not visible to a same-statement UPDATE CTE. A fenced cheap refresh must roll back
+  before retrying; it already holds activity and cannot safely take the jobs lock.
+  `UpsertJob` uses PostgreSQL 18 `RETURNING old.closed_at` to preserve strike reset
+  semantics for an expired posting that stays closed.
 - Writers that need both a posting/activity lock and a search queue entry take the
   activity lock before the queue lock. A legacy `AFTER` bridge runs at statement end,
   after data-modifying outbox CTEs; it cannot establish this order for them. Lock both

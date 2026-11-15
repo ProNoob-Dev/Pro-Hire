@@ -46,15 +46,10 @@ func sweepTestPosting(source, externalID, title string) job.Job {
 
 func ageJobForSweepTest(t *testing.T, pool *pgxpool.Pool, id int64, seenAgo time.Duration) {
 	t.Helper()
-	// The sweep reads job_activity. Backdate the legacy column first: the one-way bridge only ever
-	// moves job_activity forward, so a legacy write made after ageing it would undo the ageing.
-	for _, stmt := range []string{
-		"UPDATE jobs SET last_seen_at = now() - $2::interval WHERE id = $1",
+	if _, err := pool.Exec(context.Background(),
 		"UPDATE job_activity SET last_seen_at = now() - $2::interval WHERE job_id = $1",
-	} {
-		if _, err := pool.Exec(context.Background(), stmt, id, seenAgo.String()); err != nil {
-			t.Fatalf("backdate last_seen_at for %d: %v", id, err)
-		}
+		id, seenAgo.String()); err != nil {
+		t.Fatalf("backdate last_seen_at for %d: %v", id, err)
 	}
 }
 
@@ -151,9 +146,9 @@ type refreshBeforeClose struct {
 
 func (r refreshBeforeClose) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
 	if strings.Contains(sql, "-- name: CloseUnseenJobByID") {
-		// The legacy update reaches activity through the same bridge as a release A writer.
-		if _, err := r.pool.Exec(ctx, `UPDATE jobs SET last_seen_at = now() WHERE id = $1`, r.id); err != nil {
-			r.t.Fatalf("refresh selected row: %v", err)
+		// A release B observation writes activity directly, leaving the jobs row unchanged.
+		if n, err := db.New(r.pool).ObserveJobActivity(ctx, db.ObserveJobActivityParams{JobID: r.id}); err != nil || n != 1 {
+			r.t.Fatalf("refresh selected row: %d activity rows, %v; want 1", n, err)
 		}
 	}
 	return r.DBTX.QueryRow(ctx, sql, args...)

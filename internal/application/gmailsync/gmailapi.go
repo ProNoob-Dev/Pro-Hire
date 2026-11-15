@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/strelov1/freehire/internal/application/ical"
+	"github.com/strelov1/freehire/internal/platform/mailmeta"
 )
 
 const gmailBaseURL = "https://gmail.googleapis.com/gmail/v1/users/me"
@@ -35,16 +36,30 @@ func NewAPIReader(client *http.Client, learned []string) GmailReader {
 // ListATSMessageIDs pages through the ATS-scoped search, returning all matching ids.
 func (r *apiReader) ListATSMessageIDs(ctx context.Context, selfAddr string, afterUnix int64) ([]string, error) {
 	q := BuildQueryFor(selfAddr, afterUnix, r.learned)
-	var ids []string
+	refs, err := r.listMessages(ctx, q)
+	ids := make([]string, 0, len(refs))
+	for _, ref := range refs {
+		ids = append(ids, ref.ID)
+	}
+	return ids, err
+}
+
+func (r *apiReader) ListSentMessages(ctx context.Context, afterUnix int64) ([]MessageRef, error) {
+	return r.listMessages(ctx, fmt.Sprintf("in:sent after:%d", max(0, afterUnix-60)))
+}
+
+func (r *apiReader) listMessages(ctx context.Context, query string) ([]MessageRef, error) {
+	var refs []MessageRef
 	pageToken := ""
 	for {
-		u := fmt.Sprintf("%s/messages?maxResults=100&q=%s", gmailBaseURL, url.QueryEscape(q))
+		u := fmt.Sprintf("%s/messages?maxResults=100&q=%s", gmailBaseURL, url.QueryEscape(query))
 		if pageToken != "" {
 			u += "&pageToken=" + url.QueryEscape(pageToken)
 		}
 		var page struct {
 			Messages []struct {
-				ID string `json:"id"`
+				ID       string `json:"id"`
+				ThreadID string `json:"threadId"`
 			} `json:"messages"`
 			NextPageToken string `json:"nextPageToken"`
 		}
@@ -52,10 +67,10 @@ func (r *apiReader) ListATSMessageIDs(ctx context.Context, selfAddr string, afte
 			return nil, err
 		}
 		for _, m := range page.Messages {
-			ids = append(ids, m.ID)
+			refs = append(refs, MessageRef{ID: m.ID, ThreadID: m.ThreadID})
 		}
 		if page.NextPageToken == "" {
-			return ids, nil
+			return refs, nil
 		}
 		pageToken = page.NextPageToken
 	}
@@ -92,11 +107,7 @@ func (r *apiReader) GetMessage(ctx context.Context, id string) (Message, error) 
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return Message{}, &APIError{
-			Op:         fmt.Sprintf("gmail: get message %s", id),
-			StatusCode: resp.StatusCode,
-			Status:     resp.Status,
-		}
+		return Message{}, NewAPIError(fmt.Sprintf("gmail: get message %s", id), resp)
 	}
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -116,7 +127,7 @@ func (r *apiReader) getJSON(ctx context.Context, u string, out any) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return &APIError{Op: "gmail: " + u, StatusCode: resp.StatusCode, Status: resp.Status}
+		return NewAPIError("gmail: "+u, resp)
 	}
 	return json.NewDecoder(resp.Body).Decode(out)
 }
@@ -139,6 +150,7 @@ type gmailHeader struct {
 
 type gmailMessage struct {
 	ID           string    `json:"id"`
+	Labels       []string  `json:"labelIds"`
 	ThreadID     string    `json:"threadId"`
 	InternalDate string    `json:"internalDate"`
 	Payload      gmailPart `json:"payload"`
@@ -151,7 +163,18 @@ func parseMessage(raw []byte) (Message, error) {
 	if err := json.Unmarshal(raw, &gm); err != nil {
 		return Message{}, fmt.Errorf("gmail: decode message: %w", err)
 	}
-	m := Message{ID: gm.ID, ThreadID: gm.ThreadID}
+	m := Message{ID: gm.ID, ThreadID: gm.ThreadID, Direction: DirectionIncoming}
+	for _, label := range gm.Labels {
+		if label == "SENT" {
+			m.Direction = DirectionOutgoing
+		}
+		if label == "DRAFT" {
+			m.Draft = true
+		}
+	}
+	m.SystemNotification = headerValue(gm.Payload.Headers, mailmeta.NotificationHeader) == mailmeta.InboxDigest && headerValue(gm.Payload.Headers, "Auto-Submitted") == "auto-generated"
+	m.ToAddrs = headerValue(gm.Payload.Headers, "To")
+	m.CcAddrs = headerValue(gm.Payload.Headers, "Cc")
 
 	if ms, err := strconv.ParseInt(gm.InternalDate, 10, 64); err == nil {
 		m.ReceivedAt = time.UnixMilli(ms)
@@ -202,8 +225,7 @@ func bodies(p gmailPart) (text, html string) {
 }
 
 // calendarUID walks the MIME tree for a text/calendar part and reads the meeting's
-// identifier out of it. A part that carries none, or that does not parse, yields "" —
-// an invitation whose meeting we cannot identify is still an invitation, and the mail
+// identifier out of it. A part that carries none, or does not parse, yields "": the mail
 // must not be lost over it.
 func calendarUID(p gmailPart) string {
 	var found string
@@ -240,9 +262,8 @@ func decodeB64URL(s string) string {
 
 // Search runs an arbitrary query and returns the matching messages in full.
 //
-// One page only. The recall query is already scoped to one employer inside one window, so a
-// result that overflows a page is a query that failed to narrow rather than a mailbox that
-// needs paging — and the caller is a person waiting at a button.
+// One page only: the recall query is scoped to one employer and window, and the caller is a
+// person waiting at a button.
 func (r *apiReader) Search(ctx context.Context, query string, limit int) ([]Message, error) {
 	if query == "" {
 		return nil, nil
@@ -261,8 +282,7 @@ func (r *apiReader) Search(ctx context.Context, query string, limit int) ([]Mess
 	for _, m := range page.Messages {
 		msg, err := r.GetMessage(ctx, m.ID)
 		if err != nil {
-			// One unreadable message must not lose the rest: the caller is choosing from
-			// what we found, and a short list beats an error nobody can act on.
+			// One unreadable message must not lose the rest.
 			continue
 		}
 		out = append(out, msg)

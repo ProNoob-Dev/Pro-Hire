@@ -27,14 +27,12 @@ func TestTouchJobRefreshesLivenessAndPreservesContent(t *testing.T) {
 		t.Fatalf("upsert: %v", err)
 	}
 
-	// Simulate a stale, closed row: last_seen_at far in the past, closed_at set.
+	// Simulate a stale, closed row: closed_at set and the activity row's last_seen_at far in the past.
 	if _, err := pool.Exec(ctx,
-		`UPDATE jobs SET last_seen_at = now() - interval '10 days', closed_at = now() WHERE source='justjoin' AND external_id='justjoin:1'`,
+		`UPDATE jobs SET closed_at = now() WHERE source='justjoin' AND external_id='justjoin:1'`,
 	); err != nil {
-		t.Fatalf("stale/close setup: %v", err)
+		t.Fatalf("close setup: %v", err)
 	}
-	// job_activity is what the touch compares and the readers see; the bridge never lowers it, so
-	// age it directly, after the legacy write.
 	if _, err := pool.Exec(ctx,
 		`UPDATE job_activity SET last_seen_at = now() - interval '10 days'
 		 WHERE job_id = (SELECT id FROM jobs WHERE source='justjoin' AND external_id='justjoin:1')`,
@@ -42,7 +40,7 @@ func TestTouchJobRefreshesLivenessAndPreservesContent(t *testing.T) {
 		t.Fatalf("age activity: %v", err)
 	}
 
-	touched, err := q.TouchJob(ctx, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:1", AllowReopen: true})
+	touched, err := touchObserved(ctx, q, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:1", AllowReopen: true})
 	if err != nil {
 		t.Fatalf("TouchJob: %v", err)
 	}
@@ -91,20 +89,19 @@ func TestTouchJobStampsUpdatedAtOnlyWhenItReopens(t *testing.T) {
 		if _, err := ingestUpsert(ctx, q, p); err != nil {
 			t.Fatalf("seed upsert: %v", err)
 		}
-		closeClause := ""
+		closeClause, strikes := "", 0
 		if closed {
-			closeClause = ", closed_at = now(), liveness_strikes = 2"
+			closeClause, strikes = ", closed_at = now()", 2
 		}
 		if _, err := pool.Exec(ctx,
-			`UPDATE jobs SET last_seen_at = now() - interval '10 days',
-			                 updated_at = now() - interval '10 days'`+closeClause+`
+			`UPDATE jobs SET updated_at = now() - interval '10 days'`+closeClause+`
 			 WHERE source = 'justjoin' AND external_id = $1`, externalID,
 		); err != nil {
 			t.Fatalf("seed stamps: %v", err)
 		}
 		if _, err := pool.Exec(ctx,
-			`UPDATE job_activity SET last_seen_at = now() - interval '10 days'
-			 WHERE job_id = (SELECT id FROM jobs WHERE source = 'justjoin' AND external_id = $1)`, externalID,
+			`UPDATE job_activity SET last_seen_at = now() - interval '10 days', liveness_strikes = $2
+			 WHERE job_id = (SELECT id FROM jobs WHERE source = 'justjoin' AND external_id = $1)`, externalID, strikes,
 		); err != nil {
 			t.Fatalf("age activity: %v", err)
 		}
@@ -117,7 +114,7 @@ func TestTouchJobStampsUpdatedAtOnlyWhenItReopens(t *testing.T) {
 
 	t.Run("open row keeps its change stamp", func(t *testing.T) {
 		before := seed(t, "justjoin:open", false)
-		touched, err := q.TouchJob(ctx, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:open", AllowReopen: true})
+		touched, err := touchObserved(ctx, q, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:open", AllowReopen: true})
 		if err != nil {
 			t.Fatalf("TouchJob: %v", err)
 		}
@@ -139,7 +136,7 @@ func TestTouchJobStampsUpdatedAtOnlyWhenItReopens(t *testing.T) {
 
 	t.Run("a reopen it may not make is deferred untouched", func(t *testing.T) {
 		before := seed(t, "justjoin:deferred", true)
-		touched, err := q.TouchJob(ctx, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:deferred"})
+		touched, err := touchObserved(ctx, q, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:deferred"})
 		if err != nil {
 			t.Fatalf("TouchJob: %v", err)
 		}
@@ -159,7 +156,7 @@ func TestTouchJobStampsUpdatedAtOnlyWhenItReopens(t *testing.T) {
 
 	t.Run("reopen stamps it", func(t *testing.T) {
 		before := seed(t, "justjoin:closed", true)
-		if _, err := q.TouchJob(ctx, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:closed", AllowReopen: true}); err != nil {
+		if _, err := touchObserved(ctx, q, TouchJobParams{Source: "justjoin", ExternalID: "justjoin:closed", AllowReopen: true}); err != nil {
 			t.Fatalf("TouchJob: %v", err)
 		}
 		after, err := q.GetJobBySourceExternalID(ctx, GetJobBySourceExternalIDParams{Source: "justjoin", ExternalID: "justjoin:closed"})
