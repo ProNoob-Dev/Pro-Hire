@@ -355,6 +355,16 @@ type Handler interface {
 	//
 	// POST /me/cvs
 	CreateCV(ctx context.Context, req *CvCreate) (*CreateCVCreated, error)
+	// CreateChangeWebhook implements createChangeWebhook operation.
+	//
+	// Subscribes a URL to the change feed and answers with the signing secret, this once. Needs an `api`
+	// or `api_data` plan (`402` without one), at most 5 subscriptions per account (`409` past that). The
+	// URL is not probed here, so a receiver that verifies signatures can be set up with the returned
+	// secret first; call the `test` endpoint to check it. Deliveries start from about the time of this
+	// call.
+	//
+	// POST /me/change-webhooks
+	CreateChangeWebhook(ctx context.Context, req *ChangeWebhookCreate) (*CreateChangeWebhookCreated, error)
 	// CreateEmployerVacancy implements createEmployerVacancy operation.
 	//
 	// Publishes, or idempotently updates the caller's own vacancy at the same URL.
@@ -472,6 +482,13 @@ type Handler interface {
 	//
 	// DELETE /me/cvs/{id}
 	DeleteCV(ctx context.Context, params DeleteCVParams) error
+	// DeleteChangeWebhook implements deleteChangeWebhook operation.
+	//
+	// An id that is not the caller's is a `404`. Delete a disabled subscription and create it again to
+	// resume (from the changes made then).
+	//
+	// DELETE /me/change-webhooks/{id}
+	DeleteChangeWebhook(ctx context.Context, params DeleteChangeWebhookParams) error
 	// DeleteCompanyFeedback implements deleteCompanyFeedback operation.
 	//
 	// Returns the company's freshly recomputed counters, the same cast/clear shape as the vote endpoints.
@@ -639,6 +656,14 @@ type Handler interface {
 	//
 	// GET /me/autofill-profile
 	GetAutofillProfile(ctx context.Context) (*GetAutofillProfileOK, error)
+	// GetBillingAttempts implements getBillingAttempts operation.
+	//
+	// The caller's 20 most recent Stripe charge attempts, newest first, including failed first purchases
+	// and retries. An account with no Stripe customer gets an empty list; a provider read failure returns
+	// 503. Cookie session only.
+	//
+	// GET /billing/attempts
+	GetBillingAttempts(ctx context.Context) (*BillingAttemptsHeaders, error)
 	// GetBillingCheckout implements getBillingCheckout operation.
 	//
 	// 404 when checkout is unconfigured or the price is not offered. Cookie session only.
@@ -684,6 +709,12 @@ type Handler interface {
 	//
 	// GET /me/cvs/{id}/cover-letter
 	GetCVCoverLetter(ctx context.Context, params GetCVCoverLetterParams) (*GetCVCoverLetterOK, error)
+	// GetCVCoverLetterEvidence implements getCVCoverLetterEvidence operation.
+	//
+	// Review confirmed evidence without a model call or allowance charge.
+	//
+	// GET /me/cvs/{id}/cover-letter/evidence
+	GetCVCoverLetterEvidence(ctx context.Context, params GetCVCoverLetterEvidenceParams) (*GetCVCoverLetterEvidenceOK, error)
 	// GetCVJobMatch implements getCVJobMatch operation.
 	//
 	// Deterministic and free — no model call, unlike the AI match analysis. Scored off the CV’s
@@ -739,12 +770,25 @@ type Handler interface {
 	//
 	// GET /stats/embeddings
 	GetEmbeddingProgress(ctx context.Context) (*GetEmbeddingProgressOK, error)
+	// GetEmployerApplicationCV implements getEmployerApplicationCV operation.
+	//
+	// The CV file the application sent, exactly as it was emailed to you: a PDF, or the text the candidate
+	// pasted. 404 when none was kept.
+	//
+	// GET /employer/applications/{id}/cv
+	GetEmployerApplicationCV(ctx context.Context, params GetEmployerApplicationCVParams) (*GetEmployerApplicationCVOKHeaders, error)
 	// GetEmployerCompany implements getEmployerCompany operation.
 	//
 	// The caller's own account in any status, with the company profile.
 	//
 	// GET /employer/company
 	GetEmployerCompany(ctx context.Context) (*GetEmployerCompanyOK, error)
+	// GetEmployerTeam implements getEmployerTeam operation.
+	//
+	// Everyone who acts for the caller's company, and the invitations still open.
+	//
+	// GET /employer/team
+	GetEmployerTeam(ctx context.Context) (*GetEmployerTeamOK, error)
 	// GetInbox implements getInbox operation.
 	//
 	// `?body=1` returns each message's readable text inline and marks nothing read — that is the agent
@@ -1114,6 +1158,13 @@ type Handler interface {
 	//
 	// POST /search/interpret
 	InterpretSearch(ctx context.Context, req *SearchIntentRequest) (*InterpretSearchOK, error)
+	// InviteEmployerTeamMember implements inviteEmployerTeamMember operation.
+	//
+	// Mails a colleague a single-use link to join the team, valid seven days. Inviting an address again
+	// replaces its link. 429 past twenty open invitations.
+	//
+	// POST /employer/team/invitations
+	InviteEmployerTeamMember(ctx context.Context, req *EmployerTeamInvite) (*InviteEmployerTeamMemberCreated, error)
 	// JobApplyForm implements jobApplyForm operation.
 	//
 	// The questions a candidate will have to answer, shaped for reading. Only captured for a minority of
@@ -1147,6 +1198,12 @@ type Handler interface {
 	//
 	// GET /stats/jobs-activity
 	JobsActivity(ctx context.Context, params JobsActivityParams) (*JobsActivity, error)
+	// JoinEmployerTeam implements joinEmployerTeam operation.
+	//
+	// Joins the team an invitation link invites to. 409 when the caller already acts for a company.
+	//
+	// POST /employer/team/join
+	JoinEmployerTeam(ctx context.Context, req *EmployerTeamToken) (*JoinEmployerTeamOK, error)
 	// LinkEmail implements linkEmail operation.
 	//
 	// Attach a message to one of your applications.
@@ -1232,6 +1289,20 @@ type Handler interface {
 	//
 	// GET /me/cvs
 	ListCVs(ctx context.Context) (*ListCVsOK, error)
+	// ListCatalogueSnapshots implements listCatalogueSnapshots operation.
+	//
+	// Lists the finished snapshots, newest first, each with a short-lived pre-signed download URL (about
+	// 15 minutes; call this again for a fresh link). Needs the Data plan: any other account gets `403`.
+	// `501` means bulk files are not set up on this deployment.
+	//
+	// GET /catalogue/snapshots
+	ListCatalogueSnapshots(ctx context.Context) (*ListCatalogueSnapshotsOK, error)
+	// ListChangeWebhooks implements listChangeWebhooks operation.
+	//
+	// The caller's subscriptions, oldest first, with their delivery state. Secrets are not included.
+	//
+	// GET /me/change-webhooks
+	ListChangeWebhooks(ctx context.Context) (*ListChangeWebhooksOK, error)
 	// ListCompanies implements listCompanies operation.
 	//
 	// Most active first. Facet params are repeatable and filter by array overlap (OR within a facet, AND
@@ -1270,6 +1341,14 @@ type Handler interface {
 	//
 	// GET /me/tracking/dismissed
 	ListDismissedSlugs(ctx context.Context) (*ListDismissedSlugsOK, error)
+	// ListEmployerApplications implements listEmployerApplications operation.
+	//
+	// The delivered applications to the caller's vacancies, newest first. An unknown `stage` is a 400
+	// rather than an unfiltered answer; a param the listing does not read is named in
+	// `meta.ignored_params`.
+	//
+	// GET /employer/applications
+	ListEmployerApplications(ctx context.Context, params ListEmployerApplicationsParams) (*EmployerApplicationsPage, error)
 	// ListEmployerPendingClaims implements listEmployerPendingClaims operation.
 	//
 	// Moderators only: the claims that could not auto-activate.
@@ -1560,6 +1639,14 @@ type Handler interface {
 	//
 	// POST /me/experience/atoms/merge
 	MergeAtoms(ctx context.Context, req *MergeAtoms) (*MergeAtomsOK, error)
+	// MoveEmployerApplication implements moveEmployerApplication operation.
+	//
+	// Moves the application to a stage of your pipeline. The candidate's tracking follows, and
+	// `interview`, `offer` and `rejected` email the candidate with your optional message. A move to the
+	// stage it already holds changes nothing and sends nothing.
+	//
+	// POST /employer/applications/{id}/stage
+	MoveEmployerApplication(ctx context.Context, req *EmployerApplicationMove, params MoveEmployerApplicationParams) (*MoveEmployerApplicationOK, error)
 	// MyCompanyFeedback implements myCompanyFeedback operation.
 	//
 	// All of the caller's own reviews of the company, one per category; empty when none.
@@ -1661,6 +1748,12 @@ type Handler interface {
 	//
 	// POST /submissions/prefill
 	PrefillSubmission(ctx context.Context, req *PrefillRequest) (*PrefillSubmissionOK, error)
+	// PreviewEmployerTeamInvitation implements previewEmployerTeamInvitation operation.
+	//
+	// Which company an invitation link invites to, at which address. 404 for a dead link.
+	//
+	// POST /employer/team/invitation-preview
+	PreviewEmployerTeamInvitation(ctx context.Context, req *EmployerTeamToken) (*PreviewEmployerTeamInvitationOK, error)
 	// PreviewPromoCode implements previewPromoCode operation.
 	//
 	// What a code would take off, without using it. 404 for a code that cannot be used.
@@ -1770,6 +1863,13 @@ type Handler interface {
 	//
 	// DELETE /me/mailbox
 	ReleaseMailbox(ctx context.Context) (*ReleaseMailboxOK, error)
+	// RemoveEmployerTeamMember implements removeEmployerTeamMember operation.
+	//
+	// Removes a member, or the caller themselves (leaving). Their vacancies stay with the team. The
+	// claimant cannot be removed.
+	//
+	// DELETE /employer/team/members/{user_id}
+	RemoveEmployerTeamMember(ctx context.Context, params RemoveEmployerTeamMemberParams) (*RemoveEmployerTeamMemberOK, error)
 	// RemoveFromWatchlist implements removeFromWatchlist operation.
 	//
 	// A company that was not on the list is not an error.
@@ -1970,6 +2070,14 @@ type Handler interface {
 	//
 	// PUT /me/answer-bank
 	SaveBankedAnswer(ctx context.Context, req *SaveBankedAnswer) (*SaveBankedAnswerOK, error)
+	// SaveCVCoverLetterEvidence implements saveCVCoverLetterEvidence operation.
+	//
+	// Save up to 50 confirmed achievement ids with an expected revision. An empty atom_ids array
+	// explicitly prevents drafting until facts are selected. Returns 409 when the expected revision is
+	// stale, or 422 for invalid evidence.
+	//
+	// PUT /me/cvs/{id}/cover-letter/evidence
+	SaveCVCoverLetterEvidence(ctx context.Context, req jx.Raw, params SaveCVCoverLetterEvidenceParams) (*SaveCVCoverLetterEvidenceOK, error)
 	// SaveJob implements saveJob operation.
 	//
 	// Save (bookmark) the job.
@@ -2126,6 +2234,13 @@ type Handler interface {
 	//
 	// POST /me/cvs/tailor
 	TailorCV(ctx context.Context, req *CvTailorRequest) (TailorCVRes, error)
+	// TestChangeWebhook implements testChangeWebhook operation.
+	//
+	// Sends a signed `webhook.test` event with no changes. `204` when the endpoint answered 2xx, `422`
+	// with what it answered otherwise.
+	//
+	// POST /me/change-webhooks/{id}/test
+	TestChangeWebhook(ctx context.Context, params TestChangeWebhookParams) error
 	// TestPushToken implements testPushToken operation.
 	//
 	// Never targets another user or a caller-supplied destination — only your own registered tokens.
@@ -2339,6 +2454,12 @@ type Handler interface {
 	//
 	// POST /jobs/{slug}/vote
 	VoteJob(ctx context.Context, req *VoteRequest, params VoteJobParams) (*VoteJobOK, error)
+	// WithdrawEmployerTeamInvitation implements withdrawEmployerTeamInvitation operation.
+	//
+	// Withdraws an invitation; its link stops working.
+	//
+	// DELETE /employer/team/invitations/{id}
+	WithdrawEmployerTeamInvitation(ctx context.Context, params WithdrawEmployerTeamInvitationParams) (*WithdrawEmployerTeamInvitationOK, error)
 	// WithdrawMentorProfile implements withdrawMentorProfile operation.
 	//
 	// DELETE /me/mentorship/profile

@@ -126,6 +126,44 @@ The feed keeps the full history and nothing is deleted from it, so a `cursor` yo
 
 A posting counts as listed while it is open, canonical (not a duplicate of another posting) and public. A posting that stops being listed is a `closed` change whose `closed_reason` is the close reason, or `duplicate` when it became a duplicate of another posting, or `private`; one that is listed again is `reopened`.
 
+### Change webhooks
+
+Instead of polling the feed you can have it pushed. `POST /me/change-webhooks` subscribes a URL (with an `api` or `api_data` plan); the answer carries the signing `secret`, **once**. A subscription can ask for only some companies (`company_slugs`) and some kinds of change (`kinds`), and receives changes made from about the time it was created (a change from the moment just before can arrive once; `seq` dedupes it). It reads the same feed as `GET /jobs/changes`, in the same order, and the same postings.
+
+A delivery is a `POST` with a JSON body and these headers:
+
+| Header | Value |
+|---|---|
+| `X-Freehire-Timestamp` | Unix seconds when it was signed. |
+| `X-Freehire-Signature` | `v1=` plus the hex HMAC-SHA256, keyed by your secret, of the timestamp, a `.`, and the raw body. |
+| `X-Freehire-Delivery` | An id, the same for a retry of the same batch. |
+| `X-Freehire-Event` | `job.changes`, or `webhook.test` for a test. |
+
+```json
+{"id": "7-4821-90210", "type": "job.changes", "changes": [
+  {"public_slug": "senior-go-engineer-acme-1a2b", "company_slug": "acme", "seq": 98765, "kind": "closed", "at": "2026-06-20T04:10:00Z", "closed_reason": "unseen"}
+]}
+```
+
+`changes` is a batch of up to 100, oldest first, each shaped like a feed change plus `company_slug`. Apply a change only when its `seq` is greater than the last one you applied for that `public_slug` (this also drops a repeat). `opened` and `reopened` mean fetch the posting with `GET /jobs/{slug}`; `closed` means delist it.
+
+Verify before you trust a body: recompute the HMAC over the timestamp header, `.` and the **raw** body bytes (not re-serialised JSON), compare in constant time, and refuse a timestamp more than 5 minutes from your clock. In Go:
+
+```go
+func verify(secret, ts, sig string, body []byte) bool {
+	n, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil || math.Abs(time.Since(time.Unix(n, 0)).Seconds()) > 300 {
+		return false
+	}
+	mac := hmac.New(sha256.New, []byte(secret))
+	fmt.Fprintf(mac, "%s.", ts)
+	mac.Write(body)
+	return hmac.Equal([]byte("v1="+hex.EncodeToString(mac.Sum(nil))), []byte(sig))
+}
+```
+
+Answer any `2xx` to accept a batch. Anything else, a timeout (10 seconds) or a redirect counts as a failure: the same batch is sent again after 30 seconds, doubling up to an hour. Delivery is at least once, so expect repeats and dedupe on `seq`. After 25 failures in a row, or at once on a `410 Gone`, the subscription is disabled (`disabled_at` and `disabled_reason` in the list); delete it and create it again to resume, from the changes made then. Plan for the feed instead if you need what happened meanwhile. While your plan has lapsed, deliveries pause and pick up where they stopped once it is renewed.
+
 ## Authentication model
 
 Browser clients authenticate with an `HttpOnly` session cookie set on sign-in (same-origin; the SPA cannot read it). Non-browser clients use a personal API key as `Authorization: Bearer <token>`.
@@ -178,7 +216,7 @@ Every facet below supports repeat-OR, `_mode=and`, and `_exclude` as described a
 
 | `work_mode` | Work format | remote, hybrid, onsite |
 
-| `category` | Specialization | software_engineering, backend, frontend, fullstack, mobile, devops, sre, network_engineering, it_support, data_engineering, data_science, data_analytics, ml_ai, ai_engineering, qa, security, hardware, embedded, blockchain, architecture, design, creative, engineering_design, industrial_engineering, occupational_safety, product, project_management, healthcare, skilled_trades, retail, hospitality, logistics, education, personal_services, administration, social_services, science, manufacturing, public_safety, marketing, sales, support, business_analysis, solutions_engineering, developer_relations, technical_writing, recruiting, hr, finance, legal, operations, customer_success, other. The retired value management is still accepted and answered as role_type=people_manager |
+| `category` | Specialization | software_engineering, backend, frontend, fullstack, mobile, devops, sre, network_engineering, system_administration, telecommunications_engineering, it_support, data_engineering, data_science, data_analytics, ml_ai, ai_engineering, qa, security, hardware, embedded, blockchain, architecture, design, creative, engineering_design, industrial_engineering, occupational_safety, product, project_management, healthcare, skilled_trades, retail, hospitality, logistics, education, personal_services, administration, social_services, science, manufacturing, public_safety, marketing, sales, support, business_analysis, solutions_engineering, developer_relations, technical_writing, recruiting, hr, finance, legal, operations, customer_success, other. The retired value management is still accepted and answered as role_type=people_manager |
 
 | `ai_archetype` | AI Specialization | rag_app_builder, agent_builder, cloud_ml_platform_engineer, ml_trainer_researcher, fullstack_ai_engineer, devops_infra_engineer |
 
@@ -701,6 +739,7 @@ curl "https://freehire.me/api/v1/me/notification-settings" -b cookies.txt
 ```json
 {
   "data": {
+    "application_digest_enabled": false,
     "inbox_digest_enabled": true,
     "enabled": true,
     "channels": [
@@ -727,6 +766,7 @@ An enabled rule needs a valid channel. Session cookie only.
 
 | Name | Type | Required | Description |
 | --- | --- | --- | --- |
+| `application_digest_enabled` | boolean \| null | no | Omitted or null preserves the current weekly application digest choice. |
 | `inbox_digest_enabled` | boolean \| null | no | Omitted or null preserves the current inbox digest choice. |
 | `enabled` | boolean \| null | no | Turn notifications on or off. |
 | `channels` | string[] \| null | no | Delivery channels: `email`, `telegram`, `push`. Adding `push` needs a device the mobile app has registered (409 otherwise). |
@@ -743,6 +783,7 @@ curl -X PUT "https://freehire.me/api/v1/me/notification-settings" -b cookies.txt
 ```json
 {
   "data": {
+    "application_digest_enabled": false,
     "inbox_digest_enabled": true,
     "enabled": true,
     "channels": [
@@ -2899,6 +2940,35 @@ Drafts the letter (the paid gate runs before this); 402 when the allowance is sp
 curl -X POST "https://freehire.me/api/v1/me/cvs/<id>/cover-letter" -b cookies.txt
 ```
 
+### `PUT /me/cvs/{id}/cover-letter/evidence`
+
+**Auth:** Session only
+
+Save the confirmed evidence selection for a cover letter.
+
+Save up to 50 confirmed achievement ids with an expected revision.
+An empty atom_ids array explicitly prevents drafting until facts are selected.
+Returns 409 when the expected revision is stale, or 422 for invalid evidence.
+
+**Path parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | yes | The tailored CV id. |
+
+```bash
+curl -X PUT "https://freehire.me/api/v1/me/cvs/<id>/cover-letter/evidence" -b cookies.txt -H 'Content-Type: application/json' -d '{"revision":0,"atom_ids":[]}'
+```
+
+```json
+{
+  "data": {
+    "revision": 1,
+    "atom_ids": []
+  }
+}
+```
+
 ### `POST /me/cvs/{id}/duplicate`
 
 **Auth:** Session only
@@ -3361,6 +3431,37 @@ curl -X POST "https://freehire.me/api/v1/me/autofill/run"
 ```
 
 ## Billing
+
+### `GET /billing/attempts`
+
+**Auth:** Session only
+
+Read your recent payment attempts.
+
+The caller's 20 most recent Stripe charge attempts, newest first, including failed
+first purchases and retries. An account with no Stripe customer gets an empty list;
+a provider read failure returns 503. Cookie session only.
+
+```bash
+curl "https://freehire.me/api/v1/billing/attempts" -b cookies.txt
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "ch_example",
+      "date": "2026-11-14T13:24:38Z",
+      "amount_cents": 290,
+      "amount_refunded_cents": 0,
+      "currency": "brl",
+      "status": "failed",
+      "reason": "insufficient_funds",
+      "card_last4": "4242"
+    }
+  ]
+}
+```
 
 ### `GET /billing/checkout`
 
@@ -4134,6 +4235,130 @@ curl -X PATCH "https://freehire.me/api/v1/me/email-groups" -b cookies.txt
 
 ## Employer
 
+### `GET /employer/applications`
+
+**Auth:** Session only
+
+List the applications sent to your vacancies.
+
+The delivered applications to the caller's vacancies, newest first. An unknown `stage` is
+a 400 rather than an unfiltered answer; a param the listing does not read is named in
+`meta.ignored_params`.
+
+**Query parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `job` | string | no | Only this vacancy's applications. (e.g. `platform-engineer-acme-9f3c`) |
+| `stage` | string | no | Only applications at this stage. (e.g. `new`) |
+| `limit` | string | no | Page size, 1–100. (e.g. `50`) |
+| `offset` | string | no | Rows to skip. (e.g. `0`) |
+
+```bash
+curl "https://freehire.me/api/v1/employer/applications" -b cookies.txt
+```
+
+```json
+{
+  "data": [
+    {
+      "id": 42,
+      "job_slug": "platform-engineer-acme-9f3c",
+      "job_title": "Platform Engineer",
+      "candidate_email": "candidate@example.com",
+      "cv_kind": "tailored",
+      "has_cv": true,
+      "note": "Happy to talk this week.",
+      "answers": [
+        {
+          "id": "q1",
+          "label": "EU work permit?",
+          "type": "boolean",
+          "answer": "true"
+        }
+      ],
+      "stage": "new",
+      "sent_at": "2026-11-10T10:00:00Z"
+    }
+  ],
+  "meta": {
+    "total": 1,
+    "limit": 50,
+    "offset": 0,
+    "stage_counts": {
+      "new": 1,
+      "rejected": 2
+    }
+  }
+}
+```
+
+### `GET /employer/applications/{id}/cv`
+
+**Auth:** Session only
+
+Open the CV an application sent.
+
+The CV file the application sent, exactly as it was emailed to you: a PDF, or the text the candidate pasted. 404 when none was kept.
+
+**Path parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | yes | The application's id. (e.g. `42`) |
+
+```bash
+curl "https://freehire.me/api/v1/employer/applications/<id>/cv" -b cookies.txt
+```
+
+### `POST /employer/applications/{id}/stage`
+
+**Auth:** Session only
+
+Move an application through your pipeline.
+
+Moves the application to a stage of your pipeline. The candidate's tracking follows, and
+`interview`, `offer` and `rejected` email the candidate with your optional message. A move
+to the stage it already holds changes nothing and sends nothing.
+
+**Path parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | yes | The application's id. (e.g. `42`) |
+
+**Body**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `stage` | string | no | The stage to move to: new, reviewing, interview, offer, hired or rejected. (e.g. `interview`) |
+| `message` | string | no | Your words to the candidate, at most 2000 characters, quoted in their email. Accepted only with `interview`, `offer` or `rejected`, the stages that send one. |
+
+```bash
+curl -X POST "https://freehire.me/api/v1/employer/applications/<id>/stage" -b cookies.txt -H 'Content-Type: application/json' -d '{"stage":"interview","message":"Are you free on Tuesday?"}'
+```
+
+```json
+{
+  "data": {
+    "application": {
+      "id": 42,
+      "job_slug": "platform-engineer-acme-9f3c",
+      "job_title": "Platform Engineer",
+      "candidate_email": "candidate@example.com",
+      "cv_kind": "tailored",
+      "has_cv": true,
+      "note": "",
+      "answers": [],
+      "stage": "interview",
+      "stage_changed_at": "2026-11-12T09:00:00Z",
+      "sent_at": "2026-11-10T10:00:00Z"
+    },
+    "candidate_notified": true
+  }
+}
+```
+
 ### `POST /employer/claim`
 
 **Auth:** Session only
@@ -4361,6 +4586,96 @@ curl -X POST "https://freehire.me/api/v1/employer/jobs/<slug>/close" -b cookies.
 
 ```bash
 curl -X POST "https://freehire.me/api/v1/employer/jobs/<slug>/reopen" -b cookies.txt
+```
+
+### `GET /employer/team`
+
+**Auth:** Session only
+
+Everyone who acts for the caller's company, and the invitations still open.
+
+```bash
+curl "https://freehire.me/api/v1/employer/team" -b cookies.txt
+```
+
+### `POST /employer/team/invitation-preview`
+
+**Auth:** Session only
+
+Which company an invitation link invites to, at which address. 404 for a dead link.
+
+**Body**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `token` | string | no |  |
+
+```bash
+curl -X POST "https://freehire.me/api/v1/employer/team/invitation-preview" -b cookies.txt
+```
+
+### `POST /employer/team/invitations`
+
+**Auth:** Session only
+
+Mails a colleague a single-use link to join the team, valid seven days. Inviting an address again replaces its link. 429 past twenty open invitations.
+
+**Body**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `email` | string | no |  |
+
+```bash
+curl -X POST "https://freehire.me/api/v1/employer/team/invitations" -b cookies.txt
+```
+
+### `DELETE /employer/team/invitations/{id}`
+
+**Auth:** Session only
+
+Withdraws an invitation; its link stops working.
+
+**Path parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | yes |  |
+
+```bash
+curl -X DELETE "https://freehire.me/api/v1/employer/team/invitations/<id>" -b cookies.txt
+```
+
+### `POST /employer/team/join`
+
+**Auth:** Session only
+
+Joins the team an invitation link invites to. 409 when the caller already acts for a company.
+
+**Body**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `token` | string | no |  |
+
+```bash
+curl -X POST "https://freehire.me/api/v1/employer/team/join" -b cookies.txt
+```
+
+### `DELETE /employer/team/members/{user_id}`
+
+**Auth:** Session only
+
+Removes a member, or the caller themselves (leaving). Their vacancies stay with the team. The claimant cannot be removed.
+
+**Path parameters**
+
+| Name | Type | Required | Description |
+| --- | --- | --- | --- |
+| `user_id` | string | yes |  |
+
+```bash
+curl -X DELETE "https://freehire.me/api/v1/employer/team/members/<user_id>" -b cookies.txt
 ```
 
 ## Mentorship

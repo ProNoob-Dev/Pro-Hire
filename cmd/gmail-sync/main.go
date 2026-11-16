@@ -32,7 +32,7 @@ func run() int {
 	g := cfg.OAuth["google"]
 	if g.ClientID == "" || g.ClientSecret == "" || len(cfg.GmailTokenKey) != 32 {
 		log.Print("gmail-sync: not configured (Google OAuth client / GMAIL_TOKEN_KEY) — nothing to do")
-		return 0
+		return worker.Skip("OAUTH_GOOGLE_CLIENT_ID+OAUTH_GOOGLE_CLIENT_SECRET+GMAIL_TOKEN_KEY")
 	}
 	cipher, err := tokencrypt.New(cfg.GmailTokenKey)
 	if err != nil {
@@ -49,8 +49,7 @@ func run() int {
 	}
 	log.Printf("gmail-sync done: connections=%d synced=%d failed=%d needs_reconsent=%d",
 		stats.Connections, stats.Synced, stats.Failed, stats.Reconsent)
-	// A flagged grant is this worker's dead letter: no later run retries it, because only a
-	// browser consent clears the flag. Both counts must reach the exit code — a run in which
-	// every mailbox failed used to exit 0 and publish a successful last-run metric.
+	// A flagged grant is this worker's dead letter: only a browser consent clears the flag, so
+	// no later run retries it. Both counts must reach the exit code.
 	return worker.ExitCode(stats.Failed, stats.Reconsent)
 }

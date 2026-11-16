@@ -7,12 +7,15 @@ import (
 )
 
 // scrubContactReferences keeps extracted contacts out of facts imported into the
-// experience bank and served through the professional projection. It does not detect
-// PII or call a model: it rejects fields repeating the contact values already extracted.
-// Drop the affected string rather than storing a damaged achievement. Preserve
-// identity fields for their authenticated owner.
+// experience bank and the professional projection. It does not detect PII: it blanks
+// strings repeating the already-extracted contact values and leaves identity fields intact.
 func scrubContactReferences(s *Structured) {
-	contacts := append([]string{s.Email, s.Phone}, s.Links...)
+	contacts := []string{s.Email, s.Phone}
+	for _, link := range s.Links {
+		if strings.ContainsAny(link, "/@.") {
+			contacts = append(contacts, link)
+		}
+	}
 	for i, contact := range contacts {
 		contacts[i] = strings.ToLower(strings.TrimSpace(contact))
 	}

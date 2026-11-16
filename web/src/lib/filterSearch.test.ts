@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COMPANY_FACETS, TALENT_FACETS } from './facets';
+import { COMPANY_FACETS, TALENT_FACETS } from './directoryFacets';
 import { COMPANY_RAIL_GROUPS, TALENT_RAIL_GROUPS } from './filterSections';
 import { FILTER_SEARCH_LIMIT, jobFilterSearchItems, matchFilterSearch, railFacetSearchItems } from './filterSearch';
 
@@ -19,6 +19,17 @@ describe('matchFilterSearch', () => {
     expect(
       matchFilterSearch(items, 'data engineer').some((h) => h.param === 'category' && h.value === 'data_engineering'),
     ).toBe(true);
+  });
+
+  it.each([
+    ['Computer Networking', 'network_engineering'],
+    ['Network Support', 'it_support'],
+    ['Cloud Computing', 'devops'],
+    ['Cybersecurity SOC Analyst', 'security'],
+  ])('finds the specialization for %s in the job filters', (query, category) => {
+    expect(matchFilterSearch(items, query).some((hit) => hit.param === 'category' && hit.value === category)).toBe(
+      true,
+    );
   });
 
   it('accepts the same typos as the facet picker', () => {

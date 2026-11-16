@@ -675,6 +675,54 @@ func (q *Queries) ListMentorBusySyncConnections(ctx context.Context, calendarSco
 	return items, nil
 }
 
+const listStoredGmailMessages = `-- name: ListStoredGmailMessages :many
+SELECT external_id, thread_id, received_at, direction FROM emails
+WHERE user_id = $1 AND source = 'gmail' AND external_id = ANY($2::text[])
+  AND to_addrs <> ''
+`
+
+type ListStoredGmailMessagesParams struct {
+	UserID      int64    `json:"user_id"`
+	ExternalIds []string `json:"external_ids"`
+}
+
+type ListStoredGmailMessagesRow struct {
+	ExternalID string             `json:"external_id"`
+	ThreadID   string             `json:"thread_id"`
+	ReceivedAt pgtype.Timestamptz `json:"received_at"`
+	Direction  string             `json:"direction"`
+}
+
+// Which of a wave's message ids are already stored, so a sync throttled part-way resumes
+// where the last run stopped instead of re-fetching the same head and hitting the limit
+// again. Deleted rows count as stored: the upsert would not resurrect them anyway. Rows
+// with no recipients predate 0267_gmail_outgoing and are left out: re-fetching them is
+// what repairs a legacy sent reply stored as incoming.
+func (q *Queries) ListStoredGmailMessages(ctx context.Context, arg ListStoredGmailMessagesParams) ([]ListStoredGmailMessagesRow, error) {
+	rows, err := q.db.Query(ctx, listStoredGmailMessages, arg.UserID, arg.ExternalIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListStoredGmailMessagesRow{}
+	for rows.Next() {
+		var i ListStoredGmailMessagesRow
+		if err := rows.Scan(
+			&i.ExternalID,
+			&i.ThreadID,
+			&i.ReceivedAt,
+			&i.Direction,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const markAllEmailsRead = `-- name: MarkAllEmailsRead :execrows
 UPDATE emails SET read_at = now()
 WHERE user_id = $1
@@ -987,23 +1035,39 @@ func (q *Queries) UpsertExternalEmail(ctx context.Context, arg UpsertExternalEma
 }
 
 const upsertGmailConnection = `-- name: UpsertGmailConnection :exec
-INSERT INTO gmail_connections (user_id, email, refresh_token_enc, status)
-VALUES ($1, $2, $3, 'connected')
+INSERT INTO gmail_connections (user_id, email, refresh_token_enc, status, scopes)
+VALUES ($1, $2, $3, 'connected', COALESCE($4::text[], '{}'))
 ON CONFLICT (user_id) DO UPDATE
 SET email = EXCLUDED.email,
     refresh_token_enc = EXCLUDED.refresh_token_enc,
-    status = 'connected'
+    status = 'connected',
+    scopes = CASE
+                 WHEN cardinality(EXCLUDED.scopes) > 0 THEN EXCLUDED.scopes
+                 ELSE gmail_connections.scopes
+             END
 `
 
 type UpsertGmailConnectionParams struct {
-	UserID          int64  `json:"user_id"`
-	Email           string `json:"email"`
-	RefreshTokenEnc string `json:"refresh_token_enc"`
+	UserID          int64    `json:"user_id"`
+	Email           string   `json:"email"`
+	RefreshTokenEnc string   `json:"refresh_token_enc"`
+	Scopes          []string `json:"scopes"`
 }
 
-// Connect (or reconnect) a user's Gmail: store the encrypted refresh token and
-// mark connected, preserving the sync cursor on reconnect.
+// Connect (or reconnect) a user's Gmail: store the encrypted refresh token, mark
+// connected, preserving the sync cursor on reconnect, and record what the grant covers.
+//
+// Token and scopes go in one statement, so the row always holds a token together with
+// the scopes reported for it. Written separately, a calendar connect landing between the
+// two would leave its token next to this grant's scopes, and cal-sync (which selects by
+// scope) would skip the account. Scopes replace, as in UpsertCalendarGrant; an empty
+// list means the exchange did not say and keeps what we held.
 func (q *Queries) UpsertGmailConnection(ctx context.Context, arg UpsertGmailConnectionParams) error {
-	_, err := q.db.Exec(ctx, upsertGmailConnection, arg.UserID, arg.Email, arg.RefreshTokenEnc)
+	_, err := q.db.Exec(ctx, upsertGmailConnection,
+		arg.UserID,
+		arg.Email,
+		arg.RefreshTokenEnc,
+		arg.Scopes,
+	)
 	return err
 }

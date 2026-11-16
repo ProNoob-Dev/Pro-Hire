@@ -14,12 +14,9 @@ import (
 // whichever case and gender the phrase puts them: a programista, programistka,
 // programisty and programistów are one word, and the field after "ds." stands in the
 // genitive ("sprzedaży", "logistyki", "księgowości"). The main table carries a block of
-// Polish surface forms (the CEE block, freehire#3513) and they hold what they list,
-// but measured 2026-10-29 over 5,096 open postings with a Polish title (erecruiter,
-// traffit, nofluffjobs, solidjobs, smartrecruiters, teamtailor, recruitee, eures, read
-// per source with `countries @> {pl}` where the source spans countries), 35.5% still
-// resolved no category and 95.6% no grade, and the unresolved titles were the same few
-// dozen stems in cases and genders the block did not spell.
+// Polish surface forms (the CEE block) and they hold what they list, but the
+// unresolved titles are the same few dozen stems in cases and genders the block did
+// not spell.
 //
 // So the Polish tables match a STEM. Every alias is a sequence of whole words on the
 // folded title (foldPolish: lowercased, the diacritics dropped, "ł" → "l"); a word
@@ -175,13 +172,13 @@ var polishCategoryTable = []aliasEntry{
 	{"analityk* laboratoryjn*", "science"},
 	{"analityk* finansow*", "finance"},
 	{"hurtown* danych", "data_engineering"},
-	// The system and network administrators ("System Administrator" is devops,
+	// The system and network administrators ("System Administrator" is system_administration,
 	// "Network Administrator" network engineering).
 	{"administrator* sieci*", "network_engineering"},
 	{"administrator* infrastruktur*", "devops"},
-	{"administrator* system*", "devops"},
-	{"administratork* system*", "devops"},
-	{"administrator* it", "devops"},
+	{"administrator* system*", "system_administration"},
+	{"administratork* system*", "system_administration"},
+	{"administrator* it", "system_administration"},
 	{"administrator* middleware", "devops"},
 	{"administrowani* system*", "devops"},
 	{"administrator* baz* danych", "devops"},
@@ -192,7 +189,7 @@ var polishCategoryTable = []aliasEntry{
 	{"siec* informatyczn*", "network_engineering"},
 	{"sieci komputerowych", "network_engineering"},
 	{"sieci teleinformatycznych", "network_engineering"},
-	{"telekomunikacj*", "network_engineering"},
+	{"telekomunikacj*", "telecommunications_engineering"},
 	{"inzynier* danych", "data_engineering"},
 	{"inzynierk* danych", "data_engineering"},
 	// The deputy-manager seats of a store and a club are the store's and the club's.
@@ -599,81 +596,7 @@ func matchPolishCategory(lower string) string {
 // is the free shuttle to a warehouse, not a transport job.
 var polishPerks = regexp.MustCompile(`\b(?:darmowy|bezplatny|zapewniony|zapewniamy)\s+(?:transport|dojazd)\b`)
 
-// polishSeniorityTable lists the Polish grade aliases, stems on the folded title as in
-// polishCategoryTable, in precedence order.
-//
-// The executive is the board's president and the general, executive and financial
-// director, as in French and Spanish; a plain "dyrektor" and the "dyrektor
-// zarządzający" of a bank's division state none, as "Director" and "Managing Director"
-// state none in the main table. The trainee grades outrank the lead, as in German:
-// "Stażysta w zespole" is an intern. The team's own lead is the "kierownik zespołu" and
-// the "lider"; a "kierownik" alone is a manager, which is no grade. "Specjalista" is
-// the ladder's middle rung by name only and states no grade either; "Regular" is the
-// middle grade Polish IT postings write between Junior and Senior. A range ("Młodszy
-// specjalista / Specjalista", "Specjalista/Starszy specjalista") keeps its upper bound:
-// the senior grade is listed before the junior.
-var polishSeniorityTable = []aliasEntry{
-	{"prezes*", "c_level"},
-	{"wiceprezes*", "c_level"},
-	{"dyrektor* generaln*", "c_level"},
-	{"dyrektork* generaln*", "c_level"},
-	{"dyrektor* wykonawcz*", "c_level"},
-	{"dyrektor* finansow*", "c_level"},
-	{"stazyst*", "intern"},
-	{"praktykant*", "intern"},
-	{"staz", "intern"},
-	{"stazu", "intern"},
-	{"stazow*", "intern"},
-	{"praktyki", "intern"},
-	{"kierownik* zespol*", "lead"},
-	{"kierowniczk* zespol*", "lead"},
-	{"lider* zespol*", "lead"},
-	{"liderk* zespol*", "lead"},
-	{"lider* techniczn*", "lead"},
-	{"lider* zmiany", "lead"},
-	{"lider* programist*", "lead"},
-	{"liderk* programist*", "lead"},
-	{"lider* testow", "lead"},
-	{"wiodac*", "lead"},
-	{"starszy", "senior"},
-	{"starsza", "senior"},
-	{"starszego", "senior"},
-	{"starszej", "senior"},
-	{"regular", "middle"},
-	{"mlodszy", "junior"},
-	{"mlodsza", "junior"},
-	{"mlodszego", "junior"},
-	{"mlodszej", "junior"},
-	{"absolwent*", "junior"},
-}
-
 // openingPolishLider is a title that OPENS with "Lider"/"Liderka": "Lider Obszaru",
 // "Lider/Liderka Zmiany". Anywhere else the word may praise the employer ("lider
 // rynku"), so only the opening word is read, as the Spanish "Líder".
 var openingPolishLider = regexp.MustCompile(`^[^\p{L}\p{N}]*lider(?:ka)?\b`)
-
-// assistantOfPolishLead is the assistant or deputy OF a lead or an executive —
-// "Asystent kierownika zespołu", "Zastępca Dyrektora Generalnego", "Asystentka Prezesa
-// Zarządu" — which states no grade of its own, and a desk that RUNS the trainee
-// programmes ("Koordynator ds. staży", "Specjalista ds. praktyk i staży"). Both are cut
-// before the grade match.
-var assistantOfPolishLead = regexp.MustCompile(`\b(?:asystent\p{L}*|zastepc\p{L}*|zastepczyni|sekretar\p{L}*)\s+(?:(?:i|lub)\s+\p{L}+\s+)?(?:prezes\p{L}*|wiceprezes\p{L}*|dyrektor\p{L}*|kierownik\p{L}*|kierowniczk\p{L}*|lider\p{L}*|koordynator\p{L}*)(?:\s+(?:zespol\p{L}*|generaln\p{L}*|finansow\p{L}*|wykonawcz\p{L}*|zarzadu))?|\bds\s+(?:\p{L}+\s+i\s+)?(?:staz\p{L}*|praktyk\p{L}*)`)
-
-// polishElderly is the elderly person a carer looks after — "Opiekunka osoby starszej",
-// "Opiekun osób starszych", "Opieka nad starszą panią" — whose "starszy" is an age, not
-// the grade.
-var polishElderly = regexp.MustCompile(`\b(?:osob\p{L}*|pan\p{L}*|ludzi|pacjent\p{L}*|senior\p{L}*)\s+starsz\p{L}*|\bstarsz\p{L}*\s+(?:osob\p{L}*|pan\p{L}*|ludzi|pacjent\p{L}*|wiek\p{L}*|dzieci|mieszkan\p{L}*)`)
-
-// matchPolishSeniority resolves the grade of a lowercased title the other tables left
-// unresolved.
-func matchPolishSeniority(lower string) string {
-	if !looksPolish(lower) {
-		return ""
-	}
-	folded := assistantOfPolishLead.ReplaceAllString(foldPolish(lower), " ")
-	folded = polishElderly.ReplaceAllString(folded, " ")
-	if openingPolishLider.MatchString(folded) {
-		return "lead"
-	}
-	return matchPolish(polishWords(folded), polishSeniorityTable)
-}

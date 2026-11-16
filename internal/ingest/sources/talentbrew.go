@@ -19,12 +19,11 @@ import (
 //
 // The results endpoint answers a GET with {"results": "<html fragment>"}: the fragment holds a
 // <section id="search-results"> whose data-total-pages says how many pages RecordsPerPage cuts
-// the board into, and one <a href=… data-job-id=…> per posting (a page of 100 was honoured on
-// the sampled boards). The listing carries no description, so the adapter hydrates
-// (HydratingSource): a posting page — whose schema.org JobPosting ld+json block states the
-// title, description, date and locations — is fetched only for a posting the catalogue does not
-// already have. The boards are large (ALDI US lists ~1,550 postings), so that is the difference
-// between a request per posting and a request per NEW posting on every crawl.
+// the board into, and one <a href=… data-job-id=…> per posting. The listing carries no
+// description, so the adapter hydrates (HydratingSource): a posting page — whose schema.org
+// JobPosting ld+json block states the title, description, date and locations — is fetched only
+// for a posting the catalogue does not already have, turning a request per posting into a
+// request per NEW posting on every crawl.
 //
 // The results endpoint is NOT answered without the facet parameters the site's own script sends:
 // a bare CurrentPage/RecordsPerPage query returns an empty fragment with hasJobs=true.
@@ -46,7 +45,7 @@ const (
 	// tbPageSize is the RecordsPerPage a listing request asks for.
 	tbPageSize = 100
 	// tbMaxPages bounds the page walk, so a board whose data-total-pages never converges cannot
-	// loop forever. 100 pages × tbPageSize is far past the largest board sampled (~1,550).
+	// loop forever.
 	tbMaxPages = 100
 	// tbResultsQuery is the facet parameter set the site's own search script sends with every
 	// request, empty. Without it the endpoint answers an empty fragment.
@@ -210,6 +209,9 @@ func (s talentbrew) detail(ctx context.Context, e CompanyEntry, p tbPosting) (Jo
 	}
 	var ld tbLD
 	if !ldJobPosting(root, &ld) || strings.TrimSpace(ld.Title) == "" {
+		if j, ok := tbHTMLPosting(root, p, e.Company); ok {
+			return j, true
+		}
 		return unreadableDetail(p.id, p.url, e.Company), true
 	}
 	j := Job{
@@ -224,4 +226,40 @@ func (s talentbrew) detail(ctx context.Context, e CompanyEntry, p tbPosting) (Jo
 	j.Remote = isRemote(j.Location)
 	j.WorkMode = workModeFromRemote(j.Remote)
 	return j, true
+}
+
+// Some TalentBrew themes publish no JSON-LD. Read only their identified job section.
+func tbHTMLPosting(root *html.Node, p tbPosting, company string) (Job, bool) {
+	var section *html.Node
+	walk(root, func(n *html.Node) bool {
+		if Attr(n, "data-selector-name") == "jobdetails" && Attr(n, "data-job-id") == p.id {
+			section = n
+			return false
+		}
+		return true
+	})
+	if section == nil {
+		return Job{}, false
+	}
+	var title, description, location string
+	walk(section, func(n *html.Node) bool {
+		if n.Type != html.ElementNode {
+			return true
+		}
+		if n.Data == "h1" {
+			title = strings.TrimSpace(textContent(n))
+		}
+		if HasClass(n, "ats-description") {
+			description = sanitizeHTML(innerHTML(n))
+			return false
+		}
+		if HasClass(n, "ajd_header__location") {
+			location = strings.TrimSpace(textContent(n))
+		}
+		return true
+	})
+	if title == "" || strings.TrimSpace(description) == "" {
+		return Job{}, false
+	}
+	return Job{ExternalID: p.id, URL: p.url, Company: company, Title: title, Description: description, Location: location, Remote: isRemote(location)}, true
 }

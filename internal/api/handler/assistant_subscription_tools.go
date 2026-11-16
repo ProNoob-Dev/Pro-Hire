@@ -26,20 +26,14 @@ import (
 	"github.com/strelov1/freehire/internal/search/search"
 )
 
-// The job-alert tools of the signed-in MCP server: an agent connected for a person can
-// subscribe a search to the person's alerts, list them with their settings, change them,
-// remove them, and ask what they have matched. MCP cannot push, so delivery stays where it
-// is — email, Telegram, the mobile app, the webhook — and these tools only manage what is
-// delivered.
-//
-// An ALERT is what the website shows on its alerts page: one saved search, over any of the
-// search filters, delivered on one or more channels. In storage that is a saved_searches
-// row plus one subscriptions row per channel; the tools address the alert by its saved
-// search id and name the per-channel rows only where they differ (active, pending).
-//
-// Every write goes through the website's own use cases — savedsearch.Service for the
-// search and its name, subscription.Service for the channels and pause — so Narrows, the
-// push-device rule and the per-account cap are enforced once.
+// The job-alert tools of the signed-in MCP server: an agent can subscribe a search to the
+// person's alerts, list and change them, remove them, and ask what they matched. MCP cannot
+// push, so delivery stays where it is (email, Telegram, mobile app, webhook).
+// An ALERT is what the alerts page shows: one saved search delivered on one or more channels.
+// In storage that is a saved_searches row plus one subscriptions row per channel; tools address
+// the alert by its saved search id and name the per-channel rows only where they differ.
+// Every write goes through the website's use cases (savedsearch.Service, subscription.Service),
+// so Narrows, the push-device rule and the per-account cap are enforced once.
 
 // subscriptionMCPTools is the set the account server adds for job alerts. Not offered to
 // the in-app assistant: the browser there already has the alert controls beside the
@@ -55,9 +49,8 @@ func (h *assistantHandlers) subscriptionMCPTools(origin string) []assistant.Tool
 }
 
 const (
-	// subscriptionUpdatesDefaultDays and subscriptionUpdatesMaxDays bound the look-back
-	// of subscription_updates. The ceiling is the notify worker's freshness window in
-	// spirit: a match older than a few weeks is no longer news.
+	// subscriptionUpdatesDefaultDays and subscriptionUpdatesMaxDays bound the look-back of
+	// subscription_updates; a match older than a few weeks is no longer news.
 	subscriptionUpdatesDefaultDays = 7
 	subscriptionUpdatesMaxDays     = 30
 	subscriptionUpdatesDefaultMax  = 20
@@ -88,12 +81,10 @@ func alertChannelsHelp(origin string) string {
 		"back on at %s/my/notifications/settings", origin, origin)
 }
 
-// deliverableChannels lists the channels that would actually reach this account now, in
-// the order a default is picked from. Each is the delivery worker's own test: email is
-// gated by the job-alerts mail switch (ListActiveSubscriptions), Telegram needs a linked
-// chat, push a registered device, a webhook an enabled destination
-// (GetSubscriptionForDelivery). A subscription on any other channel is soft-skipped on
-// every pass and nobody receives it.
+// deliverableChannels lists the channels that would reach this account now, in the order a
+// default is picked from, using the delivery worker's own tests: email needs the job-alerts mail
+// switch, Telegram a linked chat, push a registered device, a webhook an enabled destination.
+// A subscription on any other channel is soft-skipped on every pass.
 func deliverableChannels(st db.GetAlertChannelStateRow) []string {
 	var out []string
 	if st.EmailAlertsEnabled {
@@ -156,16 +147,12 @@ func alertSearchSchema(props map[string]any) map[string]any {
 	return props
 }
 
-// applyAlertSearch writes the given search fields over base — a copy of the alert's
-// stored query, or nothing for a new one — and returns the result. A given field replaces
-// what was there: filters replaces every facet the tool can name (an empty object clears
-// them), query replaces the text, a salary bound of 0 clears it. Params only the website
-// sets (exclusions, match-all modes, visa and the like) are kept as they were.
-//
-// Unknown filter NAMES are refused (assistantFilterArgs.values, the search_jobs rule); a
-// value outside a closed vocabulary is DROPPED and named, the rule the catalogue's
-// search_jobs follows: kept, it would narrow the alert to nothing, and a person would wait
-// for mail that can never come.
+// applyAlertSearch writes the given search fields over base (the alert's stored query, or
+// nothing for a new one). A given field replaces what was there: filters replaces every facet
+// (an empty object clears them), query the text, a salary bound of 0 clears it. Params only the
+// website sets (exclusions, match-all modes, visa) are kept.
+// Unknown filter NAMES are refused (the search_jobs rule); a value outside a closed vocabulary
+// is DROPPED and named, since kept it would narrow the alert to nothing.
 func applyAlertSearch(base url.Values, a alertSearchArgs) (url.Values, []string, error) {
 	out := url.Values{}
 	for k, vs := range base {
@@ -461,10 +448,8 @@ func withIgnored(msg string, ignored []string) string {
 	return msg + "; these values were not understood and dropped: " + strings.Join(ignored, ", ")
 }
 
-// deliverySchedule is the account-wide timing every alert shares. It is shown beside the
-// alerts because it decides when they arrive, but it is not a per-alert setting — the
-// website keeps it on the notification settings page, for reminders as well as alerts —
-// so update_subscription does not change it.
+// deliverySchedule is the account-wide timing every alert shares. It is shown beside the alerts
+// but lives on the notification settings page, so update_subscription does not change it.
 type deliverySchedule struct {
 	DigestFrequency string `json:"digest_frequency"`
 	DigestTime      string `json:"digest_time,omitempty"`
@@ -583,8 +568,7 @@ func (h *assistantHandlers) updateSubscriptionTool(origin string) assistant.Tool
 				return nil, err
 			}
 
-			// Everything is validated before the first write, so a refused change leaves the
-			// alert exactly as it was.
+			// Everything is validated before the first write, so a refused change leaves the alert as it was.
 			var newQuery *string
 			var ignored []string
 			if in.given() {
@@ -737,115 +721,4 @@ type subscriptionUpdate struct {
 	MatchedAt *time.Time `json:"matched_at,omitempty"`
 	Delivered bool       `json:"delivered"`
 	Alerts    []string   `json:"alerts"`
-}
-
-func (h *assistantHandlers) subscriptionUpdatesTool(origin string) assistant.Tool {
-	return assistant.Tool{
-		Name:   "subscription_updates",
-		Title:  "Read what job alerts matched",
-		Effect: assistant.EffectReads,
-		Description: "List the new postings the person's job alerts have matched — the same matches their alerts " +
-			"are built from, newest first, still-open postings only. Narrow to one alert by id, and to a window " +
-			"by since (RFC 3339) or days (default 7, max 30). An alert only matches postings that appeared after " +
-			"it was created, and matching runs every few minutes, so a new one starts empty. delivered says " +
-			"whether an alert already carried the posting. Effect: none, read-only.",
-		Schema: map[string]any{
-			"type": "object",
-			"properties": map[string]any{
-				"id":    map[string]any{"type": "integer", "description": "One alert's id; omit for all."},
-				"since": map[string]any{"type": "string", "description": "Only matches recorded at or after this RFC 3339 time."},
-				"days":  map[string]any{"type": "integer", "description": fmt.Sprintf("Look back this many days (default %d, max %d). Ignored when since is given.", subscriptionUpdatesDefaultDays, subscriptionUpdatesMaxDays)},
-				"limit": map[string]any{"type": "integer", "description": fmt.Sprintf("How many postings (default %d, max %d).", subscriptionUpdatesDefaultMax, subscriptionUpdatesMax)},
-			},
-		},
-		Run: func(ctx context.Context, userID int64, raw json.RawMessage) (any, error) {
-			var in struct {
-				ID    int64  `json:"id"`
-				Since string `json:"since"`
-				Days  int    `json:"days"`
-				Limit int    `json:"limit"`
-			}
-			if err := assistant.DecodeArgs(raw, &in); err != nil {
-				return nil, err
-			}
-			since, err := updatesSince(time.Now(), in.Since, in.Days)
-			if err != nil {
-				return nil, err
-			}
-			limit := in.Limit
-			if limit <= 0 {
-				limit = subscriptionUpdatesDefaultMax
-			}
-			limit = min(limit, subscriptionUpdatesMax)
-
-			var savedID pgtype.Int8
-			if in.ID != 0 {
-				// Said out loud rather than answered with an empty list: the SQL is owner-scoped
-				// either way, but "nothing new" for an id that is not this account's is a lie.
-				if _, err := h.ownAlert(ctx, userID, in.ID); err != nil {
-					return nil, err
-				}
-				savedID = pgtype.Int8{Int64: in.ID, Valid: true}
-			}
-
-			// Read several rows per posting asked for: one alert on two channels records each
-			// posting twice, and the duplicates fold below. A full read means there may be more.
-			rowLimit := limit*4 + 1
-			rows, err := h.queries.ListSubscriptionUpdates(ctx, db.ListSubscriptionUpdatesParams{
-				UserID: userID, SavedSearchID: savedID, Since: pgconv.Timestamptz(&since), RowLimit: int32(rowLimit),
-			})
-			if err != nil {
-				return nil, err
-			}
-			out, truncated := foldUpdates(rows, origin, limit)
-			truncated = truncated || len(rows) == rowLimit
-			return map[string]any{"since": since.UTC().Format(time.RFC3339), "postings": out, "truncated": truncated}, nil
-		},
-	}
-}
-
-// updatesSince resolves the look-back window: an explicit since wins, otherwise days
-// (bounded) back from now.
-func updatesSince(now time.Time, since string, days int) (time.Time, error) {
-	if since = strings.TrimSpace(since); since != "" {
-		t, err := time.Parse(time.RFC3339, since)
-		if err != nil {
-			return time.Time{}, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("since must be an RFC 3339 time such as 2026-10-20T00:00:00Z: %v", err))
-		}
-		return t, nil
-	}
-	if days <= 0 {
-		days = subscriptionUpdatesDefaultDays
-	}
-	days = min(days, subscriptionUpdatesMaxDays)
-	return now.AddDate(0, 0, -days), nil
-}
-
-// foldUpdates turns ledger rows into one entry per posting, newest match first, naming
-// every alert that matched it. A posting is delivered once ANY of its matches was.
-func foldUpdates(rows []db.ListSubscriptionUpdatesRow, origin string, limit int) ([]subscriptionUpdate, bool) {
-	out := []subscriptionUpdate{}
-	index := map[string]int{}
-	truncated := false
-	for _, r := range rows {
-		if i, seen := index[r.PublicSlug]; seen {
-			if !slices.Contains(out[i].Alerts, r.SavedSearchName) {
-				out[i].Alerts = append(out[i].Alerts, r.SavedSearchName)
-			}
-			out[i].Delivered = out[i].Delivered || r.NotifiedAt.Valid
-			continue
-		}
-		if len(out) == limit {
-			truncated = true
-			break
-		}
-		index[r.PublicSlug] = len(out)
-		out = append(out, subscriptionUpdate{
-			Title: r.Title, Company: r.Company, Location: r.Location,
-			URL:      jobURL(origin, r.PublicSlug),
-			PostedAt: pgconv.TimePtr(r.PostedAt), MatchedAt: pgconv.TimePtr(r.MatchedAt),
-			Delivered: r.NotifiedAt.Valid, Alerts: []string{r.SavedSearchName},
-		})
-	}
-	return out, truncated
 }

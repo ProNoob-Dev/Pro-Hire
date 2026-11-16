@@ -5,6 +5,7 @@ import type {
   ApiPlan,
   ApiUsageDay,
   BillingOverview,
+  BillingPaymentAttempt,
   CheckoutSession,
   CreatedApiKey,
   InviteSummary,
@@ -19,6 +20,7 @@ import type {
   WebhookConfig,
 } from '../types';
 import { track } from '../analytics';
+import { beginCheckoutTracking } from '../purchaseTracking';
 import { jsonBody, query } from '../api-core';
 import type { components } from '#lib/generated/api.js';
 
@@ -41,6 +43,23 @@ export function accountApi({ call, request, requestData }: Http) {
     // create the session is then visible as intent without a purchase rather than as
     // nothing at all.
     track('checkout_start', { price_id: priceID ?? 'default' });
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        const [user, attempts] = await Promise.all([requestData<User>('/api/v1/auth/me'), billingAttempts()]);
+        beginCheckoutTracking(
+          user.id,
+          attempts.map((a) => a.id),
+          sessionStorage,
+        );
+      }
+    } catch {
+      // A provider or analytics failure must not prevent payment.
+      try {
+        sessionStorage.removeItem('fh:checkout');
+      } catch {
+        // Storage can be disabled independently of the payment provider.
+      }
+    }
     const q = priceID ? `?price=${encodeURIComponent(priceID)}` : '';
     // No code here. This is a GET, and `SameSite=Lax` sends the session cookie on a
     // cross-site top-level navigation — so a GET that redeemed a code would let any page
@@ -76,6 +95,10 @@ export function accountApi({ call, request, requestData }: Http) {
    *  nothing rather than an error. */
   async function billingSubscription(): Promise<BillingOverview> {
     return requestData<BillingOverview>('/api/v1/billing/subscription');
+  }
+
+  async function billingAttempts(): Promise<BillingPaymentAttempt[]> {
+    return requestData<BillingPaymentAttempt[]>('/api/v1/billing/attempts');
   }
 
   /** What each plan allows and what Pro costs. Public: no session needed. Powers /pricing.
@@ -348,6 +371,7 @@ export function accountApi({ call, request, requestData }: Http) {
     promoRedeem,
     myInvite,
     billingSubscription,
+    billingAttempts,
     plans,
     billingManageUrl,
     myUsage,

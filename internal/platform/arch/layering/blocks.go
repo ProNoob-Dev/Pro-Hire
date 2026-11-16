@@ -149,7 +149,7 @@ var blocks = map[string][]string{
 		"userjob", "viewlog",
 	},
 	"search": {
-		"embedprogress", "facetidx", "facetsnapshot", "savedsearch", "search", "searchdrain", "searchintent",
+		"catalogexport", "embedprogress", "facetidx", "facetsnapshot", "savedsearch", "search", "searchdrain", "searchintent",
 		"serveprobe", "suggest",
 	},
 	// catalogstats is here, not in job, because it imports nothing from job: it takes cache,
@@ -179,7 +179,7 @@ var blocks = map[string][]string{
 		// mentorship/busysync is named in full, per the auth/oauth convention; its sync worker
 		// reaches into application (gmailsync) as mentorship does for calendar-write consent.
 		"mentorship/busysync",
-		"inboxdigest", "notify", "nudge", "onboarding", "problemreport",
+		"applicationdigest", "inboxdigest", "notify", "nudge", "onboarding", "problemreport",
 		// ga4mp sends one sign-up event to Google Analytics, imports only the standard library,
 		// and is called by the auth handlers; a growth measurement, so engage.
 		"ga4mp",

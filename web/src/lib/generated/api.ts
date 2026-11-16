@@ -296,6 +296,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/billing/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read your recent payment attempts.
+         * @description The caller's 20 most recent Stripe charge attempts, newest first, including failed
+         *     first purchases and retries. An account with no Stripe customer gets an empty list;
+         *     a provider read failure returns 503. Cookie session only.
+         */
+        get: operations["getBillingAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/billing/checkout": {
         parameters: {
             query?: never;
@@ -366,6 +388,28 @@ export interface paths {
         };
         /** @description 404 when the account has no subscription. Cookie session only. */
         get: operations["getBillingSubscription"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/catalogue/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List bulk catalogue snapshots and their download links.
+         * @description Lists the finished snapshots, newest first, each with a short-lived pre-signed download URL
+         *     (about 15 minutes; call this again for a fresh link). Needs the Data plan: any other
+         *     account gets `403`. `501` means bulk files are not set up on this deployment.
+         */
+        get: operations["listCatalogueSnapshots"];
         put?: never;
         post?: never;
         delete?: never;
@@ -745,6 +789,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/employer/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the applications sent to your vacancies.
+         * @description The delivered applications to the caller's vacancies, newest first. An unknown `stage` is
+         *     a 400 rather than an unfiltered answer; a param the listing does not read is named in
+         *     `meta.ignored_params`.
+         */
+        get: operations["listEmployerApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/applications/{id}/cv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open the CV an application sent.
+         * @description The CV file the application sent, exactly as it was emailed to you: a PDF, or the text the candidate pasted. 404 when none was kept.
+         */
+        get: operations["getEmployerApplicationCV"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/applications/{id}/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Move an application through your pipeline.
+         * @description Moves the application to a stage of your pipeline. The candidate's tracking follows, and
+         *     `interview`, `offer` and `rejected` email the candidate with your optional message. A move
+         *     to the stage it already holds changes nothing and sends nothing.
+         */
+        post: operations["moveEmployerApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/employer/claim": {
         parameters: {
             query?: never;
@@ -942,6 +1050,108 @@ export interface paths {
         put?: never;
         post: operations["reopenEmployerVacancy"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Everyone who acts for the caller's company, and the invitations still open. */
+        get: operations["getEmployerTeam"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/team/invitation-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Which company an invitation link invites to, at which address. 404 for a dead link. */
+        post: operations["previewEmployerTeamInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/team/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Mails a colleague a single-use link to join the team, valid seven days. Inviting an address again replaces its link. 429 past twenty open invitations. */
+        post: operations["inviteEmployerTeamMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/team/invitations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Withdraws an invitation; its link stops working. */
+        delete: operations["withdrawEmployerTeamInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/team/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Joins the team an invitation link invites to. 409 when the caller already acts for a company. */
+        post: operations["joinEmployerTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/employer/team/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Removes a member, or the caller themselves (leaving). Their vacancies stay with the team. The claimant cannot be removed. */
+        delete: operations["removeEmployerTeamMember"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2314,6 +2524,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/change-webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List change webhook subscriptions.
+         * @description The caller's subscriptions, oldest first, with their delivery state. Secrets are not included.
+         */
+        get: operations["listChangeWebhooks"];
+        put?: never;
+        /**
+         * Subscribe a URL to the change feed.
+         * @description Subscribes a URL to the change feed and answers with the signing secret, this once. Needs
+         *     an `api` or `api_data` plan (`402` without one), at most 5 subscriptions per account (`409`
+         *     past that). The URL is not probed here, so a receiver that verifies signatures can be set up
+         *     with the returned secret first; call the `test` endpoint to check it. Deliveries start from
+         *     about the time of this call.
+         */
+        post: operations["createChangeWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/change-webhooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a change webhook subscription.
+         * @description An id that is not the caller's is a `404`. Delete a disabled subscription and create it again to resume (from the changes made then).
+         */
+        delete: operations["deleteChangeWebhook"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/change-webhooks/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a test event to a subscription.
+         * @description Sends a signed `webhook.test` event with no changes. `204` when the endpoint answered 2xx, `422` with what it answered otherwise.
+         */
+        post: operations["testChangeWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/me/contributions": {
         parameters: {
             query?: never;
@@ -2650,6 +2928,32 @@ export interface paths {
         put?: never;
         /** @description Drafts the letter (the paid gate runs before this); 402 when the allowance is spent. */
         post: operations["draftCVCoverLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/cvs/{id}/cover-letter/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Review the confirmed evidence for a cover letter.
+         * @description Review confirmed evidence without a model call or allowance charge.
+         */
+        get: operations["getCVCoverLetterEvidence"];
+        /**
+         * Save the confirmed evidence selection for a cover letter.
+         * @description Save up to 50 confirmed achievement ids with an expected revision.
+         *     An empty atom_ids array explicitly prevents drafting until facts are selected.
+         *     Returns 409 when the expected revision is stale, or 422 for invalid evidence.
+         */
+        put: operations["saveCVCoverLetterEvidence"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6217,6 +6521,9 @@ export interface components {
             country?: string;
             city?: string;
         };
+        BillingAttempts: {
+            data: components["schemas"]["BillingPaymentAttempt"][];
+        };
         /** @description The checkout link and which offer was applied to it. */
         BillingCheckout: {
             url: string;
@@ -6261,6 +6568,28 @@ export interface components {
             ends_at?: string;
             invoices: components["schemas"]["BillingInvoice"][];
             multiple_subscriptions?: boolean;
+        };
+        /** @description One charge attempt, including retries of the same payment. */
+        BillingPaymentAttempt: {
+            id: string;
+            /** Format: date-time */
+            date: string;
+            /**
+             * Format: int64
+             * @description Amount in the currency's smallest unit.
+             */
+            amount_cents: number;
+            /** Format: int64 */
+            amount_refunded_cents: number;
+            currency: string;
+            /** @description `succeeded`, `failed`, `pending`, `refunded`, or `partially_refunded`. */
+            status: string;
+            /** @description A safe display key; provider diagnostics and risk scores are never returned. */
+            reason?: string;
+            card_brand?: string;
+            card_last4?: string;
+            card_funding?: string;
+            wallet?: string;
         };
         BillingStoreSync: {
             /** @description `synced` or `no_subscription`. */
@@ -6537,9 +6866,96 @@ export interface components {
              */
             reconstructed: boolean;
         };
+        /** @description One finished bulk snapshot of the catalogue. */
+        CatalogueSnapshot: {
+            /** @description UTC day the snapshot is named by, `YYYY-MM-DD`. */
+            date: string;
+            /**
+             * Format: int32
+             * @description Version of the line shape in the file. A removed or re-meant field bumps it; a new field does not.
+             */
+            schema_version: number;
+            /**
+             * Format: int64
+             * @description Number of lines (jobs) in the file.
+             */
+            rows: number;
+            /**
+             * Format: int64
+             * @description Size of the gzip file in bytes.
+             */
+            bytes: number;
+            /** @description Hex SHA-256 of the gzip file, to check a download. */
+            sha256: string;
+            /** Format: date-time */
+            generated_at: string;
+            /** @description Pre-signed link to the gzip file; it works without credentials until `url_expires_at`. */
+            download_url: string;
+            /** Format: date-time */
+            url_expires_at: string;
+        };
         CategoryMeta: {
             category: string;
         };
+        /** @description A webhook subscription to the change feed. The secret is never part of it after creation. */
+        ChangeWebhook: {
+            /** Format: int64 */
+            id: number;
+            url: string;
+            /** @description Empty: every company. Otherwise only changes of these companies' postings are delivered. */
+            company_slugs: string[];
+            kinds: components["schemas"]["ChangeWebhookKind"][];
+            /** Format: date-time */
+            created_at: string;
+            last_success_at: string | null;
+            /**
+             * Format: int64
+             * @description Failed deliveries in a row; reset by a delivery that succeeds.
+             */
+            consecutive_failures: number;
+            /** @description What the endpoint answered to the last failed delivery; empty when the last one succeeded. */
+            last_error: string;
+            /** @description Set when the subscription was switched off after sustained failure or a `410`; null while it delivers. */
+            disabled_at: string | null;
+            disabled_reason: string;
+        };
+        ChangeWebhookCreate: {
+            /** @description Where to POST: an absolute http(s) URL. A private, loopback or link-local address is refused. */
+            url: string;
+            /** @description At most 100 company slugs, as `GET /companies/{slug}` knows them. Absent or empty: all companies. */
+            company_slugs?: string[];
+            /** @description Absent or empty: all three. */
+            kinds?: components["schemas"]["ChangeWebhookKind"][];
+        };
+        /** @description The subscription plus its signing secret, shown exactly once, in the answer that creates it. */
+        ChangeWebhookCreated: {
+            /** Format: int64 */
+            id: number;
+            url: string;
+            /** @description Empty: every company. Otherwise only changes of these companies' postings are delivered. */
+            company_slugs: string[];
+            kinds: components["schemas"]["ChangeWebhookKind"][];
+            /** Format: date-time */
+            created_at: string;
+            last_success_at: string | null;
+            /**
+             * Format: int64
+             * @description Failed deliveries in a row; reset by a delivery that succeeds.
+             */
+            consecutive_failures: number;
+            /** @description What the endpoint answered to the last failed delivery; empty when the last one succeeded. */
+            last_error: string;
+            /** @description Set when the subscription was switched off after sustained failure or a `410`; null while it delivers. */
+            disabled_at: string | null;
+            disabled_reason: string;
+            /** @description The HMAC key for `X-Freehire-Signature`. Store it now: it cannot be read again. */
+            secret: string;
+        };
+        /**
+         * @description The kinds of change a webhook can ask for; the same as the change feed's.
+         * @enum {string}
+         */
+        ChangeWebhookKind: "opened" | "closed" | "reopened";
         CityMatch: {
             /** @description Canonical city name — pass it verbatim to the `cities` facet, which matches nothing on a near miss. */
             value: string;
@@ -6871,6 +7287,8 @@ export interface components {
         };
         /** @description A stored cover letter; `present` is false, with no letter, when none was drafted. */
         CvCoverLetter: {
+            evidence_blocked?: boolean;
+            evidence_changed?: boolean;
             present: boolean;
             stale?: boolean;
             letter?: unknown;
@@ -7139,11 +7557,86 @@ export interface components {
             verified_at?: string;
             /** @description Whether the claimant still owes the mailed code or is waiting on a moderator. */
             email_confirmed: boolean;
+            /** @description True when the caller acts for the company as a member of its team rather than as its claimant; `work_email` is then the caller's own. */
+            member: boolean;
             /** Format: date-time */
             created_at: string;
         };
         /** @enum {string} */
         EmployerAccountStatus: "pending" | "active" | "revoked";
+        /** @description One application sent on freehire to one of the caller's vacancies. */
+        EmployerApplication: {
+            /** Format: int64 */
+            id: number;
+            /** @description The vacancy's public slug. */
+            job_slug: string;
+            job_title: string;
+            /** @description The candidate's address; replies to the application email reach it too. */
+            candidate_email: string;
+            /** @description "tailored" (a CV made for this vacancy) or "resume" (the candidate's uploaded file). */
+            cv_kind: string;
+            /** @description False for an application sent before its CV was kept: that CV reached you by email only. */
+            has_cv: boolean;
+            /** @description The candidate's note, empty when none. */
+            note: string;
+            answers: components["schemas"]["EmployerApplicationAnswer"][];
+            stage: components["schemas"]["EmployerApplicationStage"];
+            /**
+             * Format: date-time
+             * @description When you last moved it; absent while it has never been moved.
+             */
+            stage_changed_at?: string;
+            /**
+             * Format: date-time
+             * @description When the application reached you.
+             */
+            sent_at: string;
+        };
+        /** @description One answered question, as asked when the candidate applied. */
+        EmployerApplicationAnswer: {
+            /** @description The question's id on the vacancy's form. (e.g. `q1`) */
+            id: string;
+            /** @description The question as it read when the candidate applied. */
+            label: string;
+            /** @description "text", "boolean" (answer "true"/"false") or "select". */
+            type: string;
+            /** @description The candidate's answer. */
+            answer: string;
+        };
+        EmployerApplicationMove: {
+            /** @description The stage to move to: new, reviewing, interview, offer, hired or rejected. (e.g. `interview`) */
+            stage?: string;
+            /** @description Your words to the candidate, at most 2000 characters, quoted in their email. Accepted only with `interview`, `offer` or `rejected`, the stages that send one. */
+            message?: string;
+        };
+        EmployerApplicationMoved: {
+            application: components["schemas"]["EmployerApplication"];
+            /** @description Whether the candidate was emailed about this move. False when the stage sends no letter, nothing changed, or the letter failed. */
+            candidate_notified: boolean;
+        };
+        /**
+         * @description A stage of the employer's hiring pipeline. Every delivered application starts at `new`.
+         * @enum {string}
+         */
+        EmployerApplicationStage: "new" | "reviewing" | "interview" | "offer" | "hired" | "rejected";
+        EmployerApplicationsMeta: {
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            limit: number;
+            /** Format: int64 */
+            offset: number;
+            /** @description How many applications sit at each stage under the `job` filter, whatever `stage` is; a stage with none is absent. */
+            stage_counts: {
+                [key: string]: number;
+            };
+            /** @description Query params this listing did not read, so the answer is wider than asked; absent when every param was read. */
+            ignored_params?: components["schemas"]["IgnoredParam"][];
+        };
+        EmployerApplicationsPage: {
+            data: components["schemas"]["EmployerApplication"][];
+            meta: components["schemas"]["EmployerApplicationsMeta"];
+        };
         EmployerClaim: {
             company_name?: string;
             work_email?: string;
@@ -7163,6 +7656,8 @@ export interface components {
             verified_at?: string;
             /** @description Whether the claimant still owes the mailed code or is waiting on a moderator. */
             email_confirmed: boolean;
+            /** @description True when the caller acts for the company as a member of its team rather than as its claimant; `work_email` is then the caller's own. */
+            member: boolean;
             /** Format: date-time */
             created_at: string;
             tagline?: string;
@@ -7199,6 +7694,44 @@ export interface components {
         };
         EmployerRejected: {
             rejected: boolean;
+        };
+        EmployerRemoved: {
+            removed: boolean;
+        };
+        EmployerTeam: {
+            members: components["schemas"]["EmployerTeamMember"][];
+            invitations: components["schemas"]["EmployerTeamInvitation"][];
+        };
+        /** @description An invitation whose link still works. */
+        EmployerTeamInvitation: {
+            /** Format: int64 */
+            id: number;
+            email: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        /** @description What an invitation link offers before it is accepted. */
+        EmployerTeamInvitationPreview: {
+            company_name: string;
+            email: string;
+        };
+        EmployerTeamInvite: {
+            email?: string;
+        };
+        /** @description Someone who acts for the company. `holder` is the claimant, who cannot be removed. */
+        EmployerTeamMember: {
+            /** Format: int64 */
+            user_id: number;
+            work_email: string;
+            /** Format: date-time */
+            joined_at: string;
+            holder: boolean;
+        };
+        /** @description The token from the invitation link. */
+        EmployerTeamToken: {
+            token?: string;
         };
         /** @description `title` is required, and `url` too unless `apply_mode` is "freehire". */
         EmployerVacancyCreate: {
@@ -8389,6 +8922,8 @@ export interface components {
             meta: components["schemas"]["NotificationListMeta"];
         };
         NotificationSettings: {
+            /** @description Opt-in Monday summary of application activity. Uses digest_time and account timezone. */
+            application_digest_enabled: boolean;
             /** @description Opt-in daily summary of classified hiring mail. Uses digest_time. */
             inbox_digest_enabled: boolean;
             enabled: boolean;
@@ -8403,6 +8938,8 @@ export interface components {
         };
         /** @description Every field is read as its zero value when left out. Times are `HH:MM`. */
         NotificationSettingsUpdate: {
+            /** @description Omitted or null preserves the current weekly application digest choice. */
+            application_digest_enabled?: boolean | null;
             /** @description Omitted or null preserves the current inbox digest choice. */
             inbox_digest_enabled?: boolean | null;
             /** @description Turn notifications on or off. */
@@ -10504,6 +11041,52 @@ export interface operations {
             };
         };
     };
+    getBillingAttempts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    "Cache-Control": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "id": "ch_example",
+                     *           "date": "2026-11-14T13:24:38Z",
+                     *           "amount_cents": 290,
+                     *           "amount_refunded_cents": 0,
+                     *           "currency": "brl",
+                     *           "status": "failed",
+                     *           "reason": "insufficient_funds",
+                     *           "card_last4": "4242"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": components["schemas"]["BillingAttempts"];
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     getBillingCheckout: {
         parameters: {
             query?: {
@@ -10623,6 +11206,53 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["BillingOverview"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listCatalogueSnapshots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "date": "2026-11-13",
+                     *           "schema_version": 1,
+                     *           "rows": 4500000,
+                     *           "bytes": 7000000000,
+                     *           "sha256": "3b1f0c7e5d9a4c2e8f6a1b0d7c3e9f52a4b8d6c1e0f7a3b5c9d2e4f6a8b0c1d3",
+                     *           "generated_at": "2026-11-13T04:10:00Z",
+                     *           "download_url": "https://example-bucket.example.com/catalogue/2026-11-13/jobs.jsonl.gz?X-Amz-Signature=...",
+                     *           "url_expires_at": "2026-11-13T12:15:00Z"
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["CatalogueSnapshot"][];
                     };
                 };
             };
@@ -11630,6 +12260,176 @@ export interface operations {
             };
         };
     };
+    listEmployerApplications: {
+        parameters: {
+            query?: {
+                /** @description Only this vacancy's applications. (e.g. `platform-engineer-acme-9f3c`) */
+                job?: string;
+                /** @description Only applications at this stage. (e.g. `new`) */
+                stage?: string;
+                /** @description Page size, 1–100. (e.g. `50`) */
+                limit?: string;
+                /** @description Rows to skip. (e.g. `0`) */
+                offset?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "id": 42,
+                     *           "job_slug": "platform-engineer-acme-9f3c",
+                     *           "job_title": "Platform Engineer",
+                     *           "candidate_email": "candidate@example.com",
+                     *           "cv_kind": "tailored",
+                     *           "has_cv": true,
+                     *           "note": "Happy to talk this week.",
+                     *           "answers": [
+                     *             {
+                     *               "id": "q1",
+                     *               "label": "EU work permit?",
+                     *               "type": "boolean",
+                     *               "answer": "true"
+                     *             }
+                     *           ],
+                     *           "stage": "new",
+                     *           "sent_at": "2026-11-10T10:00:00Z"
+                     *         }
+                     *       ],
+                     *       "meta": {
+                     *         "total": 1,
+                     *         "limit": 50,
+                     *         "offset": 0,
+                     *         "stage_counts": {
+                     *           "new": 1,
+                     *           "rejected": 2
+                     *         }
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["EmployerApplicationsPage"];
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEmployerApplicationCV: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The application's id. (e.g. `42`) */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    "Content-Disposition": string;
+                    "Cache-Control": string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": unknown;
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    moveEmployerApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The application's id. (e.g. `42`) */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "stage": "interview",
+                 *       "message": "Are you free on Tuesday?"
+                 *     }
+                 */
+                "application/json": components["schemas"]["EmployerApplicationMove"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "application": {
+                     *           "id": 42,
+                     *           "job_slug": "platform-engineer-acme-9f3c",
+                     *           "job_title": "Platform Engineer",
+                     *           "candidate_email": "candidate@example.com",
+                     *           "cv_kind": "tailored",
+                     *           "has_cv": true,
+                     *           "note": "",
+                     *           "answers": [],
+                     *           "stage": "interview",
+                     *           "stage_changed_at": "2026-11-12T09:00:00Z",
+                     *           "sent_at": "2026-11-10T10:00:00Z"
+                     *         },
+                     *         "candidate_notified": true
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["EmployerApplicationMoved"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     claimEmployerCompany: {
         parameters: {
             query?: never;
@@ -12082,6 +12882,208 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["EmployerClosed"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getEmployerTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerTeam"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    previewEmployerTeamInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployerTeamToken"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerTeamInvitationPreview"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    inviteEmployerTeamMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployerTeamInvite"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerTeamInvitation"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    withdrawEmployerTeamInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerRemoved"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    joinEmployerTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployerTeamToken"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerAccount"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    removeEmployerTeamMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployerRemoved"];
                     };
                 };
             };
@@ -15992,6 +16994,187 @@ export interface operations {
             };
         };
     };
+    listChangeWebhooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": [
+                     *         {
+                     *           "id": 7,
+                     *           "url": "https://mirror.example.com/hooks/freehire",
+                     *           "company_slugs": [
+                     *             "acme"
+                     *           ],
+                     *           "kinds": [
+                     *             "opened",
+                     *             "closed"
+                     *           ],
+                     *           "created_at": "2026-06-20T04:10:00Z",
+                     *           "last_success_at": "2026-06-21T09:00:00Z",
+                     *           "consecutive_failures": 0,
+                     *           "last_error": "",
+                     *           "disabled_at": null,
+                     *           "disabled_reason": ""
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ChangeWebhook"][];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createChangeWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "url": "https://mirror.example.com/hooks/freehire",
+                 *       "company_slugs": [
+                 *         "acme"
+                 *       ],
+                 *       "kinds": [
+                 *         "opened",
+                 *         "closed"
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["ChangeWebhookCreate"];
+            };
+        };
+        responses: {
+            /** @description The request has succeeded and a new resource has been created as a result. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "id": 7,
+                     *         "url": "https://mirror.example.com/hooks/freehire",
+                     *         "company_slugs": [
+                     *           "acme"
+                     *         ],
+                     *         "kinds": [
+                     *           "opened",
+                     *           "closed"
+                     *         ],
+                     *         "created_at": "2026-06-20T04:10:00Z",
+                     *         "last_success_at": null,
+                     *         "consecutive_failures": 0,
+                     *         "last_error": "",
+                     *         "disabled_at": null,
+                     *         "disabled_reason": "",
+                     *         "secret": "whsec_example_secret_shown_once"
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: components["schemas"]["ChangeWebhookCreated"];
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteChangeWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    testChangeWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description There is no content to send for this request, but the headers may be useful. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     listMyContributions: {
         parameters: {
             query?: never;
@@ -16917,6 +18100,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CvPlanRefusal"];
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getCVCoverLetterEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The tailored CV id. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "revision": 0,
+                     *         "explicit": false,
+                     *         "atom_ids": [],
+                     *         "suggested_ids": [],
+                     *         "invalid_ids": [],
+                     *         "available": []
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description An unexpected error response. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveCVCoverLetterEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The tailored CV id. */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description revision is the expected saved revision (0 before the first save); atom_ids contains up to 50 unique, owned, confirmed achievement UUIDs. */
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "revision": 0,
+                 *       "atom_ids": []
+                 *     }
+                 */
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            /** @description The request has succeeded. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "data": {
+                     *         "revision": 1,
+                     *         "atom_ids": []
+                     *       }
+                     *     }
+                     */
+                    "application/json": {
+                        data: unknown;
+                    };
                 };
             };
             /** @description An unexpected error response. */
@@ -19723,6 +21005,7 @@ export interface operations {
                     /**
                      * @example {
                      *       "data": {
+                     *         "application_digest_enabled": false,
                      *         "inbox_digest_enabled": true,
                      *         "enabled": true,
                      *         "channels": [
@@ -19774,6 +21057,7 @@ export interface operations {
                     /**
                      * @example {
                      *       "data": {
+                     *         "application_digest_enabled": false,
                      *         "inbox_digest_enabled": true,
                      *         "enabled": true,
                      *         "channels": [

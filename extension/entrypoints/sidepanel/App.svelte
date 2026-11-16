@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { SvelteSet } from 'svelte/reactivity';
   import { browser } from 'wxt/browser';
-  import { type RuntimeMessage, type LabelFill, type FramedField, type FramedUpload } from '../../lib/protocol';
+  import { type RuntimeMessage } from '../../lib/protocol';
   import { TOP_FRAME } from '../../lib/tools/attachCv';
   import { createSession, getSession, SessionNotFound } from '../../lib/assistant/api';
   import { sendTurn, type Turn } from '../../lib/assistant/client';
@@ -14,50 +13,24 @@
   import { pageIdentity, readStablePageKey } from '../../lib/assistant/pageIdentity';
   import { track } from '../../lib/analytics';
   import { signIn, signOut, getToken, fetchMe, type HireUser } from '../../lib/auth';
-  import {
-    freehireSlugFromUrl,
-    findJob,
-    getJob,
-    getMatch,
-    getAutofillProfile,
-    runAgentAutofill,
-    saveBankAnswer,
-    markApplied,
-    resolveJob,
-    resolveNotice,
-    type FreehireJob,
-    type JobMatch,
-  } from '../../lib/freehire';
-  import { offersAddJob } from '../../lib/addJob';
-  import {
-    planLabelFills,
-    looksLikeApplication,
-    scopeToApplication,
-    profileToValues,
-    normalizeLabel,
-  } from '../../lib/form';
-  import {
-    buildPlan,
-    leftAnApplication,
-    markAnswered,
-    showsApplicationForm,
-    type ApplyPlan,
-    type PlanItem,
-  } from '../../lib/applyPlan';
-  import { startWalk, nextStep, applyStep, skipStep, stopWalk, type Walk } from '../../lib/walk';
+  import { type FreehireJob, type JobMatch } from '../../lib/freehire';
+  import { contributePageUrl, matchPage } from '../../lib/pageMatch';
+  import { normalizeLabel } from '../../lib/fieldKeys';
+  import { leftAnApplication, type PlanItem } from '../../lib/applyPlan';
+  import type { WalkHooks } from '../../lib/formWalk';
+  import { agentAutofill, saveChosenAnswers, type FillPanel } from '../../lib/formFill';
   import { ToolChannel } from '../../lib/tools/client';
   import { activeTabPage } from '../../lib/tools/page';
-  import MatchCard from './MatchCard.svelte';
-  import ApplyPlanCard from './ApplyPlan.svelte';
-  import SaveAnswers from './SaveAnswers.svelte';
+  import MatchStatusView from './MatchStatusView.svelte';
+  import AutofillFooter from './AutofillFooter.svelte';
+  import FormPlanView from './FormPlanView.svelte';
+  import { FormPlan } from './formPlan.svelte';
   import AppliedPrompt from './AppliedPrompt.svelte';
   import PlanRefusalAlert from './PlanRefusalAlert.svelte';
   import { answersToOffer, type AnswerOffer } from '../../lib/answerOffer';
-  import AddJobOffer from './AddJobOffer.svelte';
   import ChatPanel from './ChatPanel.svelte';
   import PanelHeader from './PanelHeader.svelte';
-  import { Button, EmptyState, Skeleton, TabStrip, tabStripId } from 'freehire-design-system';
-  import { Square, RectangleEllipsis } from '@lucide/svelte';
+  import { TabStrip, tabStripId } from 'freehire-design-system';
 
   let chat = $state<ChatState>(initChat());
   // Local action feedback (autofill results, errors) — not part of a turn.
@@ -193,20 +166,6 @@
     return pageIdentity(tab?.url ?? '');
   }
 
-  /** Strips the fragment and any embedded credentials from a URL before it goes to
-   *  the server for a catalog lookup — neither affects which job a page is, and a
-   *  fragment can carry an SSO token on some ATS redirects. Query parameters are
-   *  kept: Greenhouse's embedded application form encodes the board and job id
-   *  there (`for`, `token`), which `sources.RefFromURL` depends on. */
-  function sanitizeForLookup(url: string): string {
-    try {
-      const u = new URL(url);
-      return `${u.origin}${u.pathname}${u.search}`;
-    } catch {
-      return url;
-    }
-  }
-
   /**
    * Runs on every tab switch and page load. A genuine change of page clears
    * whatever conversation is on screen — there is nothing on the new page for it
@@ -226,8 +185,8 @@
     const auth = authGeneration;
     const key = await currentPageKey();
     if (requestId !== pageRequestId || auth !== authGeneration || !user) return;
-    formFilled = false;
-    autofilled.clear();
+    form.formFilled = false;
+    form.autofilled.clear();
     if (chatPageKey !== null && key !== chatPageKey) {
       resetChat();
       chatPageKey = key;
@@ -287,14 +246,6 @@
   // newer one's result after the user has already tabbed or navigated again.
   let matchRequestId = 0;
 
-  async function loadCatalog(slug: string, token: string, requestId: number): Promise<boolean> {
-    const [job, m] = await Promise.all([getJob(slug, token), getMatch(slug, token)]);
-    if (requestId !== matchRequestId) return false;
-    matchJob = job;
-    match = m;
-    return true;
-  }
-
   async function loadMatch() {
     const requestId = ++matchRequestId;
     const token = await getToken();
@@ -313,47 +264,20 @@
     matchStatus = 'loading';
     matchError = '';
     try {
-      // Freehire's own job page → curated slug directly.
-      const directSlug = freehireSlugFromUrl(url);
-      if (directSlug) {
-        if (!(await loadCatalog(directSlug, token, requestId))) return;
-        matchStatus = 'ready';
-        return;
+      const result = await matchPage(url, token, () => requestId !== matchRequestId);
+      if (!result) return;
+      if (result.status === 'ready') {
+        matchJob = result.job;
+        match = result.match;
+      } else {
+        canAddJob = result.canAddJob;
       }
-
-      // Any other page: recognise it as a catalog job from its URL (curated card),
-      // else there is nothing to show. No ad-hoc scrape-and-match call here — that
-      // used to run automatically on every tab the panel happened to be open on,
-      // job posting or not, which is both wasted work and a wasted LLM call for
-      // the vast majority of pages. `contributePage` (the "Add vacancy" action on
-      // the empty state) is the explicit, on-demand equivalent.
-      const found = await findJob(sanitizeForLookup(url), token);
-      if (requestId !== matchRequestId) return;
-      if (found.slug) {
-        if (!(await loadCatalog(found.slug, token, requestId))) return;
-        matchStatus = 'ready';
-        return;
-      }
-      const offer = offersAddJob({
-        atsBoard: found.atsBoard,
-        // The page is asked only when the URL alone did not settle it.
-        jobPostingMarkup: !found.atsBoard && (await readJobPostingMarkup()),
-      });
-      if (requestId !== matchRequestId) return;
-      canAddJob = offer;
-      matchStatus = 'empty';
+      matchStatus = result.status;
     } catch (err) {
       if (requestId !== matchRequestId) return;
       matchError = err instanceof Error ? err.message : 'Could not load match';
       matchStatus = 'error';
     }
-  }
-
-  async function readJobPostingMarkup(): Promise<boolean> {
-    const reply = (await browser.runtime.sendMessage({
-      kind: 'GET_JOB_POSTING_MARKUP',
-    } satisfies RuntimeMessage)) as RuntimeMessage | undefined;
-    return reply?.kind === 'JOB_POSTING_MARKUP' && reply.present;
   }
 
   let contributing = $state(false);
@@ -380,9 +304,9 @@
         notices.push('No page to add.');
         return;
       }
-      const resolved = await resolveJob(url, token);
-      notices.push(resolveNotice(resolved.status));
-      if (resolved.public_slug) await loadMatch();
+      const resolved = await contributePageUrl(url, token);
+      notices.push(resolved.notice);
+      if (resolved.slug) await loadMatch();
     } catch (err) {
       notices.push(`Could not add this page: ${err instanceof Error ? err.message : 'error'}`);
     } finally {
@@ -549,84 +473,25 @@
 
   let autofilling = $state(false);
 
-  // ── The application-form plan ──────────────────────────────────────────────
-  //
-  // The panel's standing account of the form in front of the user: what it asks,
-  // what is answered, how far the required questions are along. It exists before
-  // any fill and outlives every one, which is the difference from the notices —
-  // those describe one action and are gone by the next.
+  // The application-form plan (see FormPlan). Every read is followed by
+  // noteApplication, which tracks the started application across reads.
+  const form = new FormPlan(() => noteApplication());
 
-  let plan = $state<ApplyPlan | null>(null);
-  /** The question a walk is filling right now, by label. */
-  let fillingLabel = $state<string | null>(null);
-  // Reads of the form are serialised rather than raced. A request id (the
-  // `matchRequestId` pattern) was the first attempt and it deadlocked on a real
-  // ATS page: the page announces changes continuously, so every read found its id
-  // already superseded by the next one and returned before assigning anything —
-  // the checklist never appeared at all. One read at a time, with a re-read queued
-  // if anything arrived meanwhile, cannot starve and cannot land stale.
-  let planReading = false;
-  let planStale = false;
-  /** How many labelled questions the last read found, whether or not they added
-   *  up to an application. It is what the panel says when it shows no checklist,
-   *  so "nothing appeared" can be told from "nothing was found". */
-  let questionsSeen = $state(0);
-  /** Why the last read produced nothing, when it failed outright. */
-  let planError = $state('');
-  /** True once a walk has written into this page's form. It outranks every guess
-   *  about whether the page is showing an application: it accepted values. Reset
-   *  by a page change, with the plan. */
-  let formFilled = $state(false);
-  /** The questions on this page whose answers freehire already holds, by normalised
-   *  label: the ones this panel wrote (from the profile or the bank) and the ones just
-   *  saved. Neither is offered for saving again. Reset by a page change, with
-   *  `formFilled`. */
-  const autofilled = new SvelteSet<string>();
-  /** The last read's questions, scoped as the plan is — with their values, which the
-   *  plan does not carry. What the "save my answers" offer is computed from. */
-  let formFields = $state<FramedField[]>([]);
   let savingAnswers = $state(false);
   /** The catalog job whose application form is in front of the user, started. */
   let startedJob: FreehireJob | null = null;
   /** The catalog job whose started application gave way to a page with no form — the one
    *  the "did you submit?" prompt names. Kept until answered. */
   let appliedCandidate = $state<FreehireJob | null>(null);
-  let markingApplied = $state(false);
   /** Asked only once the page in front of the user shows no form: the next step of a
    *  multi-step application is still the application, not its end. */
-  let asksApplied = $derived(appliedCandidate !== null && !plan && !autofilling);
-  let answerOffers = $derived(autofilling ? [] : answersToOffer(formFields, autofilled));
-  /** The upload fields the last read found, across every frame — MatchCard's "Attach
-   *  tailored CV" action is gated on at least one being in the TOP frame specifically
-   *  (see `pickAttachableUpload`), not merely on this list being non-empty: an upload
-   *  that exists only inside an embedded iframe is one this action can never reach. */
-  let uploads = $state<FramedUpload[]>([]);
+  let asksApplied = $derived(appliedCandidate !== null && !form.plan && !autofilling);
+  let answerOffers = $derived(autofilling ? [] : answersToOffer(form.formFields, form.autofilled));
 
-  /** Reads the page's form and rebuilds the plan, or clears it for a page that
-   *  is not showing an application. */
+  /** Reads the page's form and rebuilds the plan (signed in only). */
   async function refreshPlan() {
     if (!user) return;
-    if (planReading) {
-      planStale = true;
-      return;
-    }
-    planReading = true;
-    try {
-      do {
-        planStale = false;
-        const reply = (await browser.runtime.sendMessage({
-          kind: 'GET_FRAMED_FORM',
-        } satisfies RuntimeMessage)) as RuntimeMessage | undefined;
-        applyRead(reply);
-        noteApplication();
-      } while (planStale);
-    } catch (err) {
-      // A read that could not happen is not a page without a form: say so rather
-      // than clearing a checklist the user is looking at.
-      planError = err instanceof Error ? err.message : 'could not read the form';
-    } finally {
-      planReading = false;
-    }
+    await form.refresh();
   }
 
   /**
@@ -636,39 +501,14 @@
    * cannot see the second, and race the page's own change notice on the first.
    */
   function noteApplication() {
-    if (leftAnApplication(plan)) {
+    if (leftAnApplication(form.plan)) {
       if (matchJob?.public_slug) startedJob = matchJob;
       return;
     }
-    if (!plan && startedJob) {
+    if (!form.plan && startedJob) {
       appliedCandidate = startedJob;
       startedJob = null;
     }
-  }
-
-  /** Turns one form read into the plan, or into the reason there is none. */
-  function applyRead(reply: RuntimeMessage | undefined) {
-    planError = '';
-    if (reply?.kind !== 'FRAMED_FORM') {
-      questionsSeen = 0;
-      plan = null;
-      uploads = [];
-      formFields = [];
-      return;
-    }
-    uploads = reply.uploads;
-    questionsSeen = reply.fields.filter((f) => f.label.trim() !== '').length;
-    if (!showsApplicationForm(reply.fields, reply.uploads, { filled: formFilled })) {
-      plan = null;
-      formFields = [];
-      return;
-    }
-    // Scoped to the one form the upload identifies, where there is one: an
-    // application and a job-alert signup each have their own "Email". With no
-    // upload to scope by — every step of an ATS form after the first — the page's
-    // questions ARE the form.
-    formFields = reply.uploads.length > 0 ? scopeToApplication(reply.fields, reply.uploads) : reply.fields;
-    plan = buildPlan(formFields);
   }
 
   /** Sends the user to one question: the page scrolls there and takes the cursor. */
@@ -682,105 +522,25 @@
     }
   }
 
-  /**
-   * Autofill, agent-first: freehire's agent reads the form through the wire,
-   * maps the profile onto it, and fills what it can justify. The deterministic
-   * filler stays as the fallback until the agent path has proven itself — it
-   * only knows a fixed set of labels, but it needs nothing but this browser.
-   */
-  /**
-   * Names the first few labels and counts the rest. A real ATS form leaves
-   * dozens of fields untouched (Greenhouse alone contributes a checkbox per
-   * country), and a notice that lists them all is one the user cannot read.
-   */
-  function nameSome(labels: string[], shown = 5): string {
-    const trimmed = labels.map((l) => l.trim().replace(/\s+/g, ' ')).filter(Boolean);
-    if (trimmed.length <= shown) return trimmed.join(', ');
-    return `${trimmed.slice(0, shown).join(', ')} and ${trimmed.length - shown} more`;
-  }
-
-  /** How long each filled question stays in view before the walk moves on. It is
-   *  there for the eye: without it the walk is a flicker, which is the batch fill
-   *  this replaced. */
-  const WALK_STEP_MS = 300;
-
   /** Set while a walk runs, so Stop can end it between steps. */
   let walkStop = $state(false);
 
-  function pause(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  /** Ticks one question off the plan, narrowed by whatever address the caller
-   *  has: a fill knows its frame and form, the agent's report knows the label
-   *  alone. An address that matches nothing leaves the plan as it was. */
-  function tickOff(label: string, frame?: number, form?: number) {
-    autofilled.add(normalizeLabel(label));
-    if (!plan) return;
-    const item = plan.items.find(
-      (i) => i.label === label && (frame === undefined || i.frame === frame) && (form === undefined || i.form === form),
-    );
-    if (item) plan = markAnswered(plan, item.key);
-  }
-
-  /**
-   * Works through `fills` one question at a time, each one revealed as its value
-   * lands, ticking the plan off as it goes. Returns what it managed — the caller
-   * owns the closing sentence, because the two callers reach the walk from
-   * different places (its own plan, or the agent's report).
-   */
-  async function walkFills(fills: LabelFill[]): Promise<Walk<LabelFill>> {
-    let walk = startWalk(fills);
-    try {
-      // `nextStep` is the continuation test: it ends the walk both when the list
-      // runs out and when Stop has been pressed.
-      for (let fill = nextStep(walk); fill !== null; fill = nextStep(walk)) {
-        fillingLabel = fill.label;
-        const applied = (await browser.runtime.sendMessage({
-          kind: 'FILL_BY_LABEL',
-          fills: [fill],
-          reveal: true,
-        } satisfies RuntimeMessage)) as RuntimeMessage | undefined;
-        const outcome = applied?.kind === 'FILL_OUTCOMES' ? applied.outcomes[0] : undefined;
-        if (outcome?.status === 'filled') {
-          walk = applyStep(walk, fill);
-          formFilled = true;
-          // Ticked off from what was just written, not from a fresh read: the
-          // page's own change notice is debounced, so re-reading here would leave
-          // the counter a step behind the value on screen.
-          tickOff(fill.label, fill.frame, fill.form);
-        } else {
-          walk = skipStep(walk, fill);
-        }
-        if (walkStop) return stopWalk(walk);
-        await pause(WALK_STEP_MS);
-      }
-      return walk;
-    } finally {
-      fillingLabel = null;
-    }
-  }
-
-  /** Plays a list of labels the agent says it filled back over the page, so the
-   *  user sees what changed. Nothing is written — the agent already did that. */
-  async function walkReported(labels: string[]) {
-    try {
-      for (const label of labels) {
-        if (walkStop) return;
-        fillingLabel = label;
-        await browser.runtime.sendMessage({
-          kind: 'REVEAL_FIELD',
-          request: { label },
-        } satisfies RuntimeMessage);
-        tickOff(label);
-        await pause(WALK_STEP_MS);
-      }
-    } finally {
-      // Whatever ended the walk — the list, Stop, or a throw — no question is
-      // being filled once it is over, and a stuck spinner would say otherwise.
-      fillingLabel = null;
-    }
-  }
+  // What the walks in lib/formWalk report back to this panel.
+  const walkHooks: WalkHooks = {
+    filling: (label) => (form.fillingLabel = label),
+    stopped: () => walkStop,
+    wrote: () => (form.formFilled = true),
+    answered: (label, frame, formIndex) => form.tickOff(label, frame, formIndex),
+  };
+  // What the fallback filler in lib/formFill reports back to this panel.
+  const fillPanel: FillPanel = {
+    notice: (text) => notices.push(text),
+    offerOverride: (run) => (overrideFill = run),
+    walk: walkHooks,
+    refreshPlan: () => refreshPlan(),
+    known: (label) => form.autofilled.add(normalizeLabel(label)),
+    refused: (err) => (autofillRefusal = err),
+  };
 
   async function autofill() {
     const token = await getToken();
@@ -789,55 +549,12 @@
     walkStop = false;
     autofillRefusal = null;
     try {
-      // Read the form first: the walk ticks questions off the plan, and a page
-      // whose form arrived after the last read (an ATS step change, which fires
-      // no page load) would otherwise be walked with nothing to tick.
-      await refreshPlan();
-      const report = await runAgentAutofill(token);
-      // The agent filled the page itself, server-side. Play its report back so
-      // the user watches what changed rather than finding it later.
-      if (report.filled.length > 0) formFilled = true;
-      // Every label the agent filled is known up front: a walk stopped part-way still
-      // leaves those answers written, and they came from the profile, not the candidate.
-      for (const label of report.filled) autofilled.add(normalizeLabel(label));
-      await walkReported(report.filled);
-      const filled = report.filled.length;
-      track('autofill', { mode: 'agent', filled });
-      notices.push(
-        filled > 0
-          ? `✓ Autofilled ${filled} field${filled === 1 ? '' : 's'} — review before submitting.`
-          : 'The agent found nothing on this form it could fill from your profile.',
-      );
-      if (report.deferred.length > 0) {
-        notices.push(`Not fillable yet (custom dropdowns): ${nameSome(report.deferred)}.`);
-      }
-    } catch (err) {
-      if (err instanceof PlanRefused) {
-        // The plan said no: a paywall with the upgrade link, not an error line.
-        autofillRefusal = err;
-        notices.push('Using the basic filler instead.');
-      } else {
-        // The server's own sentence, not just the status: /me/autofill/run answers
-        // 409 for three unrelated states, and only that sentence says which.
-        notices.push(
-          `Agent autofill unavailable: ${err instanceof Error ? err.message : 'error'} — using the basic filler.`,
-        );
-      }
-      track('autofill', { mode: 'basic' });
-      await deterministicAutofill(token);
+      await agentAutofill(token, fillPanel);
     } finally {
       autofilling = false;
     }
   }
 
-  /**
-   * The fallback filler, over the same frame-aware primitives the agent drives:
-   * an apply form is routinely served from an ATS iframe, and a careers page
-   * carrying any other iframe would otherwise be answered by whichever frame
-   * replied first. Addressing questions by label rather than by position also
-   * keeps the read and the write on the same question when a form re-renders
-   * between them.
-   */
   /**
    * The fill the user has been offered but not yet confirmed, because the page
    * does not look like it is showing an application form. Held so "Fill anyway"
@@ -845,51 +562,17 @@
    */
   let overrideFill = $state<(() => Promise<void>) | null>(null);
 
-  /**
-   * Saves the answers the candidate chose into their answer bank, one at a time. One
-   * refused answer (too long, no readable question) does not stop the rest; the
-   * notice names what did not go through.
-   */
   async function saveAnswers(chosen: AnswerOffer[]) {
     const token = await getToken();
     if (!token || savingAnswers) return;
     savingAnswers = true;
-    const failed: string[] = [];
     try {
-      for (const offer of chosen) {
-        try {
-          await saveBankAnswer(offer.question, offer.answer, token);
-          // Saved answers leave the offer: the next read must not ask for them again.
-          autofilled.add(normalizeLabel(offer.question));
-        } catch {
-          failed.push(offer.question);
-        }
-      }
-      const saved = chosen.length - failed.length;
-      track('answers_saved', { saved, failed: failed.length });
-      if (saved > 0) {
-        notices.push(`✓ Saved ${saved} answer${saved === 1 ? '' : 's'} — freehire will fill them on the next form.`);
-      }
-      if (failed.length > 0) notices.push(`Could not save: ${nameSome(failed)}.`);
+      await saveChosenAnswers(chosen, token, {
+        notice: (text) => notices.push(text),
+        saved: (question) => form.autofilled.add(normalizeLabel(question)),
+      });
     } finally {
       savingAnswers = false;
-    }
-  }
-
-  async function confirmApplied() {
-    const job = appliedCandidate;
-    const token = await getToken();
-    if (!job || !token || markingApplied) return;
-    markingApplied = true;
-    try {
-      await markApplied(job.public_slug, token);
-      track('mark_applied', { source: 'left_form' });
-      notices.push(`✓ Marked as applied — ${job.title} is in your Applied list.`);
-      appliedCandidate = null;
-    } catch (err) {
-      notices.push(`Could not mark as applied: ${err instanceof Error ? err.message : 'error'}`);
-    } finally {
-      markingApplied = false;
     }
   }
 
@@ -902,56 +585,6 @@
       await run();
     } finally {
       autofilling = false;
-    }
-  }
-
-  async function deterministicAutofill(token: string, force = false) {
-    try {
-      const formReply = (await browser.runtime.sendMessage({
-        kind: 'GET_FRAMED_FORM',
-      } satisfies RuntimeMessage)) as RuntimeMessage | undefined;
-      if (formReply?.kind !== 'FRAMED_FORM' || formReply.fields.length === 0) {
-        notices.push('No form fields found on this page.');
-        return;
-      }
-
-      // A careers page keeps the application behind an "Apply" button and shows a
-      // job-alert signup meanwhile; filling that one silently is worse than
-      // declining, so the user is told and can insist.
-      if (!force && !looksLikeApplication(formReply.uploads)) {
-        notices.push(
-          `This doesn't look like the application form — ${formReply.fields.length} field${
-            formReply.fields.length === 1 ? '' : 's'
-          } are showing and none of them takes a CV. Open the application on the page, then try again.`,
-        );
-        overrideFill = () => deterministicAutofill(token, true);
-        return;
-      }
-      overrideFill = null;
-
-      // One form, not every question on the page: an application and a job-alert
-      // signup each have their own "Email".
-      const scoped = scopeToApplication(formReply.fields, formReply.uploads);
-      const fills = planLabelFills(scoped, profileToValues(await getAutofillProfile(token)));
-      if (fills.length === 0) {
-        notices.push('Nothing matched your profile on this form.');
-        return;
-      }
-      const walk = await walkFills(fills);
-      // The form has now accepted values, which is stronger evidence than
-      // anything its markup says — so read it again and let the checklist appear.
-      await refreshPlan();
-      const n = walk.done.length;
-      // What was left unanswered is not listed here: the checklist above shows
-      // exactly which questions those are, and naming thirty of them in a notice
-      // is the wall of text this feature replaced.
-      notices.push(
-        walk.stopped
-          ? `Stopped after ${n} field${n === 1 ? '' : 's'} — what was filled stays.`
-          : `✓ Autofilled ${n} field${n === 1 ? '' : 's'} — review before submitting.`,
-      );
-    } catch (err) {
-      notices.push(`Autofill failed: ${err instanceof Error ? err.message : 'error'}`);
     }
   }
 </script>
@@ -985,62 +618,34 @@
             {#if asksApplied && appliedCandidate}
               <AppliedPrompt
                 job={appliedCandidate}
-                marking={markingApplied}
-                onConfirm={confirmApplied}
-                onDismiss={() => (appliedCandidate = null)}
+                onNotice={(text) => notices.push(text)}
+                onDone={() => (appliedCandidate = null)}
               />
             {/if}
-            {#if matchStatus === 'ready' && matchJob && match}
-              <MatchCard job={matchJob} {match} hasUploadField={uploads.some((u) => u.frame === TOP_FRAME)} />
-            {:else if matchStatus === 'loading'}
-              <div class="match-skeleton">
-                <Skeleton class="h-9 w-9 rounded-lg" />
-                <div class="match-skeleton-lines">
-                  <Skeleton class="h-3 w-2/3 rounded" />
-                  <Skeleton class="h-3 w-1/3 rounded" />
-                </div>
-              </div>
-            {:else if matchStatus === 'error'}
-              <EmptyState title="Match unavailable" description={matchError}>
-                {#snippet action()}
-                  <Button variant="outline" size="sm" onclick={loadMatch}>Retry</Button>
-                {/snippet}
-              </EmptyState>
-            {:else if matchStatus === 'empty' && canAddJob}
-              <!-- Not an empty state but an offer: a vacancy freehire does not carry yet is
-                   the one moment the panel can ask for something useful, so it leads with
-                   the action and says what it buys — rather than reporting a miss. Any
-                   other page gets nothing here (see canAddJob). -->
-              <AddJobOffer adding={contributing} onAdd={contributePage} />
-            {/if}
+            <MatchStatusView
+              status={matchStatus}
+              job={matchJob}
+              {match}
+              hasUploadField={form.uploads.some((u) => u.frame === TOP_FRAME)}
+              error={matchError}
+              onRetry={loadMatch}
+              {canAddJob}
+              {contributing}
+              onAdd={contributePage}
+            />
 
-            <!-- The account of the form the user is standing in front of. It is
-                 independent of the match: a page can show an application freehire
-                 does not carry a posting for, and the checklist is just as useful
-                 there. -->
-            {#if !plan && planError}
-              <p class="no-plan">Could not read this page's form: {planError}</p>
-            {:else if !plan && questionsSeen > 0}
-              <!-- The page asks questions but they did not add up to an
-                   application. Saying so beats an empty space the user has to
-                   guess about. -->
-              <p class="no-plan">
-                {questionsSeen} field{questionsSeen === 1 ? '' : 's'} on this page — not enough to read as an application
-                form.
-              </p>
-            {/if}
-            {#if plan}
-              <ApplyPlanCard
-                {plan}
-                filling={fillingLabel}
-                walking={autofilling}
-                onReveal={revealItem}
-                onCancel={() => (walkStop = true)}
-              />
-              {#if answerOffers.length > 0}
-                <SaveAnswers offers={answerOffers} saving={savingAnswers} onSave={saveAnswers} />
-              {/if}
-            {/if}
+            <FormPlanView
+              plan={form.plan}
+              planError={form.planError}
+              questionsSeen={form.questionsSeen}
+              fillingLabel={form.fillingLabel}
+              {autofilling}
+              onReveal={revealItem}
+              onCancel={() => (walkStop = true)}
+              {answerOffers}
+              {savingAnswers}
+              onSave={saveAnswers}
+            />
 
             {#if autofillRefusal}
               <PlanRefusalAlert refusal={autofillRefusal} />
@@ -1059,23 +664,7 @@
         </div>
 
         {#if user && matchStatus === 'ready' && matchJob && matchJob.public_slug !== ''}
-          <div class="match-footer">
-            {#if autofilling}
-              <!-- The same button, not a second one beside it: while a walk runs
-                   there is exactly one thing to do with it, and a disabled
-                   "Filling…" left the user watching something they could not
-                   call off. -->
-              <Button class="w-full" variant="outline" size="lg" onclick={() => (walkStop = true)} disabled={walkStop}>
-                {walkStop ? 'Stopping…' : 'Stop'}
-                <Square class="size-4" />
-              </Button>
-            {:else}
-              <Button class="w-full" variant="primary" size="lg" onclick={autofill}>
-                Autofill
-                <RectangleEllipsis class="size-4" />
-              </Button>
-            {/if}
-          </div>
+          <AutofillFooter {autofilling} bind:walkStop onAutofill={autofill} />
         {/if}
       </div>
     {:else}
@@ -1176,31 +765,6 @@
    * 0` makes .match-scroll actually scroll instead of squeezing its children. */
   .match-scroll > :global(*) {
     flex-shrink: 0;
-  }
-
-  .match-footer {
-    flex-shrink: 0;
-    padding: 10px 12px;
-    border-top: 1px solid var(--border);
-  }
-
-  .match-skeleton {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .match-skeleton-lines {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .no-plan {
-    font-size: 12px;
-    color: var(--muted-foreground);
-    padding: 0 2px;
   }
 
   .empty {

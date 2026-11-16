@@ -2,11 +2,11 @@
 // for every messaging kind (today: interview buddies). Schedule it every 5 minutes.
 //
 // A participant is due once the oldest message another wrote since its read cursor is five
-// minutes old, and is not due again until it has read and a newer message ages the same way. The run CLAIMS each notice before sending it and sends only the ones
-// it won; when every channel fails the claim is released so the next run retries.
+// minutes old, and is not due again until it has read and a newer message ages the same way.
+// The run claims each notice before sending it; when every channel fails the claim is released.
 //
-// The notice carries no message text and no account detail — only that a message or
-// request is waiting, in the kind's words, with a link to the conversation.
+// The notice carries no message text or account detail, only that a message is waiting, with
+// a link to the conversation.
 //
 // Needs DATABASE_URL, AWS_REGION + NOTIFY_EMAIL_FROM (the SES transport), FRONTEND_ORIGIN
 // and JWT_SECRET (the unsubscribe link). TELEGRAM_BOT_TOKEN is optional. Without the mail
@@ -36,7 +36,7 @@ func run() int {
 	cfg := config.Load()
 	if cfg.AWSRegion == "" || cfg.NotifyEmailFrom == "" {
 		log.Print("message-notify: email transport not configured (AWS_REGION / NOTIFY_EMAIL_FROM) — nothing to do")
-		return 0
+		return worker.Skip("AWS_REGION+NOTIFY_EMAIL_FROM")
 	}
 	if len(cfg.JWTSecret) < 32 {
 		log.Print("message-notify: JWT_SECRET must be at least 32 bytes — the unsubscribe link would not verify; refusing")

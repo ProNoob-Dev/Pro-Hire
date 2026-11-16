@@ -19,6 +19,8 @@ export const messages = defineMessages(
     workEmailPlaceholder: 'you@acme.com',
     workEmailHint: 'A public email provider (Gmail, Outlook, …) is not accepted — use your company address.',
     claimSubmit: 'Claim company',
+    claimTeamHint:
+      'Your company already manages its page here? Ask a colleague to invite you from Company profile → Team instead of claiming it.',
     claiming: 'Claiming…',
 
     // Confirm step: code just mailed.
@@ -42,6 +44,11 @@ export const messages = defineMessages(
 
     // Dashboard shell.
     dashboardTitle: '{company}',
+
+    // The vacancies section's routed tabs.
+    vacancyTabsLabel: 'Vacancy sections',
+    tabVacancies: 'Vacancies',
+    tabApplications: 'Applications',
 
     // Profile tab.
     profileSaved: 'Saved.',
@@ -94,7 +101,7 @@ export const messages = defineMessages(
     applyModeLabel: 'How candidates apply',
     applyModeFreehire: 'On freehire',
     applyModeFreehireHint:
-      'Candidates apply on the vacancy page. You receive each application by email — CV attached, reply goes straight to the candidate. The vacancy is only on freehire.',
+      'Candidates apply on the vacancy page. Each application lands in Applications, where you move it through your pipeline, and arrives by email — CV attached, reply goes straight to the candidate. The vacancy is only on freehire.',
     applyModeExternal: 'On my own site',
     applyModeExternalHint: 'Candidates follow your link to apply.',
     questionsLabel: 'Questions for candidates',
@@ -127,6 +134,8 @@ export const messages = defineMessages(
       workEmailHint:
         'Публичные почтовые сервисы (Gmail, Outlook и т.п.) не принимаются — используйте корпоративный адрес.',
       claimSubmit: 'Заявить компанию',
+      claimTeamHint:
+        'Ваша компания уже ведёт здесь свою страницу? Попросите коллегу пригласить вас в разделе «Профиль компании» → «Команда», а не заявляйте права заново.',
       claiming: 'Отправка…',
 
       confirmTitle: 'Подтвердите рабочий email',
@@ -146,6 +155,10 @@ export const messages = defineMessages(
       revokedBody: 'Администратор отозвал доступ к компании «{company}». Если это ошибка, обратитесь в поддержку.',
 
       dashboardTitle: '{company}',
+
+      vacancyTabsLabel: 'Разделы вакансий',
+      tabVacancies: 'Вакансии',
+      tabApplications: 'Отклики',
 
       profileSaved: 'Сохранено.',
       profileSaveError: 'Не удалось сохранить. Попробуйте ещё раз.',
@@ -196,7 +209,7 @@ export const messages = defineMessages(
       applyModeLabel: 'Как откликаются кандидаты',
       applyModeFreehire: 'На freehire',
       applyModeFreehireHint:
-        'Кандидаты откликаются прямо на странице вакансии. Каждый отклик приходит вам на почту: CV во вложении, ответ уходит кандидату напрямую. Вакансия есть только на freehire.',
+        'Кандидаты откликаются прямо на странице вакансии. Каждый отклик попадает в раздел «Отклики», где вы ведёте его по стадиям, и приходит вам на почту: CV во вложении, ответ уходит кандидату напрямую. Вакансия есть только на freehire.',
       applyModeExternal: 'На своём сайте',
       applyModeExternalHint: 'Кандидаты переходят по вашей ссылке.',
       questionsLabel: 'Вопросы кандидатам',

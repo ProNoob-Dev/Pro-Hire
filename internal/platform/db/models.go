@@ -96,6 +96,13 @@ type Application struct {
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }
 
+type ApplicationDigestDelivery struct {
+	UserID    int64              `json:"user_id"`
+	LocalWeek pgtype.Date        `json:"local_week"`
+	ClaimedAt pgtype.Timestamptz `json:"claimed_at"`
+	SentAt    pgtype.Timestamptz `json:"sent_at"`
+}
+
 type ApplicationEvent struct {
 	ID            int64              `json:"id"`
 	UserID        int64              `json:"user_id"`
@@ -461,6 +468,24 @@ type CompanyAccount struct {
 	EmailConfirmedAt pgtype.Timestamptz `json:"email_confirmed_at"`
 }
 
+type CompanyAccountInvitation struct {
+	ID          int64              `json:"id"`
+	CompanySlug string             `json:"company_slug"`
+	Email       string             `json:"email"`
+	TokenHash   []byte             `json:"token_hash"`
+	InvitedBy   int64              `json:"invited_by"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+}
+
+type CompanyAccountMember struct {
+	UserID      int64              `json:"user_id"`
+	CompanySlug string             `json:"company_slug"`
+	WorkEmail   string             `json:"work_email"`
+	InvitedBy   pgtype.Int8        `json:"invited_by"`
+	JoinedAt    pgtype.Timestamptz `json:"joined_at"`
+}
+
 type CompanyFeedback struct {
 	ID           int64              `json:"id"`
 	UserID       pgtype.Int8        `json:"user_id"`
@@ -571,14 +596,23 @@ type ConversationReport struct {
 }
 
 type CoverLetter struct {
-	UserID       int64              `json:"user_id"`
-	JobID        int64              `json:"job_id"`
-	Body         string             `json:"body"`
-	CitedAtomIds []pgtype.UUID      `json:"cited_atom_ids"`
-	Language     string             `json:"language"`
-	Model        string             `json:"model"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	UserID              int64              `json:"user_id"`
+	JobID               int64              `json:"job_id"`
+	Body                string             `json:"body"`
+	CitedAtomIds        []pgtype.UUID      `json:"cited_atom_ids"`
+	Language            string             `json:"language"`
+	Model               string             `json:"model"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	EvidenceRevision    int64              `json:"evidence_revision"`
+	EvidenceFingerprint string             `json:"evidence_fingerprint"`
+}
+
+type CoverLetterEvidence struct {
+	UserID   int64         `json:"user_id"`
+	JobID    int64         `json:"job_id"`
+	Revision int64         `json:"revision"`
+	AtomIds  []pgtype.UUID `json:"atom_ids"`
 }
 
 type CreditBalance struct {
@@ -1139,6 +1173,7 @@ type Job struct {
 	HydratedAt                pgtype.Timestamptz `json:"hydrated_at"`
 	LivenessStrikes           int32              `json:"liveness_strikes"`
 	Team                      string             `json:"team"`
+	ApplicationUrl            string             `json:"application_url"`
 }
 
 type JobActivity struct {
@@ -1277,6 +1312,8 @@ type JobRow struct {
 	Engagement          []string    `json:"engagement"`
 	// Department or team the source ATS files the posting under, verbatim and trimmed; empty when unstated.
 	Team string `json:"team"`
+	// Verified application destination; empty falls back to the source posting URL. Independent of ingest and liveness.
+	ApplicationUrl string `json:"application_url"`
 }
 
 type JobSearchPing struct {
@@ -1466,19 +1503,21 @@ type Message struct {
 }
 
 type NotificationSetting struct {
-	UserID               int64              `json:"user_id"`
-	Enabled              bool               `json:"enabled"`
-	Channels             []string           `json:"channels"`
-	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
-	DigestFrequency      string             `json:"digest_frequency"`
-	DigestTime           pgtype.Time        `json:"digest_time"`
-	QuietHoursStart      pgtype.Time        `json:"quiet_hours_start"`
-	QuietHoursEnd        pgtype.Time        `json:"quiet_hours_end"`
-	AlertsEmailEnabled   bool               `json:"alerts_email_enabled"`
-	NewsEmailEnabled     bool               `json:"news_email_enabled"`
-	DigestIntervalHours  int16              `json:"digest_interval_hours"`
-	InboxDigestEnabled   bool               `json:"inbox_digest_enabled"`
-	InboxDigestEnabledAt pgtype.Timestamptz `json:"inbox_digest_enabled_at"`
+	UserID                     int64              `json:"user_id"`
+	Enabled                    bool               `json:"enabled"`
+	Channels                   []string           `json:"channels"`
+	UpdatedAt                  pgtype.Timestamptz `json:"updated_at"`
+	DigestFrequency            string             `json:"digest_frequency"`
+	DigestTime                 pgtype.Time        `json:"digest_time"`
+	QuietHoursStart            pgtype.Time        `json:"quiet_hours_start"`
+	QuietHoursEnd              pgtype.Time        `json:"quiet_hours_end"`
+	AlertsEmailEnabled         bool               `json:"alerts_email_enabled"`
+	NewsEmailEnabled           bool               `json:"news_email_enabled"`
+	DigestIntervalHours        int16              `json:"digest_interval_hours"`
+	InboxDigestEnabled         bool               `json:"inbox_digest_enabled"`
+	InboxDigestEnabledAt       pgtype.Timestamptz `json:"inbox_digest_enabled_at"`
+	ApplicationDigestEnabled   bool               `json:"application_digest_enabled"`
+	ApplicationDigestEnabledAt pgtype.Timestamptz `json:"application_digest_enabled_at"`
 }
 
 type OauthAuthAttempt struct {

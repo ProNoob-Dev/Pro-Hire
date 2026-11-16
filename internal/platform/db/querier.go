@@ -12,6 +12,12 @@ import (
 )
 
 type Querier interface {
+	// Consumes a live invitation to an active account and makes user_id a member, in one
+	// statement, so a link cannot be accepted twice. Refused (no row) when the token is unknown
+	// or expired, the account is not active, or the user already acts for a company — as its
+	// claimant here, or as a member through company_account_members' primary key, which a
+	// concurrent acceptance hits as a unique violation.
+	AcceptCompanyInvitation(ctx context.Context, arg AcceptCompanyInvitationParams) (string, error)
 	// Flip a board's first successful crawl from pending to active. A no-op (0 rows) when
 	// the board is already active or does not exist, so the caller need not check first.
 	ActivateBoard(ctx context.Context, arg ActivateBoardParams) (int64, error)
@@ -429,6 +435,8 @@ type Querier interface {
 	// The claim returns the job's external_id and url because the fetcher needs the posting
 	// id and the exact stored URL to hit the same page the ingest write recorded.
 	ClaimAdzunaDescriptionBatch(ctx context.Context, arg ClaimAdzunaDescriptionBatchParams) ([]ClaimAdzunaDescriptionBatchRow, error)
+	// Recheck live consent and recipient eligibility immediately before reserving the week.
+	ClaimApplicationDigest(ctx context.Context, arg ClaimApplicationDigestParams) (int64, error)
 	// Claim a batch of live, unleased captures, freshest posting first, by stamping
 	// claimed_at. Mirrors ClaimSemanticBatch: FOR UPDATE OF o locks only outbox rows (a bare
 	// FOR UPDATE would also lock jobs, making concurrent claim waves contend), SKIP LOCKED
@@ -837,7 +845,8 @@ type Querier interface {
 	// would show no crawl evidence from its second run on and never sweep its delisted rows.
 	CloseCoveredJobs(ctx context.Context, arg CloseCoveredJobsParams) ([]string, error)
 	// Soft-close, the employer-self-service analogue of CloseJobByID: scoped to the actor's own
-	// employer-authored posting (created_by = actor_id AND source = 'employer'), never any other
+	// team's employer-authored posting (created_by in employer_team(actor_id) AND source =
+	// 'employer'), never any other
 	// job. closed_reason = 'employer_closed' (migration 0175) keeps this mechanism distinguishable
 	// from a moderator's 'moderated' close — a different actor and a different trust level.
 	// WHERE closed_at IS NULL keeps it idempotent, matching every other closer.
@@ -1908,6 +1917,11 @@ type Querier interface {
 	DeleteCompanyAccount(ctx context.Context, userID int64) (int64, error)
 	// Remove the caller's own feedback in one category on a company (no-op when absent).
 	DeleteCompanyFeedback(ctx context.Context, arg DeleteCompanyFeedbackParams) error
+	// Withdraws one of a company's invitations; its link stops working at once.
+	DeleteCompanyInvitation(ctx context.Context, arg DeleteCompanyInvitationParams) (int64, error)
+	// Withdraws the invitation a failed letter carried — only while it still holds that token:
+	// a resend that replaced the token in the meantime mailed a link that must keep working.
+	DeleteCompanyInvitationByToken(ctx context.Context, arg DeleteCompanyInvitationByTokenParams) (int64, error)
 	// Whatever links still name the retiring slug: its own parent (the canon may have another,
 	// or be a parent itself, and one level is the rule), and a link to the canon it has just
 	// become.
@@ -2249,6 +2263,9 @@ type Querier interface {
 	// An id matching no open canonical row simply yields no row for that id, which the caller
 	// reads as "no widening".
 	DuplicateClosureGeoFor(ctx context.Context, ownerIds []int64) ([]DuplicateClosureGeoForRow, error)
+	// Whether other is actor or acts for the same company as actor (employer_team, migration
+	// 0271). Every user is their own teammate, so a caller never special-cases itself.
+	EmployerTeamIncludes(ctx context.Context, arg EmployerTeamIncludesParams) (bool, error)
 	// Newest open postings written in the last ten minutes, capped, so cmd/queue-metrics
 	// can ask jobfacts whether a stored employment_type is carried only by boilerplate.
 	//
@@ -2655,6 +2672,9 @@ type Querier interface {
 	// There is no unique constraint behind this on purpose (a second stint at the same employer
 	// in the same role is a real career shape), so the oldest match wins and stays stable.
 	FindExperienceEmployment(ctx context.Context, arg FindExperienceEmploymentParams) (FindExperienceEmploymentRow, error)
+	// Match the verified destination before rewriting an application form's path to a
+	// description page. Vacancy parameters remain identity; only known tracking is noise.
+	FindOpenJobByApplicationURL(ctx context.Context, url string) (string, error)
 	// Resolve a job page URL to the posting stored under it — the second tier of
 	// /api/v1/jobs/find, used when no (source, external_id) identity can be read out of the
 	// URL. Both sides go through normalize_job_url (migration 0042), so a link differing only
@@ -2697,6 +2717,14 @@ type Querier interface {
 	// is offered again on purpose: it is the only way the pass can ever re-decide it, and without
 	// that a marker survives its canon closing, the descriptions diverging, and every later run.
 	FuzzyDedupCandidateTitlesForCompany(ctx context.Context, company string) ([]FuzzyDedupCandidateTitlesForCompanyRow, error)
+	// FuzzyDedupCandidateTitlesForCompany with a row cap, for the per-insert check
+	// (jobdedup.CanonicalForFuzzy). THE PREDICATE MUST STAY IDENTICAL to that query's: the two tiers
+	// agree on the canon only while they see the same candidate set (an integration test pins it).
+	// Served by jobs_open_fuzzy_candidate_idx (migration 0276) in id order, so the cost is bounded
+	// by max_rows rows, not by the company's size. The caller asks for
+	// cap+1 rows and skips the check when it gets more than cap: a company that large is left to the
+	// batch pass rather than paying a scan on every insert.
+	FuzzyDedupCandidateTitlesForCompanyCapped(ctx context.Context, arg FuzzyDedupCandidateTitlesForCompanyCappedParams) ([]FuzzyDedupCandidateTitlesForCompanyCappedRow, error)
 	// The id span cmd/report-geo-gaps walks. Same shape as ClassifyDriftReportBounds.
 	GeoGapReportBounds(ctx context.Context) (GeoGapReportBoundsRow, error)
 	// Authentication accepts only active identities. A pending Apple revocation
@@ -2711,6 +2739,8 @@ type Querier interface {
 	// MCP server reads it so an agent can only subscribe on a channel that will deliver,
 	// instead of creating a subscription whose matches are soft-skipped forever.
 	GetAlertChannelState(ctx context.Context, id int64) (GetAlertChannelStateRow, error)
+	// Live, unretracted ledger facts; the current board is deliberately a separate view.
+	GetApplicationDigestSnapshot(ctx context.Context, arg GetApplicationDigestSnapshotParams) (GetApplicationDigestSnapshotRow, error)
 	// The caller's own current stage for a job, or pgx.ErrNoRows when no application row
 	// exists yet — the check behind "put the job on the board at stage preparing when auto-apply
 	// starts, but never move a job already on the board" (auto-apply-review-tracking): a NULL
@@ -2864,10 +2894,15 @@ type Querier interface {
 	// the table grows columns (e.g. collections); an explicit subset makes sqlc emit a
 	// distinct row type and breaks the company-detail handler on every new column.
 	GetCompany(ctx context.Context, slug string) (Company, error)
-	// The one account a user may hold, in whatever status it is in. Every employer-facing
-	// capability check reads this and then inspects status itself, rather than a second query
-	// per status, since a pending/revoked account needs to be distinguishable in the refusal.
-	GetCompanyAccountByUserID(ctx context.Context, userID int64) (CompanyAccount, error)
+	// A company account's team: its members and the invitations that bring them in
+	// (migration 0271). The claimant stays the account (company_accounts); members act for it.
+	// The account a user acts for, as its claimant or as a member, in whatever status the account
+	// is in. acting_email is the user's own work address — the claimant's work_email, or the one
+	// the member's invitation was sent to — because it is where that user's vacancies'
+	// applications go and what candidates reply to. member tells the two apart. Two primary-key
+	// lookups rather than one OR across a join, which neither key could serve; a user is in at
+	// most one of the two (the writes keep it so), so at most one row comes back.
+	GetCompanyAccountForUser(ctx context.Context, userID int64) (GetCompanyAccountForUserRow, error)
 	// The company_slug for a review id, read (unlocked) BEFORE HideCompanyFeedback so
 	// Service.Hide can take LockCompanyForVote before it touches the feedback row —
 	// the same company-then-feedback lock order Upsert/Delete already use, needed to
@@ -2876,6 +2911,10 @@ type Querier interface {
 	// One company's open count now and as of the growth window ago. No row means nothing
 	// open at either point; the caller serves zeros.
 	GetCompanyGrowth(ctx context.Context, companySlug string) (GetCompanyGrowthRow, error)
+	// The live invitation a link names, with the company and the status of the account it
+	// invites to. No row: no such token (never issued, already accepted, withdrawn or replaced by
+	// a resend), or it has expired.
+	GetCompanyInvitationByToken(ctx context.Context, tokenHash []byte) (GetCompanyInvitationByTokenRow, error)
 	// One company's posting lifetime. No row means no qualifying closure; the caller
 	// applies its own sample gate on `closed`.
 	GetCompanyLifetime(ctx context.Context, companySlug string) (GetCompanyLifetimeRow, error)
@@ -2916,6 +2955,7 @@ type Querier interface {
 	// language stamp is checked against the VACANCY, not the caller's profile, unlike
 	// GetUserJobAnalysis.
 	GetCoverLetter(ctx context.Context, arg GetCoverLetterParams) (GetCoverLetterRow, error)
+	GetCoverLetterEvidence(ctx context.Context, arg GetCoverLetterEvidenceParams) (GetCoverLetterEvidenceRow, error)
 	// One candidate's application to one vacancy, if any — whether it reached the employer is
 	// sent_at, whether a delivery is in flight is a sending_at younger than the claim's two
 	// minutes. Read by the apply form ("already applied") and by Apply to tell the three
@@ -3727,7 +3767,9 @@ type Querier interface {
 	// the whole race guard: two concurrent claims on the same slug both attempt this insert, one
 	// succeeds, and the loser's caller maps the unique violation to a clean conflict — see
 	// pgerr.IsUniqueViolation. user_id is the table's primary key, so a user who already holds
-	// an account (in any status) also fails here, on the primary-key conflict.
+	// an account (in any status) also fails here, on the primary-key conflict. A user who is a
+	// member of another company's team (migration 0271) is refused too, by writing no row: a user
+	// acts for at most one company.
 	InsertPendingCompanyAccount(ctx context.Context, arg InsertPendingCompanyAccountParams) (CompanyAccount, error)
 	// Creates a job visible only to its creator: the jd-tailor-intake private-JD path
 	// (pasted text, or a URL only a generic scrape could read). Always a plain INSERT,
@@ -3794,6 +3836,9 @@ type Querier interface {
 	// Whether some retired slug already redirects here. Such a slug cannot itself retire: the
 	// registry resolves one hop, so its aliases would land on a slug with no jobs.
 	IsCanonicalCompanySlug(ctx context.Context, slug string) (bool, error)
+	// Whether the user acts for the company — as its claimant or a member — right now. Read
+	// under LockEmployerCompany, so a removal that committed first is seen.
+	IsCompanyActor(ctx context.Context, arg IsCompanyActorParams) (bool, error)
 	// Whether a normalized host (see submission.normalizeHost) is on the submission blocklist.
 	IsHostBlocked(ctx context.Context, host string) (bool, error)
 	// Cursor read: has this rotated file (by content signature) been applied? The
@@ -3975,6 +4020,10 @@ type Querier interface {
 	// posting that has since been recognised as a recruiter's, and report how many it
 	// declined for that reason. The column is true-or-NULL (migration 0214), hence IS TRUE.
 	ListAggregatorJobsForCrosscheckBySource(ctx context.Context, arg ListAggregatorJobsForCrosscheckBySourceParams) ([]ListAggregatorJobsForCrosscheckBySourceRow, error)
+	// Keyset pagination lets the worker skip empty snapshots without starving later accounts.
+	ListApplicationDigestCandidates(ctx context.Context, arg ListApplicationDigestCandidatesParams) ([]ListApplicationDigestCandidatesRow, error)
+	// Mirror the board's activity clock: a candidate's chase or stage edit is not a reply.
+	ListApplicationDigestSilentCandidates(ctx context.Context, arg ListApplicationDigestSilentCandidatesParams) ([]ListApplicationDigestSilentCandidatesRow, error)
 	// One application's live events, newest first — what the application panel renders as its
 	// history, where ListApplicationEventsInRange paints a month for the calendar.
 	//
@@ -4324,6 +4373,7 @@ type Querier interface {
 	// the two callers' needs differ, so one query with a caller-supplied cap serves both rather
 	// than duplicating the threshold logic across an uncapped and a capped variant. total is the
 	// FULL count before the cap, same convention as ListUnhealthyBoards.Total.
+	// Only scheduled (active/pending) catalog identities participate; history stays in health.
 	//
 	// No differently-cased-twin guard here any more: board_health's identity is
 	// case-insensitive as of migration 0171 (board_health_identity_key), so two rows for the
@@ -4424,8 +4474,8 @@ type Querier interface {
 	//
 	// job_count > 0 is the whole eligibility, and it is not a fresh judgement: it is the
 	// same gate that puts a company in the sitemap, derived by cmd/recount-companies from
-	// the postings the SEARCH INDEX will hold (see the long argument on that query in
-	// companies.sql). So a page announced here is exactly a page the site already claims,
+	// the postings the SEARCH INDEX will hold (see the long argument on RefreshCompanyFacets in
+	// company_facets.sql). So a page announced here is exactly a page the site already claims,
 	// and a company whose last posting drops out of search stops being offered without this
 	// query knowing why.
 	//
@@ -4478,6 +4528,8 @@ type Querier interface {
 	// rows that already hold industries, but the merge pass must also reach companies
 	// with none, and one query serving both keeps the two walks identical.
 	ListCompanyIndustriesPage(ctx context.Context, arg ListCompanyIndustriesPageParams) ([]ListCompanyIndustriesPageRow, error)
+	// A company's invitations that can still be accepted, newest first.
+	ListCompanyInvitations(ctx context.Context, companySlug string) ([]ListCompanyInvitationsRow, error)
 	// A company page's parent (role 'parent') and subsidiaries (role 'subsidiary') in one round
 	// trip, since every company read pays for it and almost every company has neither. The join
 	// through companies hides a relative that has no row any more. Subsidiaries come hiring
@@ -4497,6 +4549,9 @@ type Querier interface {
 	// former-name slug candidates, instead of one CompanyExists round trip per
 	// candidate per entry (the dataset runs several thousand entries deep).
 	ListCompanySlugs(ctx context.Context) ([]string, error)
+	// Everyone who acts for a company: the claimant first (holder), then members by when they
+	// joined. The claimant joined when the account was verified.
+	ListCompanyTeam(ctx context.Context, companySlug string) ([]ListCompanyTeamRow, error)
 	// ListCompanyWebsites returns the companies whose curated record holds a website, which
 	// is the only population cmd/publish-logo-domains can publish a domain for. ~17,900 rows
 	// of ~480,000 companies as of 2026-09-16.
@@ -4639,9 +4694,10 @@ type Querier interface {
 	// two drift.
 	ListEmailsForRecall(ctx context.Context, arg ListEmailsForRecallParams) ([]ListEmailsForRecallRow, error)
 	// The employer's inbox. Every statement below reaches an application only through the
-	// vacancy it was sent to, and only when that vacancy is the employer's own on-site posting
-	// (created_by = employer AND source = 'employer') — the same ownership predicate the
-	// employer's vacancy writes use (jobs_manual.sql). An application not yet delivered
+	// vacancy it was sent to, and only when that vacancy is an on-site posting of the employer's
+	// company team (created_by in employer_team(employer), migration 0271, AND source =
+	// 'employer') — the same ownership predicate the employer's vacancy writes use
+	// (jobs_manual.sql). An application not yet delivered
 	// (sent_at NULL) is not the employer's to see: they were never sent it, and it may still be
 	// replaced by the candidate's retry. The vacancy is read from the base table, not jobs_read:
 	// these are identity columns, not a posting read.
@@ -4649,7 +4705,8 @@ type Querier interface {
 	// one vacancy and one stage — or to the one application `id` names, which is how a single
 	// application is read. Reached through jobs_created_by_idx.
 	ListEmployerApplications(ctx context.Context, arg ListEmployerApplicationsParams) ([]ListEmployerApplicationsRow, error)
-	// An employer's own dashboard list: every vacancy this actor created through this path,
+	// An employer's own dashboard list: every vacancy the actor's company team created through
+	// this path (employer_team, migration 0271),
 	// newest first, open and closed both (the dashboard shows a closed one with its own badge
 	// rather than dropping it — the employer's own re-Create-to-reopen path needs the closed
 	// ones findable). Capped rather than paginated: an MVP dashboard for one employer's own
@@ -4995,7 +5052,7 @@ type Querier interface {
 	// with something other than "other", or is_tech is confidently true). A URL worth
 	// announcing is a URL the site itself claims, and the sitemap claims exactly what the
 	// index holds. The body test is the raw column, not the stripped text the index tests;
-	// a body that is only empty markup is the same small residual companies.sql names.
+	// a body that is only empty markup is the same small residual company_facets.sql names.
 	//
 	// `technical` picks the tier, and the two tiers partition the gate: true is the
 	// is_tech postings, false is every other posting with a resolved category — the
@@ -5424,6 +5481,12 @@ type Querier interface {
 	// The whole snapshot. Aggregate only — per-source counts, no record-level data. A few hundred rows, so it is read whole and joined in Go against
 	// the adapter registry rather than filtered here.
 	ListSourceStats(ctx context.Context) ([]ListSourceStatsRow, error)
+	// Which of a wave's message ids are already stored, so a sync throttled part-way resumes
+	// where the last run stopped instead of re-fetching the same head and hitting the limit
+	// again. Deleted rows count as stored: the upsert would not resurrect them anyway. Rows
+	// with no recipients predate 0267_gmail_outgoing and are left out: re-fetching them is
+	// what repairs a legacy sent reply stored as incoming.
+	ListStoredGmailMessages(ctx context.Context, arg ListStoredGmailMessagesParams) ([]ListStoredGmailMessagesRow, error)
 	// "My submissions": one user's submissions, newest first, whatever their status.
 	// LEFT JOIN the minted job (present only once approved) to surface its public_slug,
 	// so the UI can link an approved submission straight to its live vacancy page.
@@ -5606,7 +5669,7 @@ type Querier interface {
 	// per-run summary log. Every row also carries the FULL unhealthy count: count(*) OVER () is
 	// evaluated over the whole filtered set, before the LIMIT, so the caller reports how many
 	// boards are broken without a second round trip and without naming them all. Ask this table
-	// directly for the rest.
+	// directly for the rest. Only scheduled (active/pending) catalog identities participate.
 	ListUnhealthyBoards(ctx context.Context, maxBoards int32) ([]ListUnhealthyBoardsRow, error)
 	// The reconciler's first pass: events recorded but never applied, oldest first, served by
 	// the partial index on (received_at) WHERE processed_at IS NULL.
@@ -5774,8 +5837,19 @@ type Querier interface {
 	// created and how many closed, for the one-off history reconstruction. A full scan: run it
 	// on the analytics replica, never on a request path.
 	ListedJobDailyFlow(ctx context.Context) ([]ListedJobDailyFlowRow, error)
+	// Locks the user's membership row (FOR KEY SHARE) and names its company. A vacancy write
+	// takes it so that removing the member — or deleting their company account, which cascades
+	// here — waits for the write to commit, and then hands over or detaches the new vacancy
+	// too. No row: the user is no member (the claimant, or nobody).
+	LockActingMembership(ctx context.Context, userID int64) (string, error)
 	// Serializes one user's get-or-create of a blank session for the transaction, so two parallel calls cannot both find none and both insert.
 	LockAssistantSessionCreation(ctx context.Context, userID int64) error
+	// Locks the author's users row (FOR KEY SHARE) for an employer vacancy write, before the
+	// company and membership rows: deleting the user takes that row first and then cascades to
+	// the company account and memberships, so the write takes the three in the same order and
+	// the two serialise instead of deadlocking (the write's created_by foreign-key check would
+	// otherwise wait on the user row while holding the account row). No row: the user is gone.
+	LockAuthor(ctx context.Context, userID int64) (int64, error)
 	// The leave's half of the buddy_members lock protocol (see LockBuddyMembersForMock): lock
 	// the member's own row FOR UPDATE, in a statement of its own, before LeaveBuddyMember. A
 	// booking holding its share lock makes this wait until the mock is committed, and
@@ -5789,6 +5863,11 @@ type Querier interface {
 	// it started with even after waiting on a row lock, so the eligibility check has to be a
 	// LATER statement to see a leave or block that committed while this one waited.
 	LockBuddyMembersForMock(ctx context.Context, arg LockBuddyMembersForMockParams) error
+	// Locks a company account row (FOR KEY SHARE), for the same reason: deleting the account
+	// waits for an in-flight vacancy write of its team. Taken BEFORE LockActingMembership, the
+	// order the account's deletion takes the two. Returns the claimant. No row: the account is
+	// gone.
+	LockCompanyAccountBySlug(ctx context.Context, companySlug string) (int64, error)
 	// Per-(user, company) thumbs votes. Unlike a job vote (a nullable column on the
 	// user_jobs row that persists for other marks), a company_votes row exists solely to
 	// hold the vote, so clearing a vote DELETEs the row. The domain layer branches in Go
@@ -5798,6 +5877,12 @@ type Querier interface {
 	// (see LockJobForVote for the drift this prevents). Called first in the vote
 	// transaction.
 	LockCompanyForVote(ctx context.Context, slug string) error
+	// Locks a member row FOR UPDATE ahead of RemoveCompanyMember, in its own statement: it waits
+	// for an in-flight vacancy write holding the row FOR KEY SHARE to commit, so the removal's
+	// statement that follows takes a snapshot that sees the new vacancy and hands it over too
+	// (one statement waiting inside its DELETE would keep its earlier snapshot for the hand-over
+	// and miss it). No row: not a member of this company.
+	LockCompanyMemberForRemoval(ctx context.Context, arg LockCompanyMemberForRemovalParams) (int64, error)
 	// Serializes approvals for the transaction (key "fhcr", listed in internal/platform/migrate).
 	// Each approval checks the registry and company_parents and then writes them, and two
 	// approvals checked against the same state could each pass while together making a chain.
@@ -5808,6 +5893,15 @@ type Querier interface {
 	// letter goes out after the move's transaction commits and must still be inside the lock;
 	// the caller releases it with UnlockDirectApplication on the same connection.
 	LockDirectApplication(ctx context.Context, id int64) error
+	// Serialises the two writes that make a user act for a company — a claim and an invitation's
+	// acceptance — for one user. Each refuses a user the other table already holds, but two
+	// concurrent statements would each check a snapshot without the other's row; taken first in
+	// the same transaction, this lock makes the second write's check see the first's commit.
+	LockEmployerActor(ctx context.Context, userID int64) error
+	// Serialises every change to one company's team — inviting, accepting, removing — so the
+	// invitation cap holds, and a member being removed cannot have an invitation of theirs
+	// inserted after the removal withdrew the others. Transaction-scoped.
+	LockEmployerCompany(ctx context.Context, companySlug string) error
 	// Take the job row's lock so concurrent applies on the same job serialize. Without
 	// it, two applies in the same window under READ COMMITTED each read a snapshot
 	// missing the other's user_jobs row and both bump applied_count. Called first in
@@ -5852,6 +5946,7 @@ type Querier interface {
 	// Bulk mark-as-read for the caller; only unread rows are touched, and the
 	// affected count is returned to the client as confirmation.
 	MarkAllNotificationsRead(ctx context.Context, userID int64) (int64, error)
+	MarkApplicationDigestSent(ctx context.Context, arg MarkApplicationDigestSentParams) (int64, error)
 	// Park an attempt the sidecar could not fully resolve: record which fields stopped it and
 	// why, and leave the lease in place. Unlike RecordAutoApplyFailure this is not a retry
 	// countdown — a parked attempt needs new data, not another try — so attempts is left
@@ -5971,6 +6066,10 @@ type Querier interface {
 	// from the row's own applied_at, so a dated recording carries the mail's date
 	// into the ledger rather than now().
 	MarkJobApplied(ctx context.Context, arg MarkJobAppliedParams) (MarkJobAppliedRow, error)
+	// Point one row at its FUZZY canon at insert, as MarkJobDuplicateOfRole does for the role tier.
+	// Writes only the owned column; the trigger derives duplicate_of. The row must still be open and
+	// unclaimed by an exact pass, the same candidate predicate the batch applies.
+	MarkJobDuplicateOfFuzzy(ctx context.Context, arg MarkJobDuplicateOfFuzzyParams) (int64, error)
 	// Point one row at its ROLE canon. The import path only: the batch passes recompute whole
 	// companies (RecomputeRoleDuplicatesForCompanies, SuppressAggregatorDuplicatesForCompanies) and
 	// must keep doing so — this marks the single row an import just wrote.
@@ -6340,7 +6439,7 @@ type Querier interface {
 	// yields 0, not NULL). A provider with no ACTIVE board is left out: board_health rows
 	// outlive the boards they describe, so a provider whose boards were all retired or rejected
 	// (apploi's 5,833, retired 2026-09-15) would otherwise read "down" forever for a crawl
-	// nobody runs any more.
+	// nobody runs any more. Each health identity must match an active catalog identity.
 	ProviderHealthRollup(ctx context.Context) ([]ProviderHealthRollupRow, error)
 	// Per-provider ingest health: when the provider's most recent board crawl succeeded, and
 	// how its boards split across four mutually exclusive states. It is also the ONLY source of
@@ -6650,10 +6749,6 @@ type Querier interface {
 	// Count a failed attempt for a whole claimed batch (one facetd write serves them all),
 	// releasing the lease so a later run retries, and dead-lettering entries that reach the max.
 	RecordFacetdOutboxFailure(ctx context.Context, arg RecordFacetdOutboxFailureParams) (int64, error)
-	// Record what a grant covers, as the provider reported it. Replacing rather than unioning,
-	// for the reason above: a list that only grows cannot express a scope the candidate took
-	// away. An empty list means the exchange did not say, and keeps what we held.
-	RecordGrantScopes(ctx context.Context, arg RecordGrantScopesParams) error
 	// Record that this posting was announced to this engine, for this event. ON CONFLICT DO
 	// NOTHING keeps a re-run after a partial failure from double-spending a budget that is
 	// counted in hundreds per day: the row is what makes the send idempotent, so it is
@@ -7130,6 +7225,8 @@ type Querier interface {
 	// pass instead of waiting out the lease.
 	ReleaseNudgeClaim(ctx context.Context, id int64) error
 	// Used only when dispatch was definitely withheld (e.g. the SES circuit breaker).
+	ReleasePausedApplicationDigest(ctx context.Context, arg ReleasePausedApplicationDigestParams) error
+	// Used only when dispatch was definitely withheld (e.g. the SES circuit breaker).
 	ReleasePausedInboxDigest(ctx context.Context, arg ReleasePausedInboxDigestParams) error
 	// Release the lease without counting an attempt, so a soft-skipped send (e.g. no
 	// usable destination on any configured channel) is retried promptly on a later pass
@@ -7140,6 +7237,13 @@ type Querier interface {
 	// Give a claim back after every channel failed, so the next run retries. Guarded on the
 	// stamp being the claim's own: a participant re-notified since keeps its newer one.
 	ReleaseUnread(ctx context.Context, arg ReleaseUnreadParams) error
+	// Removes a member from a company's team, and in the same statement hands the vacancies they
+	// published to the account's claimant — a vacancy belongs to the team, and one left created
+	// by somebody outside it would stop taking applications and drop out of every teammate's
+	// dashboard — and withdraws the invitations they sent, which would otherwise let them invite
+	// an address of their own and walk straight back in. The claimant is never a member row, so
+	// cannot be removed here. Returns how many members were removed (0 or 1).
+	RemoveCompanyMember(ctx context.Context, arg RemoveCompanyMemberParams) (int64, error)
 	// Remove a company by the slug a page carries, together with any stored alias of it that no
 	// company row still holds (that one is a company of its own, and stays).
 	RemoveFromWatchlist(ctx context.Context, arg RemoveFromWatchlistParams) error
@@ -7191,8 +7295,8 @@ type Querier interface {
 	// so only the new first message is unread. The read cursors are taken from the snapshot
 	// before the new message is inserted. No row means closed-without-block did not hold.
 	ReopenConversation(ctx context.Context, arg ReopenConversationParams) (ReopenConversationRow, error)
-	// Undoes CloseEmployerJob: the same actor, the same scope (created_by = actor_id AND
-	// source = 'employer'), and ONLY a close that actor made — closed_reason =
+	// Undoes CloseEmployerJob: the same scope (created_by in employer_team(actor_id) AND
+	// source = 'employer'), and ONLY a close the employer made — closed_reason =
 	// 'employer_closed'. A posting another mechanism closed (a moderator, the liveness probe)
 	// stays closed; reopening it is not the employer's call. A vacancy taking applications on
 	// freehire has no URL to re-create under, so without this its employer could never undo a
@@ -7431,6 +7535,7 @@ type Querier interface {
 	// (source, id) open index can supply candidates without reading the catalogue's wide rows.
 	SampleLivenessAuditJobs(ctx context.Context, arg SampleLivenessAuditJobsParams) ([]SampleLivenessAuditJobsRow, error)
 	SampleRemoteAuditJobs(ctx context.Context, arg SampleRemoteAuditJobsParams) ([]SampleRemoteAuditJobsRow, error)
+	SaveCoverLetterEvidence(ctx context.Context, arg SaveCoverLetterEvidenceParams) (SaveCoverLetterEvidenceRow, error)
 	// Save (bookmark) a job for a user. Idempotent and independent of a prior view:
 	// it inserts the row (viewed_at defaults) or refreshes saved_at in place.
 	SaveJob(ctx context.Context, arg SaveJobParams) (SaveJobRow, error)
@@ -7734,6 +7839,9 @@ type Querier interface {
 	// clear in only one of them is precisely the gap a code review found.
 	SetGmailStatus(ctx context.Context, arg SetGmailStatusParams) error
 	SetGmailSynced(ctx context.Context, arg SetGmailSyncedParams) error
+	// Curator-owned destination: never written by UpsertJob. Lock posting then activity
+	// before queueing, like the posting writers, and fence competing curator edits.
+	SetJobApplicationURL(ctx context.Context, arg SetJobApplicationURLParams) (int64, error)
 	// Targeted enrichment write used by the enrichment command: set only the payload
 	// and the provenance stamp, touching no raw source field. Kept separate from
 	// UpsertJob (the ingest full-upsert path) so ingest and enrichment stay decoupled.
@@ -8016,6 +8124,7 @@ type Querier interface {
 	// The body a stored posting keeps. Ingest reads it for a posting whose detail fetch came back
 	// empty, so the facets it derives are those of the body UpsertJob preserves, not of nothing.
 	StoredJobDescription(ctx context.Context, arg StoredJobDescriptionParams) (string, error)
+	StoredJobDescriptions(ctx context.Context, arg StoredJobDescriptionsParams) ([]StoredJobDescriptionsRow, error)
 	// Record one message as belonging to a job the caller named, as a SUGGESTION they still
 	// confirm. It is the only write the recall path makes.
 	//
@@ -8322,8 +8431,10 @@ type Querier interface {
 	// Replace a CV's editable fields, stamping updated_at. Owner-scoped: no row is updated
 	// for a foreign or missing id (the handler maps the resulting no-row error to 404).
 	UpdateCV(ctx context.Context, arg UpdateCVParams) (UpdateCVRow, error)
+	UpdateCoverLetterEvidence(ctx context.Context, arg UpdateCoverLetterEvidenceParams) (UpdateCoverLetterEvidenceRow, error)
 	// The employer-authored analogue of UpdateManualJob, scoped narrower on purpose: WHERE
-	// created_by = actor_id (not merely IS NOT NULL) AND source = 'employer'. UpdateManualJob's
+	// created_by is in the actor's company team (employer_team, migration 0271 — not merely IS
+	// NOT NULL) AND source = 'employer'. UpdateManualJob's
 	// own scope lets any moderator edit any manually-authored job, which is correct for trusted
 	// staff and wrong for a self-service employer — see openspec/changes/
 	// add-employer-company-accounts/design.md for why this needed its own query rather than a
@@ -8540,6 +8651,13 @@ type Querier interface {
 	// CONFLICT names the target partial index directly since the unique index
 	// excludes NULL user_id.
 	UpsertCompanyFeedback(ctx context.Context, arg UpsertCompanyFeedbackParams) (CompanyFeedback, error)
+	// Invites an address to a company's team, or replaces the token and expiry of the live or
+	// expired invitation already sent to it — a resend leaves exactly one working link. It is
+	// refused (no row) once the company holds max_live invitations that can still be accepted,
+	// unless it renews one that is itself still live; reviving an expired one needs a free slot.
+	// The cap bounds how much mail one account can make freehire send. Callers hold the
+	// company's lock (LockEmployerCompany), so two invitations cannot both pass the count.
+	UpsertCompanyInvitation(ctx context.Context, arg UpsertCompanyInvitationParams) (UpsertCompanyInvitationRow, error)
 	// A subsidiary has one parent, so a newer approved decision replaces the older one.
 	UpsertCompanyParent(ctx context.Context, arg UpsertCompanyParentParams) error
 	// Set a user's company vote to $3 (-1 or 1), inserting or overwriting in place.
@@ -8589,8 +8707,14 @@ type Querier interface {
 	// nightly re-sync must not un-read a message, resurrect a deleted one, or wipe the
 	// agent's triage verdict.
 	UpsertExternalEmail(ctx context.Context, arg UpsertExternalEmailParams) (UpsertExternalEmailRow, error)
-	// Connect (or reconnect) a user's Gmail: store the encrypted refresh token and
-	// mark connected, preserving the sync cursor on reconnect.
+	// Connect (or reconnect) a user's Gmail: store the encrypted refresh token, mark
+	// connected, preserving the sync cursor on reconnect, and record what the grant covers.
+	//
+	// Token and scopes go in one statement, so the row always holds a token together with
+	// the scopes reported for it. Written separately, a calendar connect landing between the
+	// two would leave its token next to this grant's scopes, and cal-sync (which selects by
+	// scope) would skip the account. Scopes replace, as in UpsertCalendarGrant; an empty
+	// list means the exchange did not say and keeps what we held.
 	UpsertGmailConnection(ctx context.Context, arg UpsertGmailConnectionParams) error
 	// Write one provider's override. Every argument is optional: a NULL means "leave this
 	// alone" on an existing row and "use the documented default" on a new one, so a curator
@@ -8673,6 +8797,12 @@ type Querier interface {
 	// shows its salary immediately, before any enrichment pass runs (the pass then preserves
 	// it via SetJobEnrichment's overlay). The conflict reopens a previously closed posting
 	// (closed_at = NULL) since the moderator is re-asserting it.
+	// An employer re-creating a vacancy at an identity that already exists may only update one
+	// its own company team created (owner_team_of, employer_team in migration 0271); for
+	// somebody else's row the conflict updates nothing and no row comes back. Checked here, in
+	// the write itself, so no change of who belongs to which team between a pre-check and this
+	// statement can let one company overwrite another's vacancy. NULL for a moderator, who may
+	// edit any manual job.
 	UpsertManualJob(ctx context.Context, arg UpsertManualJobParams) (int64, error)
 	// One row per synced busy interval, source fixed to 'google_calendar' (the only writer
 	// of this source). external_id is not Google's — a free/busy period carries no

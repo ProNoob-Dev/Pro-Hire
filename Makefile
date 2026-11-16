@@ -87,14 +87,12 @@ down: ## Stop and remove containers
 logs: ## Tail application logs
 	$(COMPOSE) logs -f app
 
-migrate: ## Apply migrations manually to a running DB (for an existing volume)
-	@for f in migrations/*.sql; do \
-		echo "applying $$f"; \
-		$(COMPOSE) exec -T db psql -U hire -d hire -f /docker-entrypoint-initdb.d/$$(basename $$f); \
-	done
+migrate: ## Apply pending migrations to DATABASE_URL (use mise for this checkout's DB)
+	@sh scripts/check-migration-history.sh
+	go run ./cmd/migrate
 
-psql: ## Open psql in the database
-	$(COMPOSE) exec db psql -U hire -d hire
+psql: ## Open psql at DATABASE_URL (use mise for this checkout's DB)
+	psql "$${DATABASE_URL:?DATABASE_URL is required; run make through mise exec}"
 
 cover: ## Unit tests with coverage profile → coverage/unit.out
 	@mkdir -p $(COVERAGE_DIR)
@@ -111,3 +109,9 @@ cover-integration: ## Integration-tagged tests with coverage (needs Docker for t
 	go test -tags=integration ./... -coverprofile=$(COVER_INTEGRATION) -covermode=atomic
 	@go tool cover -func=$(COVER_INTEGRATION) | tail -1
 	@echo "profile: $(COVER_INTEGRATION)"
+
+# CI uses this same entry point; go run builds with the module toolchain.
+LINT_VERSION ?= 2.15.0
+.PHONY: lint
+lint: ## Run the pinned linter against origin/main
+	GOTOOLCHAIN=$$(awk '/^toolchain / {print $$2}' go.mod) go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(LINT_VERSION) run --new-from-merge-base=origin/main --allow-parallel-runners ./...

@@ -1,16 +1,24 @@
 import type { Http } from '../api-core';
 import type {
   EmployerAccount,
+  EmployerApplication,
+  EmployerApplicationMoved,
+  EmployerApplicationsPage,
+  EmployerApplicationStage,
   EmployerCompany,
   EmployerCompanyProfileInput,
+  EmployerTeam,
+  EmployerTeamInvitation,
+  EmployerTeamInvitationPreview,
   EmployerVacancyInput,
   EmployerVacancyPatch,
   Job,
 } from '../types';
+import type { Slice } from '../api-types';
 import type { components } from '#lib/generated/api.js';
-import { ApiError, jsonBody } from '../api-core';
+import { ApiError, jsonBody, toSlice } from '../api-core';
 
-export function employerApi({ call, requestData }: Http) {
+export function employerApi({ call, request, requestData, baseUrl }: Http) {
   // ── Verified employer accounts ────────────────────────────────────────────
 
   /** Claim a company: resolves the name to a slug, refuses a public-webmail work email,
@@ -92,6 +100,86 @@ export function employerApi({ call, requestData }: Http) {
     await call(`/api/v1/employer/jobs/${encodeURIComponent(slug)}/reopen`, { method: 'POST' });
   }
 
+  // ── The applicant inbox ───────────────────────────────────────────────────
+
+  /** One page of the applications sent on freehire to the caller's vacancies, newest
+   *  first, narrowed to one vacancy and/or stage, as a Slice for the shared Paginator.
+   *  `stageCounts` counts every stage under the vacancy filter. Active-account-only. */
+  async function listEmployerApplications(filter: {
+    job?: string;
+    stage?: EmployerApplicationStage;
+    limit: number;
+    offset: number;
+  }): Promise<Slice<EmployerApplication> & { stageCounts: Record<string, number> }> {
+    const q = new URLSearchParams({ limit: String(filter.limit), offset: String(filter.offset) });
+    if (filter.job) q.set('job', filter.job);
+    if (filter.stage) q.set('stage', filter.stage);
+    const page = await request<EmployerApplicationsPage>(`/api/v1/employer/applications?${q}`);
+    return { ...toSlice(page, filter.offset), stageCounts: page.meta.stage_counts };
+  }
+
+  /** Where the CV an application sent is served, as it was emailed — a link to open, not a
+   *  fetch: the browser renders the PDF itself. */
+  function employerApplicationCVUrl(id: number): string {
+    return `${baseUrl}/api/v1/employer/applications/${id}/cv`;
+  }
+
+  /** Move an application to a stage of the caller's pipeline. `message` goes to the
+   *  candidate and only with interview, offer or rejected. */
+  async function moveEmployerApplication(
+    id: number,
+    stage: EmployerApplicationStage,
+    message?: string,
+  ): Promise<EmployerApplicationMoved> {
+    return requestData<EmployerApplicationMoved>(
+      `/api/v1/employer/applications/${id}/stage`,
+      jsonBody('POST', { stage, message } satisfies components['schemas']['EmployerApplicationMove']),
+    );
+  }
+
+  // ── The company team ──────────────────────────────────────────────────────
+
+  /** Everyone who acts for the caller's company, and the invitations still open. */
+  async function getEmployerTeam(): Promise<EmployerTeam> {
+    return requestData<EmployerTeam>('/api/v1/employer/team');
+  }
+
+  /** Mail a colleague a single-use link to join the team. Inviting an address again
+   *  replaces its link. */
+  async function inviteEmployerTeamMember(email: string): Promise<EmployerTeamInvitation> {
+    return requestData<EmployerTeamInvitation>(
+      '/api/v1/employer/team/invitations',
+      jsonBody('POST', { email } satisfies components['schemas']['EmployerTeamInvite']),
+    );
+  }
+
+  /** Withdraw an invitation; its link stops working. */
+  async function withdrawEmployerTeamInvitation(id: number): Promise<void> {
+    await call(`/api/v1/employer/team/invitations/${id}`, { method: 'DELETE' });
+  }
+
+  /** Remove a member — or the caller, to leave. Their vacancies stay with the team. */
+  async function removeEmployerTeamMember(userId: number): Promise<void> {
+    await call(`/api/v1/employer/team/members/${userId}`, { method: 'DELETE' });
+  }
+
+  /** Which company an invitation link invites to, at which address. 404 for a dead link. */
+  async function previewEmployerTeamInvitation(token: string): Promise<EmployerTeamInvitationPreview> {
+    return requestData<EmployerTeamInvitationPreview>(
+      '/api/v1/employer/team/invitation-preview',
+      jsonBody('POST', { token } satisfies components['schemas']['EmployerTeamToken']),
+    );
+  }
+
+  /** Join the team an invitation link invites to. 409 when the caller already acts for a
+   *  company. */
+  async function joinEmployerTeam(token: string): Promise<EmployerAccount> {
+    return requestData<EmployerAccount>(
+      '/api/v1/employer/team/join',
+      jsonBody('POST', { token } satisfies components['schemas']['EmployerTeamToken']),
+    );
+  }
+
   /** The moderator review queue: employer claims that could not auto-activate. */
   async function listPendingEmployerClaims(): Promise<EmployerAccount[]> {
     return requestData<EmployerAccount[]>('/api/v1/employer/claims');
@@ -119,6 +207,15 @@ export function employerApi({ call, requestData }: Http) {
     updateEmployerVacancy,
     closeEmployerVacancy,
     reopenEmployerVacancy,
+    listEmployerApplications,
+    employerApplicationCVUrl,
+    moveEmployerApplication,
+    getEmployerTeam,
+    inviteEmployerTeamMember,
+    withdrawEmployerTeamInvitation,
+    removeEmployerTeamMember,
+    previewEmployerTeamInvitation,
+    joinEmployerTeam,
     listPendingEmployerClaims,
     approveEmployerClaim,
     rejectEmployerClaim,

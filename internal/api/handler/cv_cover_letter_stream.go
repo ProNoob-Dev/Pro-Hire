@@ -27,10 +27,8 @@ var errStreamPanic = errors.New("the stream panicked")
 
 // StreamCVCoverLetter drafts the letter over Server-Sent Events.
 //
-// This exists because the POST cannot work. The chain is three model calls in series and takes
-// minutes; a proxy holding a silent response gives up at sixty seconds, so every draft reached
-// the candidate as a 504 from the edge while the server was still working. The fit chain
-// streams for exactly this reason, and a letter is the same shape of work.
+// This exists because the POST cannot work: the chain is three model calls in series, and a proxy closes
+// a silent response at sixty seconds.
 //
 // Events: `stage` as each step opens and closes, then either `letter` with the finished draft
 // and its resolved evidence, or `stream_error` with a sentence to render. The stream always
@@ -47,6 +45,11 @@ func (h *cvHandlers) StreamCVCoverLetter(c *fiber.Ctx) error {
 
 	// Charged BEFORE the stream opens, while the fiber ctx is still valid — a refused caller
 	// gets a real 402 rather than an error event inside a 200 nobody status-checks.
+	prepared, err := drafter.prepare(c.Context(), userID, jobID)
+	if err != nil {
+		return mapLetterSelectionError(err)
+	}
+
 	attempt := letterAttempt(c.Context(), h.letter.letters, userID, jobID)
 	charge, refused, decision := chargeLetter(c.Context(), h.plans, userID, jobID, attempt)
 	if refused {
@@ -74,11 +77,8 @@ func (h *cvHandlers) StreamCVCoverLetter(c *fiber.Ctx) error {
 			stream.event("stream_error", letterErrorEvent{Error: letterFailureMessage(errStreamPanic)})
 		})
 
-		// Stage events fire only at the boundaries between model calls, so between one stage
-		// closing and the next opening the socket is silent for a whole call — measured at up
-		// to the client's 90s per-call timeout, against a 60s proxy. The first byte alone does
-		// not save the stream; the heartbeat is what carries it across each silent stage. Both
-		// SSE endpoints share the interval for that reason.
+		// Stage events fire only between model calls, and one call can outlast a 60s proxy timeout, so the
+		// heartbeat carries the socket across each silent stage. Both SSE endpoints share the interval.
 		stopHeartbeat := stream.keepalive(sseKeepalive)
 		defer stopHeartbeat()
 
@@ -101,7 +101,7 @@ func (h *cvHandlers) StreamCVCoverLetter(c *fiber.Ctx) error {
 		// The chain's own first emit opens a stage before it makes any network call, so it IS
 		// the early first byte this endpoint exists for — nothing needs to be written ahead of
 		// it, and writing one would send `select` twice.
-		letter, err := drafter.draftStream(ctx, caller, userID, jobID, band, func(stage string, done bool) {
+		letter, err := drafter.draftStream(ctx, caller, userID, jobID, band, prepared, func(stage string, done bool) {
 			stream.event("stage", letterStageEvent{Stage: stage, Done: done})
 		})
 		if err == nil && letter != nil {
@@ -139,6 +139,8 @@ func letterFailureMessage(err error) string {
 		return "drafting is unavailable on this deployment"
 	case errors.Is(err, coverletter.ErrNoPublishableEvidence):
 		return "nothing in your experience bank is yours to cite yet: confirm an achievement first"
+	case errors.Is(err, coverletter.ErrInvalidSelection):
+		return "select between 1 and 50 confirmed achievements; review unavailable facts"
 	case errors.Is(err, fitanalysis.ErrNoAnalysis):
 		return "run the fit analysis first"
 	default:

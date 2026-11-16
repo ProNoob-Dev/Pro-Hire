@@ -79,38 +79,6 @@ type pendingRemovals interface {
 	ListPendingSearchRemovals(ctx context.Context, jobIds []int64) ([]int64, error)
 }
 
-// appliedCompanyReader reads the company slugs of the employers a caller has applied
-// to. *jobtracking.Service satisfies it.
-type appliedCompanyReader interface {
-	AppliedCompanySlugs(ctx context.Context, userID int64) ([]string, error)
-}
-
-// seenJobs reads the job ids a caller has already opened. It is the same set the feed
-// dims a card by — every user_jobs row carries viewed_at, so any interaction is a view —
-// capped to the most recently touched. *jobtracking.Service satisfies it.
-type seenJobs interface {
-	ExcludedJobIDs(ctx context.Context, userID int64) ([]int64, error)
-}
-
-// formerEmployerLookup resolves a person's past employers to company slugs.
-// *formeremployer.Store satisfies it; tests inject a fake.
-type formerEmployerLookup interface {
-	Slugs(ctx context.Context, userID int64) ([]string, error)
-}
-
-// watchlistLookup reads a person's watchlist as company slugs. *companywatch.Service
-// satisfies it; tests inject a fake.
-type watchlistLookup interface {
-	Slugs(ctx context.Context, userID int64) ([]string, error)
-}
-
-// formerEmployersParam is the "Hiring again" filter: only postings at companies the
-// signed-in caller has worked at and left, per their experience bank. It is not part of
-// the search package's vocabulary because it is not a facet of the posting — it is a fact
-// about the CALLER, resolved per request — so the endpoint reads it itself, and declares it
-// as its own only when it did (see jobSearchOutcome.own).
-const formerEmployersParam = "former_employers"
-
 // profileReader loads a caller's profile. *userprofile.Service satisfies it; tests
 // inject a fake. Only the skills are read here — the match sort has no opinion on
 // location preferences or specializations.
@@ -160,12 +128,7 @@ type searcher interface {
 	Search(ctx context.Context, p search.SearchParams) (search.SearchResult, error)
 }
 
-// The pagination guard the search endpoints apply is maxPageWindow (api.go), which
-// they no longer own: it used to be a `maxSearchWindow` const here, and the Postgres-backed
-// lists carried no equivalent at all — the asymmetry the 2026-09-14 deep-offset outage went
-// through. It stays decoupled from the index's maxTotalHits (which now only sets how high
-// the reported total may count), so the total can read the true filtered count while deep
-// offset paging — the expensive part — stays refused.
+// The pagination guard the search endpoints apply is maxPageWindow (api.go). It is decoupled from the index's maxTotalHits (which only caps the reported total), so the total can read the true filtered count while deep offset paging stays refused.
 
 // searchParams are the query params the search endpoints read themselves rather
 // than hand to the filter: the query text, the sort directive and the pagination
@@ -184,19 +147,6 @@ var jobSearchParams = slices.Concat(searchParams, []string{"q_fields", qPrefixPa
 // search.SearchParams.Prefix for what the prefix match costs.
 const qPrefixParam = "q_prefix"
 
-// hideAppliedCompaniesParam asks /jobs/search to leave out the postings of every
-// employer the caller has applied to. It is a per-person preference, not a filter:
-// search.FilterFromValues does not read it, so a saved search carrying it narrows
-// nothing and its digest ignores it. Only the public /jobs/search reads it; the agent
-// search reports it like any other unread param.
-const hideAppliedCompaniesParam = "hide_applied_companies"
-
-// hideSeenParam asks /jobs/search to leave out the jobs the caller has already opened.
-// It is a per-person preference, not a filter: search.FilterFromValues does not read it,
-// so a saved search carrying it narrows nothing and its digest ignores it. Only the
-// public /jobs/search reads it; the agent search reports it like any other unread param.
-const hideSeenParam = "hide_seen"
-
 // publicJobSearchParams is what /jobs/search itself reads beyond the filter vocabulary.
 var publicJobSearchParams = slices.Concat(jobSearchParams, []string{hideSeenParam, hideAppliedCompaniesParam, minSkillMatchParam})
 
@@ -213,12 +163,11 @@ func ignoredParams(vals url.Values, own []string) []search.UnknownParam {
 	return search.UnknownParams(vals, own)
 }
 
-// mergedJobSearchIgnored combines runJobSearch's own value-level ignored-param
-// report — q_fields naming a field outside the searchable vocabulary, and/or any
-// filter params the Meilisearch-rejection degrade dropped — with the ordinary
-// name-level ignoredParams(vals, own) report, into one sorted, capped list. The same
-// merge both job-search endpoints need, named once so neither can apply it
-// slightly differently.
+// mergedJobSearchIgnored combines runJobSearch's value-level ignored-param report
+// (q_fields naming a field outside the searchable vocabulary, filter params the
+// Meilisearch-rejection degrade dropped) with the name-level ignoredParams(vals, own)
+// report, into one sorted, capped list. Shared so both job-search endpoints apply it
+// identically.
 func mergedJobSearchIgnored(vals url.Values, own []string, fromSearch []search.UnknownParam) []search.UnknownParam {
 	return search.SortAndCap(append(fromSearch, ignoredParams(vals, own)...))
 }
@@ -228,11 +177,10 @@ func mergedJobSearchIgnored(vals url.Values, own []string, fromSearch []search.U
 var searchSortable = map[string]string{
 	"created_at": "created_at",
 	"posted_at":  "posted_at",
-	// The "Most viewed" ordering. This entry must NEVER ship ahead of the live index
-	// declaring view_count sortable (see search.facetSettings, and "Adding a sortable
-	// attribute" in internal/search/search/AGENTS.md): Meilisearch rejects the entire
-	// query for an undeclared sort attribute, and that package maps any Meili error to
-	// a 500 — so the wrong deploy order breaks the page rather than ignoring the param.
+	// The "Most viewed" ordering. This entry must NEVER ship ahead of the live index declaring
+	// view_count sortable (see search.facetSettings and "Adding a sortable attribute" in
+	// internal/search/search/AGENTS.md): Meilisearch rejects the whole query for an undeclared
+	// sort attribute and that package maps it to a 500.
 	"view_count": "view_count",
 	"salary_min": "enrichment.salary_min",
 	"salary_max": "enrichment.salary_max",
@@ -262,9 +210,8 @@ func (h *searchHandlers) matchProfileFor(ctx context.Context, userID int64, vals
 	if vals.Get("sort") != sortMatch || h.userProfile == nil {
 		return nil, nil
 	}
-	// auth.UserID is what mw.optional populates; it reports false for an anonymous
-	// caller rather than erroring. requireUserID is the wrong helper here — its 401 is
-	// exactly the outcome this must avoid.
+	// auth.UserID is what mw.optional populates; it reports false for an anonymous caller.
+	// requireUserID is the wrong helper: its 401 is the outcome this must avoid.
 	if userID == 0 {
 		return nil, nil
 	}
@@ -346,86 +293,9 @@ func wantsParam(vals url.Values, key string) bool {
 	return err == nil && want
 }
 
-// appliedCompanyExclusionFor resolves ?hide_applied_companies=true into the filter
-// fragment that keeps the caller's applied-to employers out of this search, and
-// reports whether the param has to be named in meta.ignored_params instead.
-//
-// The exclusion runs inside the index query rather than over the returned page, so
-// meta.total and every later page stay honest: dropping hits after the fact would
-// shrink a page below its limit and leave the total counting what the caller never
-// sees.
-//
-// It is honoured for a signed-in caller only, because the set is that account's own
-// applications. An anonymous caller, an unparseable value, or a record that could not
-// be read all fall back to the unhidden search and say so, rather than refusing a
-// shared link or quietly widening. A caller with no applications gets "" — nothing to
-// exclude, and nothing ignored either.
-func (h *searchHandlers) appliedCompanyExclusionFor(ctx context.Context, userID int64, vals url.Values) (frag string, ignored bool) {
-	raw := vals.Get(hideAppliedCompaniesParam)
-	if !vals.Has(hideAppliedCompaniesParam) {
-		return "", false
-	}
-	want, err := strconv.ParseBool(raw)
-	if err != nil {
-		return "", true
-	}
-	if !want {
-		return "", false
-	}
-	if userID == 0 || h.appliedCompanies == nil {
-		return "", true
-	}
-	slugs, err := h.appliedCompanies.AppliedCompanySlugs(ctx, userID)
-	if err != nil {
-		log.Printf("search: hide_applied_companies: read applied companies of user %d: %v", userID, err)
-		return "", true
-	}
-	// The answer now depends on who asked, under a URL that does not say so.
-	if len(slugs) == 0 {
-		return "", false
-	}
-	return search.NotInStrings("company_slug", slugs), false
-}
-
-// seenExclusionFor resolves ?hide_seen=true into the job ids to keep out of this search,
-// and reports whether the param has to be named in meta.ignored_params instead.
-//
-// The exclusion happens inside the index query rather than over the returned page, so
-// meta.total and every later page stay honest: hiding hits after the fact would shrink
-// a page below its limit and leave the total counting what the caller never sees.
-//
-// It is honoured for a signed-in caller only, because "seen" is the server's record of
-// what that account opened — the same record the feed dims cards by. An anonymous
-// caller, an unparseable value, or a record that could not be read all fall back to the
-// unhidden search and say so, rather than refusing a shared link or quietly widening.
-func (h *searchHandlers) seenExclusionFor(ctx context.Context, userID int64, vals url.Values) (ids []int64, ignored bool) {
-	if !vals.Has(hideSeenParam) {
-		return nil, false
-	}
-	// A present but empty `?hide_seen=` is unreadable like any other non-boolean.
-	want, err := strconv.ParseBool(vals.Get(hideSeenParam))
-	if err != nil {
-		return nil, true
-	}
-	if !want {
-		return nil, false
-	}
-	if userID == 0 || h.seen == nil {
-		return nil, true
-	}
-	ids, err = h.seen.ExcludedJobIDs(ctx, userID)
-	if err != nil {
-		log.Printf("search: hide_seen: read seen jobs of user %d: %v", userID, err)
-		return nil, true
-	}
-	// The answer now depends on who asked, under a URL that does not say so.
-	return ids, false
-}
-
 // jobSearchOutcome is what runJobSearch hands back: the raw hits, the applied
-// limit/offset, every value-level ignored-param report gathered while building the
-// query, and — only when the caller asked for semantic search and it could apply —
-// that it was answered by keywords instead (ojcp.SemanticUnavailable).
+// limit/offset, the value-level ignored-param reports, and, when semantic search was asked
+// for but could not apply, that keywords answered instead (ojcp.SemanticUnavailable).
 type jobSearchOutcome struct {
 	res      search.SearchResult
 	limit    int
@@ -443,9 +313,9 @@ type jobSearchOutcome struct {
 }
 
 // own is the endpoint's own params for this request: base, plus former_employers and
-// watchlist when the filter read them. Anonymous, they were not read, and the report must
-// say so — the answer then is the whole catalogue, which a caller who asked for their former
-// employers or their watchlist must not mistake for them.
+// watchlist when the filter read them. Anonymous, they were not read and the report must
+// say so: the answer is then the whole catalogue, which a caller who asked for their
+// employers or watchlist must not mistake for them.
 func (o jobSearchOutcome) own(base []string) []string {
 	out := slices.Clip(base)
 	if o.formerEmployers {
@@ -457,69 +327,18 @@ func (o jobSearchOutcome) own(base []string) []string {
 	return out
 }
 
-// formerEmployerSlugsFor resolves the "Hiring again" filter for this request. applied is false
-// when the param is absent or false, or when nothing can read it — no session, no lookup
-// wired — and the caller then searches as if it were absent (and reports it, see own).
-// Applied with no slugs is a real answer: nothing banked resolves to a hiring company.
-func (h *searchHandlers) formerEmployerSlugsFor(ctx context.Context, userID int64, vals url.Values) (slugs []string, applied bool, err error) {
-	if h.formerEmployers == nil || vals.Get(formerEmployersParam) != "true" {
-		return nil, false, nil
-	}
-	if userID == 0 {
-		return nil, false, nil
-	}
-	// The answer is this person's own history; no shared cache may keep it.
-	slugs, err = h.formerEmployers.Slugs(ctx, userID)
-	if err != nil {
-		return nil, false, err
-	}
-	return slugs, true, nil
-}
-
-// watchlistSlugsFor resolves `watchlist=true` for this request, with formerEmployerSlugs's
-// contract: applied is false when the param is absent, anonymous or unreadable, and applied
-// with no slugs is a real answer — an empty list — that narrows to nothing.
-func (h *searchHandlers) watchlistSlugsFor(ctx context.Context, userID int64, vals url.Values) (slugs []string, applied bool, err error) {
-	if h.watchlist == nil || !search.WantsWatchlist(vals) || userID == 0 {
-		return nil, false, nil
-	}
-	slugs, err = h.watchlist.Slugs(ctx, userID)
-	if err != nil {
-		return nil, false, err
-	}
-	return slugs, true, nil
-}
-
-// personalCompanies combines the two per-caller company sets a search can be narrowed to:
-// the companies the caller left ("Hiring again") and the ones they watch. Asked for both,
-// a posting must satisfy both, so the set is their intersection. applied is false when
-// neither was asked for.
-func personalCompanies(former []string, hasFormer bool, watch []string, hasWatch bool) (slugs []string, applied bool) {
-	switch {
-	case hasFormer && hasWatch:
-		return slices.DeleteFunc(slices.Clone(former), func(s string) bool { return !slices.Contains(watch, s) }), true
-	case hasFormer:
-		return former, true
-	case hasWatch:
-		return watch, true
-	}
-	return nil, false
-}
-
-// runJobSearch performs the request handling shared by both job-search endpoints:
-// the availability check, the pagination-window guard, and the index query. It is
-// the single place the query is built, so the public and agent search endpoints
-// cannot drift. The availability and deep-pagination guards return a fiber *Error
-// the caller can return directly; on success `dropped` carries q_fields naming a
-// field outside the searchable vocabulary, plus any filter params dropped by the
-// degrade below (nil in the ordinary case), for the caller to merge into its own
-// ignoredParams(vals, own) report.
+// runJobSearch performs the request handling shared by both job-search endpoints
+// (availability check, pagination-window guard, index query), so they cannot drift. The
+// guards return a fiber *Error the caller can return directly; `dropped` carries q_fields
+// naming a field outside the searchable vocabulary plus any filter params dropped by the
+// degrade below, for the caller to merge into its ignoredParams(vals, own) report.
 //
 // wantSemantic is the caller's semantic flag, which is never honoured (see
 // semanticOutcome); one with nothing to apply to is reported as a dropped param.
-// exclude names job ids to keep out of the result (hide_seen); nil excludes nothing. personal is the applied-company
-// exclusion fragment; an empty fragment leaves the result unchanged. match, when set, keeps
-// only the postings at or above the caller's minimum skill match (see skillMatchFilter).
+// exclude names job ids to keep out of the result (hide_seen); nil excludes nothing.
+// personal is the applied-company exclusion fragment; empty leaves the result unchanged.
+// match, when set, keeps only postings at or above the caller's minimum skill match (see
+// skillMatchFilter).
 func (h *searchHandlers) runJobSearch(ctx context.Context, vals url.Values, userID int64, wantSemantic bool, exclude []int64, personal string, match *skillMatchFilter) (jobSearchOutcome, error) {
 	if h.search == nil {
 		return jobSearchOutcome{}, fiber.NewError(fiber.StatusServiceUnavailable, "search is not available")
@@ -615,24 +434,13 @@ func (h *searchHandlers) executeJobSearch(ctx context.Context, vals url.Values, 
 	}
 
 	if err != nil {
-		// Degrade, not fail, when the filter itself is why Meilisearch refused the
-		// query — the deploy window a filterable attribute is declared in code
-		// before the live index catches up (AGENTS.md's "Adding a filterable
-		// attribute") is the realistic trigger, not a malformed client value
-		// (every facet/scalar value is already escaped before it reaches a filter
-		// expression — see search.quote). base == nil means there is nothing to
-		// blame — retrying an unchanged query would just fail again identically.
-		// The personal company group ("Hiring again", the watchlist) is not blamed and survives the retry: company_slug
-		// has been filterable since the index existed, and dropping it would answer a
-		// request for former employers with the whole catalogue.
+		// Degrade, not fail, when the filter itself is why Meilisearch refused the query: the realistic trigger is a filterable attribute declared in code before the live index has it. base == nil means nothing to blame, and retrying unchanged would fail identically.
+		// The personal company group ("Hiring again", the watchlist) survives the retry: company_slug has always been filterable, and dropping it would answer a former-employers request with the whole catalogue.
 		if strict || base == nil || !errors.Is(err, search.ErrBadQuery) {
-			// RenderError renders a generic 500 (or 400 for ErrBadQuery); returning
-			// the error keeps the failure cause visible to logging instead of
-			// swallowing it.
+			// Returned as is so the cause stays visible to logging; RenderError makes it a 500 (400 for ErrBadQuery).
 			return jobSearchOutcome{}, err
 		}
-		// Both personal exclusions survive the retry: id and company_slug have always
-		// been filterable, so an undeclared facet cannot justify dropping either.
+		// Both personal exclusions survive the retry: id and company_slug have always been filterable.
 		retry := search.SearchParams{
 			Query: vals.Get("q"), Filter: withExcludedIDs(withFilterGroup(companyFilter, personal), exclude),
 			Sort: sort, Vector: vector, QFields: qFields, Prefix: params.Prefix, Limit: limit, Offset: offset,
@@ -660,24 +468,14 @@ func (h *searchHandlers) executeJobSearch(ctx context.Context, vals url.Values, 
 	}, nil
 }
 
-// pendingRemovalsTimeout bounds the lookup dropPendingRemovals makes. It is a primary-key
-// read over one page of ids, so a healthy answer takes milliseconds.
+// pendingRemovalsTimeout bounds the lookup dropPendingRemovals makes (a primary-key read over one page of ids).
 const pendingRemovalsTimeout = 300 * time.Millisecond
 
-// dropPendingRemovals takes out of a page the postings that have closed but are still in
-// the index. The drain applies a closure asynchronously, and a facet rebuild pauses it for
-// hours, so the queue it works from (search_delete_outbox) is exactly the set the index
-// still shows wrongly. Asking it about the page's own ids is a primary-key lookup; asking the
-// index to exclude the whole queue is not possible, it can hold a six-figure number of ids.
+// dropPendingRemovals takes out of a page the postings that have closed but are still in the index: the drain applies closures asynchronously and a facet rebuild pauses it for hours. It asks the queue (search_delete_outbox) about the page's own ids, since the index cannot exclude a six-figure id list.
 //
-// This is the one place a hit is dropped after the query, which the hide_applied_companies
-// note above avoids because it shrinks the page and leaves the total counting what the
-// caller never sees. Here the dropped hit is by definition not a result, so the total is
-// lowered by the same count; what stays over-counted is the part of the backlog on later
-// pages, and it is gone once the drain catches up.
+// Unlike hide_applied_companies this drops hits after the query, but a dropped hit is by definition not a result, so the total is lowered by the same count; the backlog on later pages stays over-counted until the drain catches up.
 //
-// Best-effort: a failed lookup logs and serves the page as the index has it, as the search
-// did before this check existed.
+// Best-effort: a failed lookup logs and serves the page as the index has it.
 func (h *searchHandlers) dropPendingRemovals(ctx context.Context, res search.SearchResult) search.SearchResult {
 	if h.removals == nil || len(res.Hits) == 0 {
 		return res
@@ -741,12 +539,7 @@ func (h *searchHandlers) recordQuery(raw string) {
 	}()
 }
 
-// demandKey normalises a raw `q` into the same key suggest.Title gives a mined
-// posting title. A title suggestion's click sends its query wrapped in a matching
-// pair of `"` (see the search-suggestions spec) — that wrapper is Meilisearch's own
-// quoting syntax, not part of the phrase, so it is stripped before normalising.
-// Anything else — no quotes, or a quote at only one end — is not that shape and is
-// left alone: guessing would rewrite text nobody asked to rewrite.
+// demandKey normalises a raw `q` into the same key suggest.Title gives a mined posting title. A query wrapped in a matching pair of `"` (a title suggestion click) is unwrapped first, since that is Meilisearch quoting, not part of the phrase; any other quoting is left alone.
 func demandKey(raw string) string {
 	if len(raw) >= 2 && strings.HasPrefix(raw, `"`) && strings.HasSuffix(raw, `"`) {
 		raw = raw[1 : len(raw)-1]
@@ -764,14 +557,9 @@ func defaultSort(query string) []string {
 }
 
 // searchSortValues builds the Meilisearch sort directive from ?sort=<field>&order=<dir>.
-// Without a valid sort param, a no-text browse defaults to the freshest postings
-// first (posted_at desc) — relevance is meaningless for an empty query — while a
-// text query keeps relevance order (nil).
+// Without a valid sort, a no-text browse sorts freshest first (posted_at desc) and a text query keeps relevance order (nil).
 //
-// ranked reports that the request carries a match vector. Meilisearch lets an explicit
-// sort directive take precedence over vector ranking, so returning one here would
-// silently discard the match order the caller asked for — not error, just quietly
-// serve something else.
+// ranked reports that the request carries a match vector: an explicit sort directive would take precedence over vector ranking and silently discard the match order.
 func searchSortValues(vals url.Values, ranked bool) []string {
 	if ranked {
 		return nil
@@ -795,25 +583,11 @@ func buildSearchFilter(vals url.Values) any {
 	return search.FilterFromValues(vals)
 }
 
-// attachGhost attaches the ghost signal to a page of search hits.
+// attachGhost attaches the ghost signal to a page of search hits. Costs two extra reads per page: the outcome evidence (sparse) and the absence stamps.
 //
-// Search is the surface where job cards are actually browsed, so leaving it out
-// would mean the badge existed almost nowhere. It costs two extra reads per page:
-// the outcome evidence (sparse — only jobs anyone reported or applied to) and the
-// absence stamps.
+// The stamps come from Postgres because cmd/reindex pushes only documents whose content_hash moved and no adapter writes ats_absent_at. The reality class IS on the document (search.FromJob promotes it), so it is read from the hit.
 //
-// The stamps have to come from Postgres because they cannot be in the index:
-// cmd/reindex pushes only documents whose content_hash moved, and no adapter writes
-// ats_absent_at, so the column would never reach Meilisearch on its own. That is the
-// same trap is_tech already fell into. The reality class, by contrast, IS on the
-// document (search.FromJob promotes it), so it is read from the hit rather than
-// recomputed.
-//
-// Best-effort: a failed lookup leaves the signal off the page rather than failing
-// the search — but not silently. These stamps are a structural tier of this path,
-// so a persistent failure here is the badge disappearing from every search result
-// while the endpoint keeps answering 200; without the log there is nothing to see
-// it by (see logGhostLookup for why cancellation is told apart on the context).
+// Best-effort: a failed lookup leaves the signal off the page, but is logged (see logGhostLookup for why cancellation is told apart), since otherwise the badge vanishes while the endpoint keeps answering 200.
 func (h *searchHandlers) attachGhost(ctx context.Context, hits []search.JobDocument, views []jobview.Job) {
 	if len(hits) == 0 || h.queries == nil {
 		return
@@ -843,10 +617,7 @@ func (h *searchHandlers) attachGhost(ctx context.Context, hits []search.JobDocum
 		row := stamps[hit.ID]
 		views[i].Ghost = jobview.ClassifyGhost(jobview.GhostInput{
 			Now: now,
-			// Read from Postgres, not from the hit: a sweep-closed job stays in the
-			// index until a reindex, whose timer is disabled, so the index cannot be
-			// trusted to say a posting is still up. Without this a warning would
-			// appear on postings already taken down.
+			// Read from Postgres, not the hit: a sweep-closed job stays in the index until a reindex, so the index cannot say a posting is still up.
 			Closed:       row.ClosedAt.Valid,
 			RealityClass: realityClass,
 			ATSAbsentAt:  row.AtsAbsentAt.Time,

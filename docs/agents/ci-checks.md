@@ -24,6 +24,21 @@ comment block, before the first statement — quoted inside a sentence it does n
 argument. Suppress a rule with `-- squawk-ignore <rule-name>` on the line before the
 statement, with the reason beside it.
 
+## Migration numbers: `pnpm check:migration-numbers`
+
+A migration's numeric prefix is how people name it, and 69 prefixes were already shared
+when the check landed (`0144` seven times, `0135` five times, and the rest of that set).
+Initdb and `cmd/migrate` order by the whole filename and record that filename, so the
+history is applied and must not be renumbered. `pnpm check:migration-numbers`
+(`scripts/check-migration-numbers.mjs`, the `migrations` CI job) reads every
+`migrations/*.sql` and fails when a prefix is used more times than
+`ALLOWED_DUPLICATE_COUNTS` records. The map is those existing duplicate prefixes, each
+with its file count, so the current tree passes and one more file on `0144` — or two
+new files sharing a fresh number — does not. A prefix used once is not listed. The
+escape hatch for a corrective file that must sort beside an immutable migration is to
+update that count in the same change and say why; [the SQL notes](../../internal/platform/db/AGENTS.md)
+still require the filename order and forbid repeating a data copy.
+
 ## Generated SQL layer: `make sqlc`
 
 `internal/platform/db/` is generated: edit `internal/platform/db/queries/*.sql` and run
@@ -224,3 +239,26 @@ file before reading it, so a path entry switches the scanner off for that file e
 ## Formatting: oxfmt
 
 [oxfmt](https://oxc.rs/docs/guide/usage/formatter) formats TypeScript, JavaScript and Svelte with one config for all three packages. `.oxfmtrc.json` at the repository root is read by `web/`, `design-system/` and `extension/` alike; in each, `pnpm run format` (`npm run format` in `extension/`) rewrites the files and `format:check` is what CI and the lefthook hook run. The version is pinned exactly in each `package.json`, because a formatter that moves between releases rewrites code nobody touched. The config's `ignorePatterns` leave out `**/generated/**` (the `contracts` CI job compares it with a regeneration) and every file type that is not TypeScript, JavaScript or Svelte, so JSON, CSS and Markdown are not reformatted. `.svelte` is opt-in (`"svelte": true`) and runs through prettier-plugin-svelte inside oxfmt. The commit that first applied it is in `.git-blame-ignore-revs`; point blame at the file with `git config blame.ignoreRevsFile .git-blame-ignore-revs` (GitHub reads it by itself). There are no stylistic lint rules to keep in step: oxlint runs only correctness, suspicious and perf, and each `eslint.config.js` spreads `svelte.configs.prettier`. `pnpm run lint` runs `oxlint --deny-warnings`, so a warning from any of those categories fails it like an error does (plain oxlint exits 0 on warnings); a rule that does not fit the codebase is turned `off` in that package's `.oxlintrc.json` with a one-line reason, not silenced per line.
+
+## Local check plan
+
+Run `python3 scripts/check-local.py --base origin/main` to print a plan, or add
+`--run` to execute it. The base is an explicit commit/ref, compared directly with
+HEAD; staged, unstaged and untracked paths are added. Rename detection is disabled
+so both endpoints and deleted paths participate. An unreadable base or unfamiliar
+path selects the full classifier scope.
+
+The helper imports `.github/scripts/ci_changes.py` and delegates file checks to
+lefthook, keeping hook rules in one place. Install the pinned tools and package
+dependencies first. Hooks can regenerate files; review the resulting diff. Deleted
+paths remain in hook input so deletions cannot silently narrow the plan.
+
+Go scope always includes whole-module build, vet, unit tests and integration-tagged
+compilation, plus lint against the resolved comparison base (unfiltered on fallback).
+The delegated secret hook scans only the staged diff; committed changes, unstaged
+edits and untracked files remain unscanned for secrets by this helper. Other scopes retain CI's whole-module unit guards. Every command and
+outcome is printed; failures return nonzero after the remaining checks run. A plan
+alone executes nothing. This is local evidence, not final readiness: behavior
+changes still need applicable integration tests and CI gates beyond these checks.
+
+Planner fixtures: `python3 scripts/test_check_local.py`.

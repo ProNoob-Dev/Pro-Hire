@@ -168,6 +168,11 @@ export interface Job {
   manually_added: boolean;
   external_id: string;
   url: string;
+  /**
+   * SourceURL is the original posting when URL points to a separately verified
+   * application destination. Omitted when both links are the same.
+   */
+  source_url?: string;
   title: string;
   company: string;
   company_slug: string;
@@ -499,31 +504,28 @@ export interface Report {
 // source: delta.go
 
 /**
- * Delta is the change one CV's ATS readiness shows against another's: the overall
- * move plus one entry per category, and — only when the overall fell — the category
- * that fell furthest. It compares two Reports and computes nothing itself, so the
- * five categories, their labels and their weights stay the scorer's business.
- * JSON is the wire contract shared with the frontend (see cmd/gen-contracts).
+ * Delta is the change one CV's ATS readiness shows against another's: the overall move,
+ * one entry per category, and (only when the overall fell) the category that fell furthest.
+ * It only compares two Reports; the categories, labels and weights stay the scorer's. JSON is
+ * the wire contract shared with the frontend (see cmd/gen-contracts).
  */
 export interface Delta {
   base: number /* int */; // the baseline CV's overall score
   tailored: number /* int */; // the compared CV's overall score
   change: number /* int */; // Tailored − Base, signed
   /**
-   * Categories reports only the categories present in BOTH reports: a category on
-   * one side alone is not a difference, and reporting it against an implied zero
-   * would invent a change nobody made.
+   * Categories reports only the categories present in BOTH reports: one-sided ones would
+   * invent a change against an implied zero.
    */
   categories: CategoryChange[];
   /**
-   * Regressed is true when the overall score fell. A category may fall while the
-   * overall holds; that is not a regression, and WorstCategory stays empty for it.
+   * Regressed is true when the overall score fell. A category may fall while the overall
+   * holds; that is not a regression and leaves WorstCategory empty.
    */
   regressed: boolean;
   /**
-   * WorstCategory is the id of the category with the most negative change, set only
-   * when Regressed. An equal drop resolves to the earlier of the two in the compared
-   * report's own order, so the answer never depends on map iteration.
+   * WorstCategory is the id of the category with the most negative change, set only when
+   * Regressed. Ties go to the earlier one in the compared report's order, never map order.
    */
   worst_category?: string;
 }
@@ -537,10 +539,8 @@ export interface CategoryChange {
   tailored: number /* int */;
   change: number /* int */; // Tailored − Base, signed
   /**
-   * Items are the checks behind the TAILORED side's score, so a panel can expand a row
-   * into why it stands where it does. The base side's items are deliberately not carried:
-   * the candidate is editing the tailored copy, and a before/after list of individual
-   * checks is a diff nobody asked for.
+   * Items are the checks behind the TAILORED side's score, so a panel can expand a row. The
+   * base side's items are deliberately not carried.
    */
   items?: LineItem[];
 }
@@ -923,10 +923,8 @@ export interface Requirement {
   evidence_strength: string; // metric|scope|responsibility|keyword for positive statuses; empty for missing-*
 }
 /**
- * Signal is one interpretive read of the job posting's own wording — a verbatim quote plus
- * what it implies about pace, ownership expectations, team stage, or culture. Freeform text
- * bounded by length only (the same tier as Recommendation/comment), not a controlled
- * vocabulary: there is no fixed set of "signal types" to coerce into.
+ * Signal is one interpretive read of the job posting's own wording: a verbatim quote plus what
+ * it implies about pace, ownership, team stage, or culture. Freeform, bounded by length only.
  */
 export interface Signal {
   quote: string;
@@ -949,18 +947,15 @@ export interface Analysis {
 }
 
 /**
- * Band is how long the letter should be. Two are offered rather than a free-form length,
- * because the application forms do not state a limit — no captured apply_forms field carries
- * maxlength — so the numbers are a product decision and a slider over them would be a
- * precision the data does not support.
+ * Band is how long the letter should be. Two are offered because forms state no limit, so the
+ * numbers are a product decision and a finer control would imply precision the data lacks.
  */
 export type Band = string;
 export const BandShort: Band = "short";
 export const BandStandard: Band = "standard";
 /**
  * Bounds are the server-owned ceilings on what the chain may return. The model is never
- * trusted to observe them; Sanitize enforces them after the fact, the same discipline
- * matchanalysis keeps over its own output.
+ * trusted to observe them; Sanitize enforces them afterwards.
  */
 export interface Bounds {
   /**
@@ -969,14 +964,13 @@ export interface Bounds {
   ShortCeiling: number /* int */;
   StandardCeiling: number /* int */;
   /**
-   * Floor is the shortest body that still counts as a letter. The audit stage cuts, and a
-   * stage whose only instruction is to cut can cut to nothing; below this the caller keeps
-   * the un-audited draft instead.
+   * Floor is the shortest body that still counts as a letter. The audit only cuts and can cut
+   * to nothing; below this the caller keeps the un-audited draft.
    */
   Floor: number /* int */;
   /**
-   * MaxCited caps how many atoms one letter may cite. A letter that cites everything cites
-   * nothing — the point of the citation list is that a reader can check it.
+   * MaxCited caps how many atoms one letter may cite; citing everything makes the list
+   * uncheckable.
    */
   MaxCited: number /* int */;
 }
@@ -986,21 +980,19 @@ export interface Bounds {
 export interface Letter {
   body: string;
   /**
-   * Cited are the atoms the letter's claims rest on, in the order the letter uses them.
-   * This is what the UI shows beside the letter and what makes the honesty claim checkable.
+   * Cited are the atoms the letter's claims rest on, in the order the letter uses them; the UI
+   * shows them beside the letter.
    */
   cited_atom_ids: string[];
   /**
-   * Language is what the letter was written in, taken from the VACANCY and not from the
-   * candidate's profile — the employer is the reader.
+   * Language is what the letter was written in, from the VACANCY, not the candidate's profile.
    */
   language: string;
 }
 
 /**
- * Structured is the typed, sanitized résumé. Every field is optional — a value the CV
- * does not state is left empty rather than invented (the model is prompted accordingly
- * and Sanitize drops empty entries).
+ * Structured is the typed, sanitized résumé. Every field is optional: a value the CV
+ * does not state stays empty, and Sanitize drops empty entries.
  */
 export interface Structured {
   full_name?: string;
@@ -1019,14 +1011,11 @@ export interface Structured {
   projects?: Project[];
 }
 /**
- * Professional is Structured with the contact fields left out — the résumé's substance
- * (what the person has done) without the identity (who they are). It is what goes to a
- * consumer that has no business knowing the candidate's name: the LLM fit chain, and an
- * agent reading the profile over the API.
- * The field set is a whitelist, deliberately: a field later added to Structured is
- * withheld until it is added here too. A blacklist — dropping the four known contact
- * keys — would disclose that new field by default, which is the wrong way round for a
- * projection whose whole job is to hold personal data back.
+ * Professional is Structured without the contact fields: what the person has done, not
+ * who they are. It goes to consumers that must not know the name (the LLM fit chain, an
+ * agent reading the profile over the API).
+ * The field set is a whitelist on purpose: a field later added to Structured stays
+ * withheld until added here, where a blacklist would disclose it by default.
  */
 export interface Professional {
   headline?: string;
@@ -1041,10 +1030,9 @@ export interface Professional {
   projects?: Project[];
 }
 /**
- * Experience is one work-history entry. Start/End are a structured perioddate.PeriodDate
- * (year, optional month) that the model interprets from however the CV prints the
- * range; Current marks an ongoing role instead of a fabricated End. Summary is the
- * role/company one-line context; Highlights are the achievement bullets.
+ * Experience is one work-history entry. Current marks an ongoing role instead of a
+ * fabricated End. Summary is the one-line role/company context; Highlights are the
+ * achievement bullets.
  */
 export interface Experience {
   title?: string;
@@ -1066,14 +1054,10 @@ export interface Project {
   highlights?: string[];
 }
 /**
- * Education is one education entry. Year is the same structured perioddate.PeriodDate as
- * Experience's Start/End (month is rarely stated for a degree, so it is usually
- * year-only, but the type stays the one shared shape rather than a bare int).
- * Degree is assumed short and dedicated (a CV's own degree line, e.g. "BSc Computer
- * Science"), never a full sentence — internal/dict/edulevel.ForDegree relies on this to
- * safely match bare "BS"/"MS" forms that would be ambiguous in free-running prose. If
- * this field's extraction ever changes to allow fuller sentences, revisit ForDegree's
- * leniency alongside it.
+ * Education is one education entry; Year is usually year-only.
+ * Degree must stay short (a CV's own degree line, e.g. "BSc Computer Science"), never a
+ * sentence: internal/dict/edulevel.ForDegree relies on it to match bare "BS"/"MS", which
+ * are ambiguous in prose.
  */
 export interface Education {
   degree?: string;
@@ -1082,10 +1066,73 @@ export interface Education {
 }
 
 /**
- * AutopilotStatus is what an autopilot run made of one requirement. The vocabulary is
- * fixed and small on purpose: the panel renders each value, and a value it cannot render
- * is worse than a refused write. Nothing is coerced — an unrecognised status is reported
- * back to the model with the valid ones named, which is how it corrects itself mid-turn.
+ * MetaResponse is GET /me/resume: storage flags, parse status, the candidate's owned
+ * overrides and the composed structured résumé.
+ */
+export interface MetaResponse {
+  enabled: boolean;
+  present: boolean;
+  uploaded_at: string | null;
+  structured: Structured | null;
+  structure_pending: boolean;
+  parse_status?: string;
+  parse_detail?: string;
+  /**
+   * Contacts is the wire name for historical/API-stability reasons; the Go/DB concept
+   * underneath is resume.Owned, which now also carries headline/summary/languages/
+   * certifications — see Owned.
+   */
+  contacts?: Owned;
+}
+/**
+ * Owned is everything about a candidate's résumé that the CANDIDATE edited directly, rather
+ * than what resume_structured last re-derived from an upload. It is the one owned-overlay
+ * mechanism for the whole profile, not identity alone: a re-upload regenerates
+ * headline/summary/languages/certifications/education as wholesale as email/phone.
+ * Deliberately NOT here: Skills (userprofile.Profile.Skills, a CV-independent resource) and
+ * Experience/Projects (the experience bank, provenance-tracked). Education stays a flat overlay.
+ * Persisted as one JSON blob on users.candidate_contacts; the column keeps its original name.
+ */
+export interface Owned {
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  links?: string[];
+  headline?: string;
+  summary?: string;
+  languages?: string[];
+  certifications?: string[];
+  education?: Education[];
+  /**
+   * TotalYears is the candidate's own years of experience: a re-upload recomputes the
+   * extracted figure wholesale, so a correction must survive. The onboarding wizard saves
+   * whatever the candidate leaves in the field.
+   */
+  total_years?: number /* int */;
+  /**
+   * The five body fields above are owned per field (see ApplyBody); a non-empty value implies
+   * ownership. A cleared field has no value left to signal it, so an explicit save carries its
+   * own *Set flag, true even while the value is "". Sanitize only turns these on, never off, so
+   * an explicit clear survives it. Identity fields need no flag: they are overlaid as one
+   * IdentityEmpty()-gated block.
+   */
+  headline_set?: boolean;
+  summary_set?: boolean;
+  languages_set?: boolean;
+  certifications_set?: boolean;
+  education_set?: boolean;
+  /**
+   * TotalYearsSet is the same explicit-clear signal for a numeric field: zero is a legitimate
+   * answer ("less than a year"), and without the flag the CV's own figure would replace it.
+   */
+  total_years_set?: boolean;
+}
+
+/**
+ * AutopilotStatus is what an autopilot run made of one requirement. The vocabulary is fixed
+ * because the panel must render each value. Nothing is coerced: an unrecognised status is
+ * reported back to the model with the valid ones named, so it can correct itself.
  */
 export type AutopilotStatus = string;
 /**
@@ -1124,44 +1171,37 @@ seeding from the extracted résumé, and PDF rendering behind a Renderer interfa
 
 /**
  * The section ceilings Sanitize truncates to, exported (and generated into the web
- * contracts) so the editor can refuse an Add past them instead of letting Sanitize drop
- * a row silently.
+ * contracts) so the editor can refuse an Add past them instead of dropping a row silently.
  */
 export const MaxExperience = 30;
 /**
- * Field bounds for untrusted CV content. The Document is user-editable and — in the
- * follow-up tailoring phase — fed to an LLM, so Sanitize is both the persistence guard
- * and the prompt-injection guard (same invariant as enrich/resumeextract).
+ * Field bounds for untrusted CV content. The Document is user-editable and fed to an LLM, so
+ * Sanitize is both the persistence guard and the prompt-injection guard.
  */
 export const MaxEducation = 20;
 /**
- * Field bounds for untrusted CV content. The Document is user-editable and — in the
- * follow-up tailoring phase — fed to an LLM, so Sanitize is both the persistence guard
- * and the prompt-injection guard (same invariant as enrich/resumeextract).
+ * Field bounds for untrusted CV content. The Document is user-editable and fed to an LLM, so
+ * Sanitize is both the persistence guard and the prompt-injection guard.
  */
 export const MaxSkillGroups = 20;
 /**
- * Field bounds for untrusted CV content. The Document is user-editable and — in the
- * follow-up tailoring phase — fed to an LLM, so Sanitize is both the persistence guard
- * and the prompt-injection guard (same invariant as enrich/resumeextract).
+ * Field bounds for untrusted CV content. The Document is user-editable and fed to an LLM, so
+ * Sanitize is both the persistence guard and the prompt-injection guard.
  */
 export const MaxLanguages = 20;
 /**
- * Field bounds for untrusted CV content. The Document is user-editable and — in the
- * follow-up tailoring phase — fed to an LLM, so Sanitize is both the persistence guard
- * and the prompt-injection guard (same invariant as enrich/resumeextract).
+ * Field bounds for untrusted CV content. The Document is user-editable and fed to an LLM, so
+ * Sanitize is both the persistence guard and the prompt-injection guard.
  */
 export const MaxProjects = 30;
 /**
- * Field bounds for untrusted CV content. The Document is user-editable and — in the
- * follow-up tailoring phase — fed to an LLM, so Sanitize is both the persistence guard
- * and the prompt-injection guard (same invariant as enrich/resumeextract).
+ * Field bounds for untrusted CV content. The Document is user-editable and fed to an LLM, so
+ * Sanitize is both the persistence guard and the prompt-injection guard.
  */
 export const MaxCertifications = 30;
 /**
- * DefaultMaxBullets is the per-experience / per-project bullet ceiling when
- * CV_MAX_BULLETS is unset. Writers must refuse growth past MaxBullets rather
- * than let Sanitize drop trailing content silently.
+ * DefaultMaxBullets is the per-experience / per-project bullet ceiling when CV_MAX_BULLETS
+ * is unset. Writers must refuse growth past MaxBullets rather than let Sanitize drop it.
  */
 export const DefaultMaxBullets = 20;
 /**
@@ -1171,9 +1211,8 @@ export const DefaultMaxBullets = 20;
 export interface Document {
   margins: Margins;
   /**
-   * No omitempty: it does nothing on a struct (encoding/json only omits false, 0, nil, and
-   * empty strings/slices/maps), so the tag would promise clients an absence they never see
-   * while making the generated TypeScript optional for no reason.
+   * No omitempty: it does nothing on a struct, so the tag would only make the generated
+   * TypeScript optional.
    */
   style: Style;
   header: Header;
@@ -1187,8 +1226,7 @@ export interface Document {
 }
 /**
  * Margins is the CV's per-side page margin in inches, applied identically to the HTML
- * preview and the Typst-rendered PDF. Sanitize clamps each side and defaults an unset
- * (zero) side to defaultMargin.
+ * preview and the Typst PDF. Sanitize clamps each side and defaults an unset side.
  */
 export interface Margins {
   top: number /* float64 */;
@@ -1198,19 +1236,13 @@ export interface Margins {
 }
 /**
  * Style is the CV's typography: the typeface, the base type size in points, and the line
- * height as a leading multiple of the em. It is part of the document, so it persists with
- * the CV, is copied when the CV is tailored, and is not clobbered by field-level patches.
- * A zero value means "whatever the active template uses" and Sanitize KEEPS IT ZERO. This is
- * the opposite of Margins, which resolves an unset side to a concrete 0.5in, and the
- * difference is deliberate on both counts:
- *   - Every CV written before this type existed has no style block, so it renders exactly as
- *     it did. There is nothing to migrate.
- *   - A template stays a whole design choice. Switching to a template with looser leading
- *     actually loosens the leading, because that value was never frozen into the document.
- * Resolving defaults here — the natural thing to do by analogy with clampMargin — would
- * silently bake the current template's typography into every document on its next save.
- * FontFamily is a registry id (see fonts.go), never a renderer's own face name: the renderer
- * resolves it on its own copy of the document at render time.
+ * height as a leading multiple of the em. It is part of the document, so it persists, is
+ * copied when the CV is tailored, and is not clobbered by field-level patches.
+ * A zero value means "whatever the active template uses" and Sanitize KEEPS IT ZERO, unlike
+ * Margins. Resolving defaults here would bake the current template's typography into every
+ * document on its next save and stop a template switch from changing leading.
+ * FontFamily is a registry id (see fonts.go), never a renderer's face name; the renderer
+ * resolves it on its own copy at render time.
  */
 export interface Style {
   font_family?: string;
@@ -1230,9 +1262,7 @@ export interface Header {
 }
 /**
  * Experience is one work-history entry. Start/End are a structured perioddate.PeriodDate
- * (year, optional month) — the same shared type experience.Employment and
- * resumeextract.Experience use. Rendering to PDF formats this back to display text
- * (see renderer.go); no template deals with the structured value directly.
+ * (year, optional month), formatted to display text at render time (see renderer.go).
  */
 export interface ExperienceItem {
   role?: string;
@@ -1431,9 +1461,8 @@ export const FieldAge18OrOlder: Field = "age_18_or_older";
 export const FieldPrivacyConsent: Field = "privacy_consent";
 
 /**
- * Responses is one candidate's survey record. Every field is independently optional: a nil
- * pointer means the candidate has not stated that fact, never a guessed default and never
- * a zero standing in for silence.
+ * Responses is one candidate's survey record. Every field is independently optional: nil
+ * means not stated, never a default or a zero standing in for silence.
  */
 export interface Responses {
   job_search_stage?: string;
@@ -1444,8 +1473,7 @@ export interface Responses {
   biggest_challenges?: string[];
   /**
    * BiggestChallengeNote is free text, admitted only while vocab.JobChallengeOther is
-   * among the challenges. A note beside coded answers alone could contradict them, and
-   * nothing downstream would know which to believe.
+   * among the challenges; beside coded answers alone it could contradict them.
    */
   biggest_challenge_note?: string;
   current_income_amount?: number /* int */;
@@ -1459,8 +1487,7 @@ export interface Responses {
 export interface CandidateCard {
   /**
    * Seniority and Category describe the candidate as a whole: what their current (or
-   * most recent) role resolves to. This is the card's heading, built rather than
-   * quoted — see PrimaryTitle.
+   * most recent) role resolves to. The heading is built, not quoted; see PrimaryTitle.
    */
   seniority?: string;
   category?: string;
@@ -1469,28 +1496,21 @@ export interface CandidateCard {
    */
   total_years?: number /* int */;
   /**
-   * Skills are skilltag canonicals. A token the dictionary does not resolve emits
-   * nothing, which is exactly the whitelisting this card needs — see skilltag's
-   * "never guess" rule.
+   * Skills are skilltag canonicals; an unresolved token emits nothing.
    */
   skills: string[];
   /**
-   * Roles is the work history with everything nameable removed: no employer, no
-   * location, no prose. What remains is the shape of a career, which is what a
-   * recruiter reads a history for anyway.
+   * Roles is the work history with everything nameable removed: no employer, location or prose.
    */
   roles: CandidateRole[];
   /**
-   * Education carries only what internal/dict/edulevel resolves from each entry's
-   * degree text, plus its year — never the institution or field of study. An entry
-   * whose degree resolves to nothing is dropped rather than kept under an empty
-   * label: a work-history gap reads worse than absence, but a candidate's set of
-   * degrees carries no such expectation of completeness.
+   * Education carries only what internal/dict/edulevel resolves from each entry's degree
+   * text, plus its year. An entry whose degree resolves to nothing is dropped, not kept
+   * under an empty label (unlike roles, nobody expects a complete degree list).
    */
   education?: EducationEntry[];
   /**
-   * Certifications are internal/dict/certification canonicals. A name the dictionary
-   * does not resolve emits nothing, the same whitelisting Skills gets from skilltag.
+   * Certifications are internal/dict/certification canonicals; unresolved names emit nothing.
    */
   certifications?: string[];
 }
@@ -1507,10 +1527,9 @@ export interface EducationEntry {
  */
 export interface CandidateRole {
   /**
-   * Title is the candidate's own words, verbatim — the card's ONE exception to the
-   * dictionary-only rule, argued in this file's header comment. Seniority and Category
-   * remain beside it as the fallback for a role whose title is absent, and as the
-   * values every filter reads: the raw string is for a human to read, never to match on.
+   * Title is the candidate's own words, the card's ONE exception to the dictionary-only
+   * rule (see the header). Seniority and Category are the fallback for an absent title
+   * and what every filter reads; the raw string is never matched on.
    */
   title?: string;
   seniority?: string;
@@ -1521,49 +1540,38 @@ export interface CandidateRole {
   stack?: string[];
 }
 /**
- * CatalogueMember is one entry in the public catalogue: the dictionary-checked card, plus the
- * facts that live in columns rather than in the CV.
- * Every field here survives the same rule ProjectCard enforces. Cities are the NORMALISED
- * extraction (users.resume_cities), not the free-text location inside the CV, which
- * carries values like "Austria, Klagenfurt 9020"; the timezone is an IANA zone;
- * specializations are drawn from vocab.CategoryValues by the profile form. None of the
- * three can carry a sentence.
- * Specializations are NOT a duplicate of Card.Category, and the difference is the useful
- * part. Category is derived from what the candidate has DONE — the title of their most
- * recent role, through classify. Specializations are what they SAY they want, ticked from
- * the same closed vocabulary on their own profile. A backend engineer whose profile says
- * `ml_ai` is somebody a recruiter wants to find, and the two fields disagreeing is the
- * only way that shows.
+ * CatalogueMember is one entry in the public catalogue: the dictionary-checked card, plus
+ * the facts that live in columns rather than in the CV.
+ * Every field obeys the ProjectCard rule: cities are the NORMALISED extraction
+ * (users.resume_cities), not the free-text CV location; the timezone is an IANA zone;
+ * specializations come from vocab.CategoryValues.
+ * Specializations are NOT a duplicate of Card.Category: Category is what the candidate has
+ * DONE (latest title through classify), Specializations what they SAY they want. A backend
+ * engineer who ticks `ml_ai` is findable only because the two can disagree.
  */
 export interface CatalogueMember {
   handle: string;
   card: CandidateCard;
   /**
-   * Timezone is the IANA zone; TimezoneRegion is the part before the slash. The region
-   * is what a recruiter asking "can we overlap for a call" actually means — there are
-   * dozens of zones per continent — so it is what the filter reads.
+   * Timezone is the IANA zone; TimezoneRegion is the part before the slash, which is what
+   * the filter reads (dozens of zones per continent).
    */
   timezone?: string;
   timezone_region?: string;
   cities: string[];
   specializations: string[];
   /**
-   * UpdatedAt is when the structured extract was written, which is the freshest thing
-   * the catalogue knows about a member. It orders the list.
+   * UpdatedAt is when the structured extract was written; it orders the list.
    */
   updated_at: string;
   /**
-   * HasPhoto says only whether GET /talent/{handle}/photo has something to serve —
-   * never the object key, and never the image itself. It survives the card's own
-   * dictionary-only rule because a boolean carries no name: the alternative was every
-   * list card firing that request and reading the 404 GetPhoto already gives a member
-   * with none, which is correct but a wasted round trip for what is, in practice, most
-   * of the catalogue.
+   * HasPhoto says only whether GET /talent/{handle}/photo has something to serve, never
+   * the object key. A boolean carries no name, and it saves list cards a wasted 404 request.
    */
   has_photo: boolean;
 }
 
-export const SOURCE_VALUES = ['telegram', 'workatastartup', 'remoteok', 'arc', '4dayweek', 'academictransfer', 'adp', 'adpmyjobs', 'adzuna', 'aijobs', 'applicantpro', 'applicantstack', 'applitrack', 'appone', 'arbeitnow', 'arbeitsagentur', 'ashby', 'ashbygraphql', 'avature', 'bamboohr', 'bayt', 'beehire', 'beesite', 'berlinstartupjobs', 'betterteam', 'bizneo', 'brassring', 'breezy', 'briefhq', 'builtin', 'bullhorn', 'bumeran', 'cadremploi', 'cake', 'careerplug', 'careerspage', 'catho', 'catsone', 'cbop', 'civilservicejobs', 'cleverstaff', 'clinch', 'comeet', 'compleo', 'computrabajo', 'concludis', 'cornerstone', 'coveto', 'crelate', 'cryptocurrencyjobs', 'cutshort', 'cvwarehouse', 'darwinbox', 'dayforce', 'deel', 'devglobaljobs', 'digitalrecruiters', 'djinni', 'dover', 'dualoo', 'dvinci', 'earcu', 'easycruit', 'echojobs', 'edjoin', 'eightfold', 'emply', 'empregos', 'energyjobline', 'engage', 'enlizt', 'epam', 'eploy', 'epreselec', 'erecruiter', 'ess', 'eures', 'factorial', 'feinaactiva', 'feishujobs', 'firefish', 'flatchr', 'francetravail', 'freework', 'freshteam', 'friendwork', 'functionalworks', 'geekhunter', 'geekjob', 'gem', 'gemeentebanen', 'gethired', 'getinit', 'getmanfred', 'getmatch', 'getonbrd', 'getro', 'gohire', 'golangjobs', 'gr8people', 'gradcracker', 'greenhouse', 'greythr', 'gulftalent', 'gupy', 'gusto', 'habr_career', 'hackernews', 'harri', 'hcshiring', 'helixjobs', 'herkey', 'herp', 'hh', 'hibob', 'higherme', 'himalayas', 'hireclick', 'hirehive', 'hireology', 'hiringroom', 'hiringthing', 'hirist', 'homerun', 'hrmanager', 'hrmdirect', 'hrmos', 'hroffice', 'humanbit', 'huntflow', 'hurma', 'hzz', 'icims', 'idealtraits', 'iimjobs', 'infoempleo', 'infojobs', 'infojobsbr', 'infostud', 'inhire', 'inploi', 'instaffo', 'instahyre', 'intervieweb', 'ismartrecruit', 'isolvedhire', 'itechart', 'itjobs', 'itviec', 'japandev', 'jazzhr', 'jibe', 'job104', 'jobappnetwork', 'jobboardly', 'jobdanmark', 'jobicy', 'jobindex', 'jobleads', 'jobnet', 'jobsch', 'jobscore', 'jobspage', 'jobspresso', 'jobstash', 'jobstreet', 'jobteaser', 'jobtech', 'jobvite', 'jobylon', 'join', 'joppy', 'jumpit', 'justjoin', 'kalibrr', 'keka', 'kenjo', 'landingjobs', 'lever', 'likeit', 'linkedin', 'livehire', 'loxo', 'luxoft', 'manatal', 'meincheckin', 'mindsight', 'mojedelo', 'mojposao', 'mokahr', 'mycareersfuture', 'mynavi', 'naukri', 'neogov', 'netempregos', 'nodesk', 'nofluffjobs', 'northstone', 'nsz', 'occ', 'odoo', 'onapply', 'onlyfy', 'oorwin', 'opencats', 'optius', 'oracle', 'pageup', 'pandape', 'pandapelatam', 'paradox', 'paycom', 'paycor', 'paylocity', 'peopleforce', 'peoplesoft', 'personio', 'phenom', 'pinpoint', 'polymer', 'posaohr', 'potok', 'powertofly', 'pracuj', 'profession', 'prospective', 'pyjamahr', 'pythonorg', 'quickin', 'radancy', 'rapyd', 'recruitee', 'recruiter_co_kr', 'recruiterflow', 'recruitify', 'recruitingsolutions', 'recrutei', 'reed', 'refline', 'remotedotcom', 'remotive', 'remotli', 'rexx', 'rippling', 'rocketjobs', 'sapoemprego', 'scalis', 'schoolspring', 'seamlesshiring', 'seek', 'selfrecruit', 'senior', 'servicepublic', 'shine', 'sitemapldjson', 'smartrecruiters', 'softgarden', 'solides', 'solidjobs', 'spainjobs', 'spark', 'speedrun', 'startupandvc', 'startupjobs', 'successfactors', 'swissdevjobs', 'taleez', 'talentadore', 'talentbrew', 'talentclue', 'talenthr', 'talentlyft', 'talentsoft', 'talentstorm', 'taleo', 'taleobe', 'teamex', 'teamtailor', 'techinasia', 'techtree', 'tecla', 'tenstreet', 'thehub', 'themuse', 'topco', 'torre', 'traffit', 'trakstar', 'trinethire', 'trudvsem', 'turijobs', 'tyomarkkinatori', 'ukg', 'ukgready', 'umantis', 'usajobs', 'vagas', 'velorahr', 'vention', 'viterbit', 'vouch', 'wantapply', 'wellfound', 'werecruit', 'werkenvoornederland', 'weworkremotely', 'whatjobs', 'whatjobs-ae', 'whatjobs-ar', 'whatjobs-at', 'whatjobs-au', 'whatjobs-be', 'whatjobs-bh', 'whatjobs-br', 'whatjobs-ca', 'whatjobs-ch', 'whatjobs-cl', 'whatjobs-co', 'whatjobs-cr', 'whatjobs-de', 'whatjobs-dk', 'whatjobs-do', 'whatjobs-dz', 'whatjobs-ec', 'whatjobs-eg', 'whatjobs-es', 'whatjobs-fi', 'whatjobs-fr', 'whatjobs-gr', 'whatjobs-gt', 'whatjobs-hk', 'whatjobs-hu', 'whatjobs-id', 'whatjobs-ie', 'whatjobs-in', 'whatjobs-it', 'whatjobs-ke', 'whatjobs-kw', 'whatjobs-lu', 'whatjobs-ma', 'whatjobs-mx', 'whatjobs-my', 'whatjobs-ng', 'whatjobs-nl', 'whatjobs-no', 'whatjobs-nz', 'whatjobs-om', 'whatjobs-pa', 'whatjobs-pe', 'whatjobs-ph', 'whatjobs-pk', 'whatjobs-pl', 'whatjobs-pr', 'whatjobs-pt', 'whatjobs-py', 'whatjobs-qa', 'whatjobs-ru', 'whatjobs-sa', 'whatjobs-se', 'whatjobs-sg', 'whatjobs-sv', 'whatjobs-th', 'whatjobs-tr', 'whatjobs-tz', 'whatjobs-ug', 'whatjobs-uk', 'whatjobs-uy', 'whatjobs-ve', 'whatjobs-vn', 'whatjobs-za', 'work180', 'workable', 'workablemarketplace', 'workday', 'workingnomads', 'workstream', 'workwise', 'wpyoast', 'wttj', 'wuzzuf', 'xing', 'zohorecruit'] as const;
+export const SOURCE_VALUES = ['telegram', 'workatastartup', 'remoteok', 'arc', '4dayweek', 'academictransfer', 'adp', 'adpmyjobs', 'adzuna', 'aijobs', 'applicantpro', 'applicantstack', 'applitrack', 'appone', 'arbeitnow', 'arbeitsagentur', 'ashby', 'ashbygraphql', 'avature', 'bamboohr', 'bayt', 'beehire', 'beesite', 'berlinstartupjobs', 'betterteam', 'bizneo', 'brassring', 'breezy', 'briefhq', 'builtin', 'bullhorn', 'bumeran', 'cadremploi', 'cake', 'careerplug', 'careerspage', 'catho', 'catsone', 'cbop', 'civilservicejobs', 'cleverstaff', 'clinch', 'comeet', 'compleo', 'computrabajo', 'concludis', 'cornerstone', 'coveto', 'crelate', 'cryptocurrencyjobs', 'cutshort', 'cvwarehouse', 'darwinbox', 'dayforce', 'deel', 'devglobaljobs', 'digitalrecruiters', 'djinni', 'dover', 'dualoo', 'dvinci', 'earcu', 'easycruit', 'echojobs', 'edjoin', 'eightfold', 'emply', 'empregos', 'energyjobline', 'engage', 'enlizt', 'epam', 'eploy', 'epreselec', 'erecruiter', 'ess', 'eures', 'factorial', 'feinaactiva', 'feishujobs', 'firefish', 'flatchr', 'francetravail', 'freework', 'freshteam', 'friendwork', 'functionalworks', 'geekhunter', 'geekjob', 'gem', 'gemeentebanen', 'gethired', 'getinit', 'getmanfred', 'getmatch', 'getonbrd', 'getro', 'gohire', 'golangjobs', 'gr8people', 'gradcracker', 'greenhouse', 'greythr', 'gulftalent', 'gupy', 'gusto', 'habr_career', 'hackernews', 'harri', 'hcshiring', 'helixjobs', 'herkey', 'herp', 'hh', 'hibob', 'higherme', 'himalayas', 'hireclick', 'hirehive', 'hireology', 'hiringroom', 'hiringthing', 'hirist', 'homerun', 'hrmanager', 'hrmdirect', 'hrmos', 'hroffice', 'hrsmart', 'humanbit', 'huntflow', 'hurma', 'hzz', 'icims', 'idealtraits', 'iimjobs', 'infoempleo', 'infojobs', 'infojobsbr', 'infostud', 'inhire', 'inploi', 'instaffo', 'instahyre', 'intervieweb', 'ismartrecruit', 'isolvedhire', 'itechart', 'itjobs', 'itviec', 'japandev', 'jazzhr', 'jibe', 'job104', 'jobappnetwork', 'jobboardly', 'jobdanmark', 'jobicy', 'jobindex', 'jobleads', 'jobnet', 'jobsch', 'jobscore', 'jobspage', 'jobspresso', 'jobstash', 'jobstreet', 'jobteaser', 'jobtech', 'jobvite', 'jobylon', 'join', 'joppy', 'jumpit', 'justjoin', 'kalibrr', 'keka', 'kenjo', 'landingjobs', 'lever', 'likeit', 'linkedin', 'livehire', 'loxo', 'luxoft', 'manatal', 'meincheckin', 'mindsight', 'mojedelo', 'mojposao', 'mokahr', 'mycareersfuture', 'mynavi', 'naukri', 'neogov', 'netempregos', 'nodesk', 'nofluffjobs', 'northstone', 'nsz', 'occ', 'odoo', 'onapply', 'onlyfy', 'oorwin', 'opencats', 'optius', 'oracle', 'pageup', 'pandape', 'pandapelatam', 'paradox', 'paycom', 'paycor', 'paylocity', 'peopleforce', 'peoplesoft', 'personio', 'phenom', 'pinpoint', 'polymer', 'posaohr', 'potok', 'powertofly', 'pracuj', 'profession', 'prospective', 'pyjamahr', 'pythonorg', 'quickin', 'radancy', 'rapyd', 'recruitee', 'recruiter_co_kr', 'recruiterflow', 'recruitify', 'recruitingsolutions', 'recrutei', 'reed', 'refline', 'remotedotcom', 'remotive', 'remotli', 'rexx', 'rippling', 'rocketjobs', 'sapoemprego', 'scalis', 'schoolspring', 'seamlesshiring', 'seek', 'selfrecruit', 'senior', 'servicepublic', 'shine', 'sitemapldjson', 'smartrecruiters', 'softgarden', 'solides', 'solidjobs', 'spainjobs', 'spark', 'speedrun', 'startupandvc', 'startupjobs', 'successfactors', 'swissdevjobs', 'taleez', 'talentadore', 'talentbrew', 'talentclue', 'talenthr', 'talentlyft', 'talentsoft', 'talentstorm', 'taleo', 'taleobe', 'teamex', 'teamtailor', 'techinasia', 'techtree', 'tecla', 'tenstreet', 'thehub', 'themuse', 'topco', 'torre', 'traffit', 'trakstar', 'trinethire', 'trudvsem', 'turijobs', 'tyomarkkinatori', 'ukg', 'ukgready', 'umantis', 'usajobs', 'vagas', 'velorahr', 'vention', 'viterbit', 'vouch', 'wantapply', 'wellfound', 'werecruit', 'werkenvoornederland', 'weworkremotely', 'whatjobs', 'whatjobs-ae', 'whatjobs-ar', 'whatjobs-at', 'whatjobs-au', 'whatjobs-be', 'whatjobs-bh', 'whatjobs-br', 'whatjobs-ca', 'whatjobs-ch', 'whatjobs-cl', 'whatjobs-co', 'whatjobs-cr', 'whatjobs-de', 'whatjobs-dk', 'whatjobs-do', 'whatjobs-dz', 'whatjobs-ec', 'whatjobs-eg', 'whatjobs-es', 'whatjobs-fi', 'whatjobs-fr', 'whatjobs-gr', 'whatjobs-gt', 'whatjobs-hk', 'whatjobs-hu', 'whatjobs-id', 'whatjobs-ie', 'whatjobs-in', 'whatjobs-it', 'whatjobs-ke', 'whatjobs-kw', 'whatjobs-lu', 'whatjobs-ma', 'whatjobs-mx', 'whatjobs-my', 'whatjobs-ng', 'whatjobs-nl', 'whatjobs-no', 'whatjobs-nz', 'whatjobs-om', 'whatjobs-pa', 'whatjobs-pe', 'whatjobs-ph', 'whatjobs-pk', 'whatjobs-pl', 'whatjobs-pr', 'whatjobs-pt', 'whatjobs-py', 'whatjobs-qa', 'whatjobs-ru', 'whatjobs-sa', 'whatjobs-se', 'whatjobs-sg', 'whatjobs-sv', 'whatjobs-th', 'whatjobs-tr', 'whatjobs-tz', 'whatjobs-ug', 'whatjobs-uk', 'whatjobs-uy', 'whatjobs-ve', 'whatjobs-vn', 'whatjobs-za', 'work180', 'workable', 'workablemarketplace', 'workday', 'workingnomads', 'workstream', 'workwise', 'wpyoast', 'wttj', 'wuzzuf', 'xing', 'zohorecruit'] as const;
 export type Source = (typeof SOURCE_VALUES)[number];
 export const STAGE_VALUES = ['preparing', 'applied', 'screening', 'responded', 'interview', 'offer', 'accepted', 'rejected', 'withdrawn', 'expired'] as const;
 export type Stage = (typeof STAGE_VALUES)[number];
@@ -1596,9 +1604,9 @@ export const WORK_MODE_VALUES = ['remote', 'hybrid', 'onsite'] as const;
 export type WorkMode = (typeof WORK_MODE_VALUES)[number];
 export const SENIORITY_VALUES = ['intern', 'junior', 'middle', 'senior', 'lead', 'staff', 'principal', 'c_level'] as const;
 export type Seniority = (typeof SENIORITY_VALUES)[number];
-export const CATEGORY_VALUES = ['software_engineering', 'backend', 'frontend', 'fullstack', 'mobile', 'devops', 'sre', 'network_engineering', 'it_support', 'data_engineering', 'data_science', 'data_analytics', 'ml_ai', 'ai_engineering', 'qa', 'security', 'hardware', 'embedded', 'blockchain', 'architecture', 'design', 'creative', 'engineering_design', 'industrial_engineering', 'occupational_safety', 'product', 'project_management', 'healthcare', 'skilled_trades', 'retail', 'hospitality', 'logistics', 'education', 'personal_services', 'administration', 'social_services', 'science', 'manufacturing', 'public_safety', 'marketing', 'sales', 'support', 'business_analysis', 'solutions_engineering', 'developer_relations', 'technical_writing', 'recruiting', 'hr', 'finance', 'legal', 'operations', 'customer_success', 'other'] as const;
+export const CATEGORY_VALUES = ['software_engineering', 'backend', 'frontend', 'fullstack', 'mobile', 'devops', 'sre', 'network_engineering', 'system_administration', 'telecommunications_engineering', 'it_support', 'data_engineering', 'data_science', 'data_analytics', 'ml_ai', 'ai_engineering', 'qa', 'security', 'hardware', 'embedded', 'blockchain', 'architecture', 'design', 'creative', 'engineering_design', 'industrial_engineering', 'occupational_safety', 'product', 'project_management', 'healthcare', 'skilled_trades', 'retail', 'hospitality', 'logistics', 'education', 'personal_services', 'administration', 'social_services', 'science', 'manufacturing', 'public_safety', 'marketing', 'sales', 'support', 'business_analysis', 'solutions_engineering', 'developer_relations', 'technical_writing', 'recruiting', 'hr', 'finance', 'legal', 'operations', 'customer_success', 'other'] as const;
 export type Category = (typeof CATEGORY_VALUES)[number];
-export const TECH_CATEGORY_VALUES = ['software_engineering', 'backend', 'frontend', 'fullstack', 'mobile', 'devops', 'sre', 'network_engineering', 'it_support', 'data_engineering', 'data_science', 'data_analytics', 'ml_ai', 'ai_engineering', 'qa', 'security', 'hardware', 'embedded', 'blockchain', 'architecture', 'design', 'creative', 'product', 'project_management', 'business_analysis', 'solutions_engineering', 'developer_relations', 'technical_writing'] as const;
+export const TECH_CATEGORY_VALUES = ['software_engineering', 'backend', 'frontend', 'fullstack', 'mobile', 'devops', 'sre', 'network_engineering', 'system_administration', 'telecommunications_engineering', 'it_support', 'data_engineering', 'data_science', 'data_analytics', 'ml_ai', 'ai_engineering', 'qa', 'security', 'hardware', 'embedded', 'blockchain', 'architecture', 'design', 'creative', 'product', 'project_management', 'business_analysis', 'solutions_engineering', 'developer_relations', 'technical_writing'] as const;
 export type TechCategory = (typeof TECH_CATEGORY_VALUES)[number];
 export const JOB_CHALLENGE_VALUES = ['english', 'recruiter_contact', 'working_abroad', 'technical_interviews', 'job_fit', 'remote_flexible', 'visa_sponsorship', 'first_job', 'just_starting', 'other'] as const;
 export type JobChallenge = (typeof JOB_CHALLENGE_VALUES)[number];
@@ -2118,6 +2126,7 @@ export const SKILL_LABELS = {
   'boolean-search': 'Boolean Search',
   'boomi': 'Boomi',
   'bootstrap': 'Bootstrap',
+  'box-office-management': 'Box Office Management',
   'bpmn': 'BPMN',
   'braze': 'Braze',
   'burp-suite': 'Burp Suite',
@@ -2139,6 +2148,7 @@ export const SKILL_LABELS = {
   'ccna': 'Ccna',
   'ccnp': 'CCNP',
   'ccpa': 'Ccpa',
+  'cctv': 'CCTV',
   'cdk': 'CDK',
   'centos': 'CentOS',
   'ceph': 'Ceph',
@@ -2250,6 +2260,7 @@ export const SKILL_LABELS = {
   'data-modeling': 'Data Modeling',
   'data-pipelines': 'Data Pipelines',
   'data-quality': 'Data Quality',
+  'data-reconciliation': 'Data Reconciliation',
   'data-science': 'Data Science',
   'data-vault': 'Data Vault',
   'data-visualization': 'Data Visualization',
@@ -2276,6 +2287,7 @@ export const SKILL_LABELS = {
   'design-of-experiments': 'Design of Experiments (DOE)',
   'design-patterns': 'Design Patterns',
   'design-thinking': 'Design Thinking',
+  'design-tokens': 'Design Tokens',
   'developer-advocacy': 'Developer Advocacy',
   'developer-experience': 'Developer Experience',
   'devops': 'DevOps',
@@ -2293,6 +2305,7 @@ export const SKILL_LABELS = {
   'docs-as-code': 'Docs as Code',
   'domain-driven-design': 'Domain-Driven Design (DDD)',
   'dotnet': '.NET',
+  'dotnet-maui': '.NET MAUI',
   'dropwizard': 'Dropwizard',
   'druid': 'Druid',
   'drupal': 'Drupal',
@@ -2335,8 +2348,10 @@ export const SKILL_LABELS = {
   'ethereum': 'Ethereum',
   'ethernet': 'Ethernet',
   'ethersjs': 'ethers.js',
+  'etix': 'Etix',
   'etl': 'ETL',
   'event-driven-architecture': 'Event Driven Architecture',
+  'event-ticketing': 'Event Ticketing',
   'eventbridge': 'Eventbridge',
   'evm': 'EVM',
   'evpn': 'EVPN',
@@ -2355,6 +2370,7 @@ export const SKILL_LABELS = {
   'fiber': 'Fiber',
   'figjam': 'FigJam',
   'figma': 'Figma',
+  'figma-plugins': 'Figma Plugins',
   'final-cut-pro': 'Final Cut Pro',
   'financial-modeling': 'Financial Modeling',
   'financial-reporting': 'Financial Reporting',
@@ -2547,6 +2563,7 @@ export const SKILL_LABELS = {
   'lgpd': 'Lgpd',
   'lidar': 'LiDAR',
   'lifecycle-marketing': 'Lifecycle Marketing',
+  'lightroom': 'Lightroom',
   'lims': 'LIMS',
   'link-building': 'Link Building',
   'linkedin-ads': 'LinkedIn Ads',
@@ -2628,6 +2645,7 @@ export const SKILL_LABELS = {
   'model-evaluation': 'Model Evaluation',
   'monday-com': 'Monday.com',
   'mongodb': 'MongoDB',
+  'monorepo': 'Monorepo',
   'motion-design': 'Motion Design',
   'motion-graphics': 'Motion Graphics',
   'mpls': 'MPLS',
@@ -2738,6 +2756,7 @@ export const SKILL_LABELS = {
   'pneumatics': 'Pneumatics',
   'podman': 'Podman',
   'polars': 'Polars',
+  'pos-terminals': 'POS Terminals',
   'postgresql': 'PostgreSQL',
   'postman': 'Postman',
   'power-automate': 'Power Automate',
@@ -2930,7 +2949,9 @@ export const SKILL_LABELS = {
   'solr': 'Solr',
   'solution-design': 'Solution Design',
   'sonarqube': 'SonarQube',
+  'sop-development': 'SOP Development',
   'soql': 'SOQL',
+  'sourcegraph': 'Sourcegraph',
   'spacy': 'spaCy',
   'spark': 'Spark',
   'sphera': 'Sphera',
@@ -2960,6 +2981,7 @@ export const SKILL_LABELS = {
   'streamlit': 'Streamlit',
   'stripe': 'Stripe',
   'structured-authoring': 'Structured Authoring',
+  'structured-cabling': 'Structured Cabling',
   'substance-designer': 'Substance Designer',
   'substance-painter': 'Substance Painter',
   'successfactors': 'SuccessFactors',
@@ -2974,6 +2996,7 @@ export const SKILL_LABELS = {
   'sybase': 'Sybase',
   'symfony': 'Symfony',
   'sysml': 'SysML',
+  'system-integration': 'System Integration',
   'systemverilog': 'SystemVerilog',
   'tableau': 'Tableau',
   'tabular-editor': 'Tabular Editor',
@@ -3147,7 +3170,7 @@ export const FACET_ALIASES = {
   'data_science': ['data scien', 'data science', 'data scientist', 'дата-сайентист', 'データサイエンティスト', '数据科学', '數據科學', '資料科學'],
   'design': ['design', 'design engineer, product', 'design system engineer', 'design systems engineer', 'designer', 'experience design engineer', 'game design engineer', 'grafični in mulzimedijski oblikovalec', 'grafični oblikovalec', 'istraživač za korisničko iskustvo', 'product design engineer', 'projektant gier', 'projektant graficzny', 'projektant mody', 'projektant wnętrz', 'projektantka gier', 'projektantka graficzna', 'projektantka mody', 'projektantka wnętrz', 'service design engineer', 'ui', 'ui design engineer', 'ui/ux design engineer', 'ui/uxデザイナー', 'ui/ux設計', 'ui/ux设计', 'uiuxデザイナー', 'uiux设计', 'uiデザイナー', 'ui設計', 'ui设计', 'ux', 'ux design engineer', 'uxデザイナー', 'ux設計', 'ux设计', 'web design engineer', 'webデザイナー', 'дизайн', 'дизайнер', 'グラフィックデザイナー', 'ゲームデザイナー', 'ゲームプランナー', 'コミュニケーションデザイナー', 'プロダクトデザイナー', '互動設計', '交互设计', '关卡策划', '剧情策划', '品牌設計', '品牌设计', '室內設計', '室内设计', '工業設計', '平面設計', '平面设计', '战斗策划', '数值策划', '服裝設計', '游戏策划', '產品設計師', '空間設計', '系统策划', '美工', '美編', '美術設計', '視覺設計', '视觉设计', '遊戲企劃'],
   'developer_relations': ['developer advocate', 'developer community manager', 'developer evangelist', 'developer experience engineer', 'developer relations', 'devrel', 'technical evangelist', 'деврел', 'технический евангелист'],
-  'devops': ['administrator systemów', 'ai platform administrator', 'alkalmazás üzemeltető', 'alkalmazásüzemeltető', 'awsエンジニア', 'cloud analyst', 'cloud design engineer', 'cloud engineer', 'cloud migration engineer', 'cloud operations engineer', 'data center engineer', 'data center technician', 'database administrator', 'database engineer', 'datenbankadministrator', 'devops', 'dizajnéri a správcovia databáz', 'fachinformatiker', 'fachinformatiker für systemintegration', 'fachinformatiker systemintegration', 'informatik', 'informatikai üzemeltető', 'informatikus', 'informatičar', 'informatičarka', 'informatyczka', 'informatyk', 'infrastructure analyst', 'infrastructure engineer', 'infrastruktúra üzemeltető', 'it administrator', 'it infrastructure', 'it manager', 'it systemelektroniker', 'it systemtechniker', 'it üzemeltető', 'it-systemelektroniker', 'it-systemtechniker', 'itインフラ', 'linux administrator', 'linux systems engineer', 'ml ops', 'mlops', 'network operations engineer', 'návrháři a správci databází', 'oracle dba', 'platform engineer', 'platform engineering', 'release engineer', 'release manager', 'rendszergazda', 'rendszerüzemeltető', 'sap basis administrator', 'servicenow administrator', 'sharepoint administrator', 'sistemski administrator', 'skrbnik informacijskega sistema', 'skrbnik računalniških sistemov', 'skrbnik sistemov', 'skrbnika informacijskih sistemov', 'správcovia systémov', 'strokovnjak s področja informacijsko-komunikacijskih tehnologij', 'sysadmin', 'system administrator', 'systemadministrator', 'systems administrator', 'systémoví administrátoři', 'szoftverüzemeltető', 'vodja informacijskih tehnologij in digitalizacije', 'vodja informatike', 'windows administrator', 'администратор баз данных', 'адміністратор баз даних', 'адміністратор системи', 'девопс', 'системний адміністратор', 'системный администратор', 'インフラエンジニア', 'インフラ運用', 'クラウドエンジニア', 'サーバエンジニア', 'サーバーエンジニア', 'サーバー構築', 'サーバー設計', 'サーバー運用', 'サーバ構築', 'サーバ設計', 'サーバ運用', 'システム運用', 'データセンターエンジニア', 'データベースエンジニア', 'プラットフォームエンジニア', '云计算', '系統管理工程', '系統管理師', '維運工程', '資料庫管理', '运维工程', '运维开发', '運用監視', '雲端工程'],
+  'devops': ['ai platform administrator', 'alkalmazás üzemeltető', 'alkalmazásüzemeltető', 'awsエンジニア', 'cloud analyst', 'cloud design engineer', 'cloud engineer', 'cloud migration engineer', 'cloud operations engineer', 'data center engineer', 'data center technician', 'database administrator', 'database engineer', 'datenbankadministrator', 'devops', 'dizajnéri a správcovia databáz', 'fachinformatiker', 'fachinformatiker für systemintegration', 'fachinformatiker systemintegration', 'informatik', 'informatikai üzemeltető', 'informatikus', 'informatičar', 'informatičarka', 'informatyczka', 'informatyk', 'infrastructure analyst', 'infrastructure engineer', 'infrastruktúra üzemeltető', 'it infrastructure', 'it manager', 'it systemelektroniker', 'it systemtechniker', 'it üzemeltető', 'it-systemelektroniker', 'it-systemtechniker', 'itインフラ', 'linux systems engineer', 'ml ops', 'mlops', 'network operations engineer', 'návrháři a správci databází', 'oracle dba', 'platform engineer', 'platform engineering', 'release engineer', 'release manager', 'rendszerüzemeltető', 'sap basis administrator', 'servicenow administrator', 'sharepoint administrator', 'strokovnjak s področja informacijsko-komunikacijskih tehnologij', 'szoftverüzemeltető', 'vodja informacijskih tehnologij in digitalizacije', 'vodja informatike', 'администратор баз данных', 'адміністратор баз даних', 'девопс', 'インフラエンジニア', 'インフラ運用', 'クラウドエンジニア', 'サーバエンジニア', 'サーバーエンジニア', 'サーバー構築', 'サーバー設計', 'サーバー運用', 'サーバ構築', 'サーバ設計', 'サーバ運用', 'システム運用', 'データセンターエンジニア', 'データベースエンジニア', 'プラットフォームエンジニア', '云计算', '系統管理工程', '系統管理師', '維運工程', '資料庫管理', '运维工程', '运维开发', '運用監視', '雲端工程'],
   'education': ['adjunct faculty', 'after school counselor', 'after-school counselor', 'asistent z doktoratom', 'assistant superintendent for', 'assistant superintendent of', 'basketball coach', 'bibliotekar', 'camp counselor', 'chess instructor', 'child care', 'childcare', 'daycare', 'edukator', 'edukatorica', 'english trainer', 'fitness coach', 'fitness instructor', 'instruktor fitness', 'instruktor vožnje', 'instruktorka fitness', 'korepetytor', 'korepetytorka', 'lecturer', 'librarian', 'nastavnica', 'nastavnik', 'nauczyciel', 'nauczycielka', 'odgajatelj', 'odgajateljica', 'odgojitelj', 'odgojiteljica', 'organizator izobraževanja odraslih', 'paraprofessional', 'pedagog', 'pilates instructor', 'pomočnik v.d. ravnatelja', 'predavatelj', 'predavačica', 'preschool', 'preschool teacher', 'profesor', 'professor', 'ravnatelj', 'referent višje strokovne šole', 'school superintendent', 'soccer coach', 'spremljevalec otroka', 'spremljevalec učenca', 'spremljevalec učencu', 'spremljevalec v osnovni šoli', 'strokovni delavec v visokošolski dejavnosti', 'substitute teacher', 'superintendent of schools', 'swim instructor', 'tanár', 'tanító', 'teacher', 'teaching assistant', 'tutor', 'učitel', 'učitelj', 'učiteljica', 'učitelka', 'vaspitač', 'vaspitačica', 'vodja enote v visokošolski dejavnost', 'vodja medpodjetniškega izobraževalnega centra', 'vzgojitelj', 'vzgojitelja', 'vzgojiteljica', 'yoga instructor', 'šolski psiholog', 'библиотекарь', 'викладач', 'вихователь', 'воспитатель', 'воспитателя', 'вчитель', 'вчителька', 'мастер производственного обучения', 'методист', 'музыкальный руководитель', 'педагог', 'преподаватель', 'тьютор', 'учител', 'учитель', '保姆', '保母', '保育スタッフ', '保育園', '保育士', '保育教諭', '保育補助', '助教', '家教', '導師', '幼兒園', '幼稚園教諭', '延長保育', '托嬰', '托育', '教保員', '教員', '教室運営', '教师', '教師', '教授', '留学カウンセラー', '老师', '老師', '課輔', '講師', '讲师'],
   'embedded': ['beágyazott szoftverfejlesztő', 'bios工程', 'embedded', 'firmware', 'inženir vgrajene programske opreme', 'logiciel embarqué', 'strokovnjak za mobilne komunikacije vgrajenih sistemov', 'vgrajene programske opreme', 'встраиваемые', 'встраиваемых', 'デバイスドライバ', 'ファームウェア', '固件', '嵌入式', '組み込み', '組込', '組込み', '韌體', '驅動程式', '驱动开发'],
   'engineering_design': ['architectural designer', 'arhitekt', 'arhitekta', 'arhitektica', 'bim coordinator', 'bim designer', 'bim digital design', 'bim manager', 'bim modeler', 'bim specialist', 'bim-digital design', 'buildings design delivery', 'cad designer', 'cad工程', 'cad繪圖', 'cad設計', 'cad设计', 'cam工程', 'civil designer', 'civil digital design', 'design engineer', 'design technician', 'die designer', 'digital design (bim)', 'digital design coordinator (electrical', 'digital design lead (buildings)', 'digital design lead (mechanical', 'digital design lead (structural', 'digital design specialist (bim)', 'digital design specialist (electrical', 'digital design specialist (structural', 'drafter', 'draftsman', 'draughtsman', 'ec&i digital design', 'electrical designer', 'electrical digital design', 'elektro projektant', 'geodet', 'geodetski inženjer', 'geodetski tehničar', 'geometar', 'hvac designer', 'inżynier konstruktor', 'inżynier projektant', 'inženir projektant', 'inženjer geodezije', 'konstruker', 'konstrukter', 'konstruktor', 'konstruktér', 'konštruktér', 'mechanical designer', 'mechanical digital design', 'mold designer', 'odgovorni projektant', 'piping designer', 'plumbing designer', 'projektant', 'projektantica', 'projektantka', 'revit designer', 'security digital design coordinator', 'security digital design specialist', 'statičar', 'structural designer', 'structural digital design', 'tehnička crtačica', 'tehnički crtač', 'tehnični risar', 'tool designer', 'vodja oddelka elektro konstrukcije', 'инженер-проектировщик', 'конструктор', '建築師', '建築設計', '意匠設計', '机械设计', '構造設計', '模具設計', '機械設計', '機構助理工程', '機構工程', '機構研發', '機構設計', '电气设计', '結構設計', '繪圖', '结构设计', '绘图', '製圖', '設備設計', '配管設計', '電気設計', '電氣設計'],
@@ -3170,7 +3193,7 @@ export const FACET_ALIASES = {
   'middle': ['mid', 'mid level', 'mid-level', 'middle', 'ssr', 'мидл', 'средний'],
   'ml_ai': ['ai safety', 'ai/ml', 'c++ in python ai razvijalci', 'computer vision engineer', 'deep learning', 'machine learning', 'machine learning engineer', 'ml developer', 'ml engineer', 'ml/ai', 'mlエンジニア', 'nlp engineer', 'razvojni inženir za umetno inteligenco', 'машинного навчання', '机器学习', '機器學習', '機械学習', '深度学习', '深度學習', '演算法', '算法专家', '算法工程', '算法研究', '自然語言處理', '自然语言处理', '计算机视觉', '電腦視覺'],
   'mobile': ['android', 'androidエンジニア', 'android客户端', 'android工程', 'android应用', 'android开发', 'android研发', 'android系统', 'android软件', 'android開發', 'app工程', 'app开发', 'app開發', 'flutterエンジニア', 'ios', 'iosエンジニア', 'ios客户端', 'ios工程', 'ios开发', 'ios研发', 'ios開發', 'mobilalkalmazás fejlesztő', 'mobilalkalmazás-fejlesztő', 'mobile app', 'mobile application', 'mobile applications', 'mobile apps', 'mobile architect', 'mobile automation', 'mobile developer', 'mobile engineer', 'mobile platform', 'mobile qa', 'mobile software', 'react native developer', 'xamarin', 'мобильная разработка', 'мобильное приложение', 'мобильной разработки', 'мобильный разработчик', 'мобильных приложений', 'アプリエンジニア', 'スマホアプリ', 'ネイティブアプリ', 'モバイルエンジニア', '安卓', '移动端', '鸿蒙'],
-  'network_engineering': ['hálózati mérnök', 'hálózati rendszermérnök', 'network administrator', 'network analyst', 'network design engineer', 'network engineer', 'network engineering', 'network specialist', 'network technician', 'netzwerkadministrator', 'netzwerktechniker', 'počítačových sietí', 'počítačových sítí', 'strokovni sodelavec za omrežje', 'strokovni sodelavec za telekomunikacijska omrežja', 'мережевий інженер', 'сетевой администратор', 'сетевой инженер', 'ネットワークエンジニア', 'ネットワーク構築', 'ネットワーク設計', 'ネットワーク運用', '網管', '網路工程師', '網路管理', '网管', '网络工程师'],
+  'network_engineering': ['hálózati mérnök', 'hálózati rendszermérnök', 'network administrator', 'network analyst', 'network design engineer', 'network engineer', 'network engineering', 'network specialist', 'network technician', 'netzwerkadministrator', 'netzwerktechniker', 'počítačových sietí', 'počítačových sítí', 'strokovni sodelavec za omrežje', 'мережевий інженер', 'сетевой администратор', 'сетевой инженер', 'ネットワークエンジニア', 'ネットワーク構築', 'ネットワーク設計', 'ネットワーク運用', '網管', '網路工程師', '網路管理', '网管', '网络工程师'],
   'occupational_safety': ['bhp', 'bzr', 'diplomirani inženir tehniške varnosti', 'director of safety', 'eh&s', 'ehs', 'ehs专员', 'ehs專員', 'ehs岗', 'ehs工程', 'ehs管理', 'environmental manager', 'head of safety', 'health & safety', 'health and safety', 'hse', 'hse risk', 'hseq', 'hsse', 'industrial hygiene', 'industrial hygienist', 'koordinator za varnost in zdravje', 'ochrony środowiska', 'organizator zdravstveno higienskega režima', 'qhse', 'risk control consultant', 'safety & health officer', 'safety administrator', 'safety advisor', 'safety and health officer', 'safety coordinator', 'safety director', 'safety engineer', 'safety inspector', 'safety intern', 'safety lead', 'safety manager', 'safety officer', 'safety professional', 'safety representative', 'safety risk', 'safety specialist', 'safety supervisor', 'safety technician', 'safety trainer', 'sanitarni inženir', 'sanitarni inžinir', 'she advisor', 'she coordinator', 'she manager', 'she officer', 'she specialist', 'sheq', 'shes', 'sodelavec za varnost', 'strokovni delavec za varnost in zdravje', 'varnostni inženir', 'workplace safety & health', 'workplace safety and health', 'zaštite na radu', 'zaštite od požara', 'охорони праці', 'охрана труда', 'охране труда', 'охраны труда', 'пожежної безпеки', '勞安', '安全员', '安全管理', '安全衛生', '工安', '環保人員', '環保專責', '環安', '职业安全', '職安', '職業安全'],
   'operations': ['beszerzési', 'beszerző', 'biz ops', 'business operations', 'buyer', 'buyers', 'category manager', 'chief of staff', 'chief operating officer', 'commodity manager', 'coo', 'facilities coordinator', 'facilities manager', 'facility manager', 'head of operations', 'nabavci', 'nabave', 'nabavi', 'nabavke', 'nabavni inženir', 'nabavni referent', 'nabavni specialist', 'nabavnik', 'nabavu', 'nákupu', 'office manager', 'operation manager', 'operations analyst', 'operations controller', 'operations coordinator', 'operations manager', 'operations specialist', 'ops manager', 'procurement', 'procurement manager', 'purchasing manager', 'purchasing specialist', 'referent za javna naročila', 'referent za nabavo', 'sodelavec v naročanju', 'sourcing manager', 'strategic sourcing', 'strokovni sodelavec vii/2 - javna naročila', 'strokovnjak za javna naročila', 'svetovalec za javna naročila', 'vodja nabavne službe', 'vodja pisarne', 'zakupów', 'госзакупкам', 'закупкам', 'закупщик', 'закупівель', 'категорийный менеджер', 'менеджер по мто', 'операционный директор', 'операционный менеджер', 'офис-менеджер', 'специалист по закупкам', 'バイヤー', '採購', '營運', '生产计划', '生產管理', '生管', '調達', '購買', '运营', '運營', '采购'],
   'personal_services': ['aesthetician', 'auxiliar de limpeza', 'babá', 'barber', 'beauty therapist', 'caretaker', 'cleaner', 'cosmetologist', 'custodial', 'custodian', 'dadilja', 'day porter', 'delavec v avtopralnici', 'delavec v pralnici', 'delavec za ravnanje z odpadki', 'domar', 'environmental services', 'esthetician', 'faxineiro', 'fitness manager', 'frizer', 'frizerka', 'gospodinja', 'gospodinjec', 'grobar', 'groundskeeper', 'hairstylist', 'higijeničar', 'higijeničarka', 'hišnik', 'housekeeper', 'housekeeping', 'izvajalec ddd', 'janitor', 'janitorial', 'jardineiro', 'kontrolor čiščenja in vzdrževanja', 'kozmetičar', 'kozmetičarka', 'manicurist', 'manikerka', 'maser', 'maserka', 'massage therapist', 'master stylist', 'nail technician', 'negovalec delovnih oblačil', 'oskrbnik', 'pediker', 'pedikerka', 'perač automobila', 'personal trainer', 'pobiralec odpadkov', 'pogrebni delavec', 'pogrebnik', 'porteiro', 'portir', 'poslovodja čistilnega servisa', 'pralec v avtopralnici', 'pralec vozil', 'razkuževalec', 'skrbnik hotelske okolice', 'skrbnik objekta', 'smetar', 'snažilec', 'sodelavec za higieno in čistočo', 'spa manager', 'spa therapist', 'spremač', 'spremačica', 'stylist', 'takarító', 'trener personalny', 'trenerka personalna', 'vodja enostavnejšega gospodinjstva', 'vodja gospodinjstva', 'vratar', 'vzdrževalec perila', 'zelador', 'čistač', 'čistačica', 'čistelec', 'čistilec', 'čistilka', 'čiščenje', 'вахтер', 'вахтёр', 'дворник', 'консьерж', 'косметолог', 'культорганизатор', 'маникюрша', 'няня', 'парикмахер', 'рабочий зеленого хозяйства', 'рабочий зелёного хозяйства', 'садовник', 'сиделка', 'уборщик', 'уборщица', 'エステティシャン', 'ネイリスト', 'マッサージ', 'メイクアップアーティスト', 'リラクゼーション', '保洁', '保潔', '健身教練', '寵物', '按摩', '染髮', '汽車美容', '洗滌', '清掃', '清潔', '美发', '美容人員', '美容助理', '美容师', '美容師', '美容服務', '美容芳療', '美容諮詢', '美容部員', '美容顧問', '美容顾问', '美甲', '美髮', '芳療'],
@@ -3192,7 +3215,9 @@ export const FACET_ALIASES = {
   'sre': ['site reliability', 'sre', 'sreエンジニア'],
   'staff': ['staff'],
   'support': ['agent kontakt centra', 'agent korisničke podrške', 'agent korisničkog servisa', 'agent u call centru', 'agent u kontakt centru', 'agent u pozivnom centru', 'agent v klicnem centru', 'asistent za podporo partnerjem in strankam', 'call centar operater', 'call center', 'call centra', 'call centru', 'call-центр', 'client support', 'contact center', 'customer care', 'customer service', 'customer service desk', 'customer support', 'customer support worker', 'delo v klicnem centru', 'klicni center', 'kontakt centra', 'kontakt centru', 'kontaktnem centru', 'korisnička podrška', 'korisničke podrške', 'korisničkoj podršci', 'obsługa klienta', 'obsługi klienta', 'obsługi klientów', 'operater u call centru', 'operater u kontakt centru', 'podpora strankam', 'pozivnom centru', 'predstavnik za podporo kupcem', 'referent za garancije', 'referent za odnose s strankami', 'referent za sprejem in podporo servisu', 'referent za stike s strankami', 'service advisor', 'servisni asistent', 'servisni svetovalec', 'sodelavec v svetovalnem centru', 'sodelavec za komunikacijo z nemškimi strankami', 'specialist podpore kupcem', 'specialist za podporo', 'sprejemnik na servis', 'sprejemnik servis', 'sprejemnik v kleparsko - ličarski delavnici', 'strokovni sodelavec v asistenčnem centru', 'support', 'svetovalci za podporo uporabnikom', 'svetovalec v klicnem centru', 'svetovalec za delo s strankami', 'svetovalec za podporo uporabnikom', 'svetovalec za stranke', 'technical support worker', 'tehnični svetovalec za servisno mrežo', 'telefonist', 'vodja tehnične podpore in servisa', 'ügyfélszolgálati', 'колл-центр', 'контактен център', 'обслуговування клієнтів', 'обслужване на клиенти', 'поддержка', 'поддержки', 'カスタマーサポート', 'カスタマーサービス', 'コミュニケーター', 'コールセンター', 'サポートエンジニア', '售後服務', '售服工程', '客戶服務', '客户服务', '客服'],
+  'system_administration': ['administrator systemów', 'it administrator', 'linux administrator', 'rendszergazda', 'sistemski administrator', 'skrbnik informacijskega sistema', 'skrbnik računalniških sistemov', 'skrbnik sistemov', 'skrbnika informacijskih sistemov', 'správcovia systémov', 'sysadmin', 'system administration', 'system administrator', 'systemadministrator', 'systems administration', 'systems administrator', 'systémoví administrátoři', 'windows administrator', 'адміністратор системи', 'системний адміністратор', 'системный администратор'],
   'technical_writing': ['content designer', 'content strategist', 'curriculum designer', 'documentation engineer', 'documentation manager', 'documentation specialist', 'e-learning developer', 'elearning developer', 'information developer', 'instructional design', 'instructional designer', 'interpreter', 'interpreters', 'learning designer', 'learning experience designer', 'localization engineer', 'localization manager', 'localization specialist', 'prevodilac', 'prevoditelj', 'prevoditeljica', 'strokovnjak za tehnično dokumentacijo', 'technical communicator', 'technical writer', 'technical writing', 'tehnični urednik', 'tolmač', 'translator', 'ux writer', 'ux-редактор', 'переводчик', 'разработчик документации', 'специалист по документации', 'технический писатель', 'технический редактор', 'техписатель', '翻訳', '翻譯', '翻译', '通訳'],
+  'telecommunications_engineering': ['strokovni sodelavec za telekomunikacijska omrežja', 'telecom engineer', 'telecommunication engineer', 'telecommunications engineer', 'telecommunications engineering', 'telecommunications network engineer', 'telecoms engineer', 'инженер связи'],
 } as const;
 export type FacetAliases = typeof FACET_ALIASES;
 export const COLLECTIONS = [

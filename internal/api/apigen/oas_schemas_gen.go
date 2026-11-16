@@ -2343,6 +2343,47 @@ func (s *BankedAnswer) SetUpdatedAt(val time.Time) {
 	s.UpdatedAt = val
 }
 
+// Ref: #/components/schemas/BillingAttempts
+type BillingAttempts struct {
+	Data []BillingPaymentAttempt `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *BillingAttempts) GetData() []BillingPaymentAttempt {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *BillingAttempts) SetData(val []BillingPaymentAttempt) {
+	s.Data = val
+}
+
+// BillingAttemptsHeaders wraps BillingAttempts with response headers.
+type BillingAttemptsHeaders struct {
+	CacheControl string
+	Response     BillingAttempts
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *BillingAttemptsHeaders) GetCacheControl() string {
+	return s.CacheControl
+}
+
+// GetResponse returns the value of Response.
+func (s *BillingAttemptsHeaders) GetResponse() BillingAttempts {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *BillingAttemptsHeaders) SetCacheControl(val string) {
+	s.CacheControl = val
+}
+
+// SetResponse sets the value of Response.
+func (s *BillingAttemptsHeaders) SetResponse(val BillingAttempts) {
+	s.Response = val
+}
+
 // The checkout link and which offer was applied to it.
 // Ref: #/components/schemas/BillingCheckout
 type BillingCheckout struct {
@@ -2548,6 +2589,135 @@ func (s *BillingOverview) SetInvoices(val []BillingInvoice) {
 // SetMultipleSubscriptions sets the value of MultipleSubscriptions.
 func (s *BillingOverview) SetMultipleSubscriptions(val OptBool) {
 	s.MultipleSubscriptions = val
+}
+
+// One charge attempt, including retries of the same payment.
+// Ref: #/components/schemas/BillingPaymentAttempt
+type BillingPaymentAttempt struct {
+	ID   string    `json:"id"`
+	Date time.Time `json:"date"`
+	// Amount in the currency's smallest unit.
+	AmountCents         int64  `json:"amount_cents"`
+	AmountRefundedCents int64  `json:"amount_refunded_cents"`
+	Currency            string `json:"currency"`
+	// `succeeded`, `failed`, `pending`, `refunded`, or `partially_refunded`.
+	Status string `json:"status"`
+	// A safe display key; provider diagnostics and risk scores are never returned.
+	Reason      OptString `json:"reason"`
+	CardBrand   OptString `json:"card_brand"`
+	CardLast4   OptString `json:"card_last4"`
+	CardFunding OptString `json:"card_funding"`
+	Wallet      OptString `json:"wallet"`
+}
+
+// GetID returns the value of ID.
+func (s *BillingPaymentAttempt) GetID() string {
+	return s.ID
+}
+
+// GetDate returns the value of Date.
+func (s *BillingPaymentAttempt) GetDate() time.Time {
+	return s.Date
+}
+
+// GetAmountCents returns the value of AmountCents.
+func (s *BillingPaymentAttempt) GetAmountCents() int64 {
+	return s.AmountCents
+}
+
+// GetAmountRefundedCents returns the value of AmountRefundedCents.
+func (s *BillingPaymentAttempt) GetAmountRefundedCents() int64 {
+	return s.AmountRefundedCents
+}
+
+// GetCurrency returns the value of Currency.
+func (s *BillingPaymentAttempt) GetCurrency() string {
+	return s.Currency
+}
+
+// GetStatus returns the value of Status.
+func (s *BillingPaymentAttempt) GetStatus() string {
+	return s.Status
+}
+
+// GetReason returns the value of Reason.
+func (s *BillingPaymentAttempt) GetReason() OptString {
+	return s.Reason
+}
+
+// GetCardBrand returns the value of CardBrand.
+func (s *BillingPaymentAttempt) GetCardBrand() OptString {
+	return s.CardBrand
+}
+
+// GetCardLast4 returns the value of CardLast4.
+func (s *BillingPaymentAttempt) GetCardLast4() OptString {
+	return s.CardLast4
+}
+
+// GetCardFunding returns the value of CardFunding.
+func (s *BillingPaymentAttempt) GetCardFunding() OptString {
+	return s.CardFunding
+}
+
+// GetWallet returns the value of Wallet.
+func (s *BillingPaymentAttempt) GetWallet() OptString {
+	return s.Wallet
+}
+
+// SetID sets the value of ID.
+func (s *BillingPaymentAttempt) SetID(val string) {
+	s.ID = val
+}
+
+// SetDate sets the value of Date.
+func (s *BillingPaymentAttempt) SetDate(val time.Time) {
+	s.Date = val
+}
+
+// SetAmountCents sets the value of AmountCents.
+func (s *BillingPaymentAttempt) SetAmountCents(val int64) {
+	s.AmountCents = val
+}
+
+// SetAmountRefundedCents sets the value of AmountRefundedCents.
+func (s *BillingPaymentAttempt) SetAmountRefundedCents(val int64) {
+	s.AmountRefundedCents = val
+}
+
+// SetCurrency sets the value of Currency.
+func (s *BillingPaymentAttempt) SetCurrency(val string) {
+	s.Currency = val
+}
+
+// SetStatus sets the value of Status.
+func (s *BillingPaymentAttempt) SetStatus(val string) {
+	s.Status = val
+}
+
+// SetReason sets the value of Reason.
+func (s *BillingPaymentAttempt) SetReason(val OptString) {
+	s.Reason = val
+}
+
+// SetCardBrand sets the value of CardBrand.
+func (s *BillingPaymentAttempt) SetCardBrand(val OptString) {
+	s.CardBrand = val
+}
+
+// SetCardLast4 sets the value of CardLast4.
+func (s *BillingPaymentAttempt) SetCardLast4(val OptString) {
+	s.CardLast4 = val
+}
+
+// SetCardFunding sets the value of CardFunding.
+func (s *BillingPaymentAttempt) SetCardFunding(val OptString) {
+	s.CardFunding = val
+}
+
+// SetWallet sets the value of Wallet.
+func (s *BillingPaymentAttempt) SetWallet(val OptString) {
+	s.Wallet = val
 }
 
 // Ref: #/components/schemas/BillingStoreSync
@@ -4738,6 +4908,105 @@ func (s *CatalogSizePoint) SetReconstructed(val bool) {
 	s.Reconstructed = val
 }
 
+// One finished bulk snapshot of the catalogue.
+// Ref: #/components/schemas/CatalogueSnapshot
+type CatalogueSnapshot struct {
+	// UTC day the snapshot is named by, `YYYY-MM-DD`.
+	Date string `json:"date"`
+	// Version of the line shape in the file. A removed or re-meant field bumps it; a new field does not.
+	SchemaVersion int32 `json:"schema_version"`
+	// Number of lines (jobs) in the file.
+	Rows int64 `json:"rows"`
+	// Size of the gzip file in bytes.
+	Bytes int64 `json:"bytes"`
+	// Hex SHA-256 of the gzip file, to check a download.
+	SHA256      string    `json:"sha256"`
+	GeneratedAt time.Time `json:"generated_at"`
+	// Pre-signed link to the gzip file; it works without credentials until `url_expires_at`.
+	DownloadURL  string    `json:"download_url"`
+	URLExpiresAt time.Time `json:"url_expires_at"`
+}
+
+// GetDate returns the value of Date.
+func (s *CatalogueSnapshot) GetDate() string {
+	return s.Date
+}
+
+// GetSchemaVersion returns the value of SchemaVersion.
+func (s *CatalogueSnapshot) GetSchemaVersion() int32 {
+	return s.SchemaVersion
+}
+
+// GetRows returns the value of Rows.
+func (s *CatalogueSnapshot) GetRows() int64 {
+	return s.Rows
+}
+
+// GetBytes returns the value of Bytes.
+func (s *CatalogueSnapshot) GetBytes() int64 {
+	return s.Bytes
+}
+
+// GetSHA256 returns the value of SHA256.
+func (s *CatalogueSnapshot) GetSHA256() string {
+	return s.SHA256
+}
+
+// GetGeneratedAt returns the value of GeneratedAt.
+func (s *CatalogueSnapshot) GetGeneratedAt() time.Time {
+	return s.GeneratedAt
+}
+
+// GetDownloadURL returns the value of DownloadURL.
+func (s *CatalogueSnapshot) GetDownloadURL() string {
+	return s.DownloadURL
+}
+
+// GetURLExpiresAt returns the value of URLExpiresAt.
+func (s *CatalogueSnapshot) GetURLExpiresAt() time.Time {
+	return s.URLExpiresAt
+}
+
+// SetDate sets the value of Date.
+func (s *CatalogueSnapshot) SetDate(val string) {
+	s.Date = val
+}
+
+// SetSchemaVersion sets the value of SchemaVersion.
+func (s *CatalogueSnapshot) SetSchemaVersion(val int32) {
+	s.SchemaVersion = val
+}
+
+// SetRows sets the value of Rows.
+func (s *CatalogueSnapshot) SetRows(val int64) {
+	s.Rows = val
+}
+
+// SetBytes sets the value of Bytes.
+func (s *CatalogueSnapshot) SetBytes(val int64) {
+	s.Bytes = val
+}
+
+// SetSHA256 sets the value of SHA256.
+func (s *CatalogueSnapshot) SetSHA256(val string) {
+	s.SHA256 = val
+}
+
+// SetGeneratedAt sets the value of GeneratedAt.
+func (s *CatalogueSnapshot) SetGeneratedAt(val time.Time) {
+	s.GeneratedAt = val
+}
+
+// SetDownloadURL sets the value of DownloadURL.
+func (s *CatalogueSnapshot) SetDownloadURL(val string) {
+	s.DownloadURL = val
+}
+
+// SetURLExpiresAt sets the value of URLExpiresAt.
+func (s *CatalogueSnapshot) SetURLExpiresAt(val time.Time) {
+	s.URLExpiresAt = val
+}
+
 // Ref: #/components/schemas/CategoryMeta
 type CategoryMeta struct {
 	Category string `json:"category"`
@@ -4751,6 +5020,348 @@ func (s *CategoryMeta) GetCategory() string {
 // SetCategory sets the value of Category.
 func (s *CategoryMeta) SetCategory(val string) {
 	s.Category = val
+}
+
+// A webhook subscription to the change feed. The secret is never part of it after creation.
+// Ref: #/components/schemas/ChangeWebhook
+type ChangeWebhook struct {
+	ID  int64  `json:"id"`
+	URL string `json:"url"`
+	// Empty: every company. Otherwise only changes of these companies' postings are delivered.
+	CompanySlugs  []string            `json:"company_slugs"`
+	Kinds         []ChangeWebhookKind `json:"kinds"`
+	CreatedAt     time.Time           `json:"created_at"`
+	LastSuccessAt NilDateTime         `json:"last_success_at"`
+	// Failed deliveries in a row; reset by a delivery that succeeds.
+	ConsecutiveFailures int64 `json:"consecutive_failures"`
+	// What the endpoint answered to the last failed delivery; empty when the last one succeeded.
+	LastError string `json:"last_error"`
+	// Set when the subscription was switched off after sustained failure or a `410`; null while it
+	// delivers.
+	DisabledAt     NilDateTime `json:"disabled_at"`
+	DisabledReason string      `json:"disabled_reason"`
+}
+
+// GetID returns the value of ID.
+func (s *ChangeWebhook) GetID() int64 {
+	return s.ID
+}
+
+// GetURL returns the value of URL.
+func (s *ChangeWebhook) GetURL() string {
+	return s.URL
+}
+
+// GetCompanySlugs returns the value of CompanySlugs.
+func (s *ChangeWebhook) GetCompanySlugs() []string {
+	return s.CompanySlugs
+}
+
+// GetKinds returns the value of Kinds.
+func (s *ChangeWebhook) GetKinds() []ChangeWebhookKind {
+	return s.Kinds
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ChangeWebhook) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetLastSuccessAt returns the value of LastSuccessAt.
+func (s *ChangeWebhook) GetLastSuccessAt() NilDateTime {
+	return s.LastSuccessAt
+}
+
+// GetConsecutiveFailures returns the value of ConsecutiveFailures.
+func (s *ChangeWebhook) GetConsecutiveFailures() int64 {
+	return s.ConsecutiveFailures
+}
+
+// GetLastError returns the value of LastError.
+func (s *ChangeWebhook) GetLastError() string {
+	return s.LastError
+}
+
+// GetDisabledAt returns the value of DisabledAt.
+func (s *ChangeWebhook) GetDisabledAt() NilDateTime {
+	return s.DisabledAt
+}
+
+// GetDisabledReason returns the value of DisabledReason.
+func (s *ChangeWebhook) GetDisabledReason() string {
+	return s.DisabledReason
+}
+
+// SetID sets the value of ID.
+func (s *ChangeWebhook) SetID(val int64) {
+	s.ID = val
+}
+
+// SetURL sets the value of URL.
+func (s *ChangeWebhook) SetURL(val string) {
+	s.URL = val
+}
+
+// SetCompanySlugs sets the value of CompanySlugs.
+func (s *ChangeWebhook) SetCompanySlugs(val []string) {
+	s.CompanySlugs = val
+}
+
+// SetKinds sets the value of Kinds.
+func (s *ChangeWebhook) SetKinds(val []ChangeWebhookKind) {
+	s.Kinds = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ChangeWebhook) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetLastSuccessAt sets the value of LastSuccessAt.
+func (s *ChangeWebhook) SetLastSuccessAt(val NilDateTime) {
+	s.LastSuccessAt = val
+}
+
+// SetConsecutiveFailures sets the value of ConsecutiveFailures.
+func (s *ChangeWebhook) SetConsecutiveFailures(val int64) {
+	s.ConsecutiveFailures = val
+}
+
+// SetLastError sets the value of LastError.
+func (s *ChangeWebhook) SetLastError(val string) {
+	s.LastError = val
+}
+
+// SetDisabledAt sets the value of DisabledAt.
+func (s *ChangeWebhook) SetDisabledAt(val NilDateTime) {
+	s.DisabledAt = val
+}
+
+// SetDisabledReason sets the value of DisabledReason.
+func (s *ChangeWebhook) SetDisabledReason(val string) {
+	s.DisabledReason = val
+}
+
+// Ref: #/components/schemas/ChangeWebhookCreate
+type ChangeWebhookCreate struct {
+	// Where to POST: an absolute http(s) URL. A private, loopback or link-local address is refused.
+	URL string `json:"url"`
+	// At most 100 company slugs, as `GET /companies/{slug}` knows them. Absent or empty: all companies.
+	CompanySlugs []string `json:"company_slugs"`
+	// Absent or empty: all three.
+	Kinds []ChangeWebhookKind `json:"kinds"`
+}
+
+// GetURL returns the value of URL.
+func (s *ChangeWebhookCreate) GetURL() string {
+	return s.URL
+}
+
+// GetCompanySlugs returns the value of CompanySlugs.
+func (s *ChangeWebhookCreate) GetCompanySlugs() []string {
+	return s.CompanySlugs
+}
+
+// GetKinds returns the value of Kinds.
+func (s *ChangeWebhookCreate) GetKinds() []ChangeWebhookKind {
+	return s.Kinds
+}
+
+// SetURL sets the value of URL.
+func (s *ChangeWebhookCreate) SetURL(val string) {
+	s.URL = val
+}
+
+// SetCompanySlugs sets the value of CompanySlugs.
+func (s *ChangeWebhookCreate) SetCompanySlugs(val []string) {
+	s.CompanySlugs = val
+}
+
+// SetKinds sets the value of Kinds.
+func (s *ChangeWebhookCreate) SetKinds(val []ChangeWebhookKind) {
+	s.Kinds = val
+}
+
+// The subscription plus its signing secret, shown exactly once, in the answer that creates it.
+// Ref: #/components/schemas/ChangeWebhookCreated
+type ChangeWebhookCreated struct {
+	ID  int64  `json:"id"`
+	URL string `json:"url"`
+	// Empty: every company. Otherwise only changes of these companies' postings are delivered.
+	CompanySlugs  []string            `json:"company_slugs"`
+	Kinds         []ChangeWebhookKind `json:"kinds"`
+	CreatedAt     time.Time           `json:"created_at"`
+	LastSuccessAt NilDateTime         `json:"last_success_at"`
+	// Failed deliveries in a row; reset by a delivery that succeeds.
+	ConsecutiveFailures int64 `json:"consecutive_failures"`
+	// What the endpoint answered to the last failed delivery; empty when the last one succeeded.
+	LastError string `json:"last_error"`
+	// Set when the subscription was switched off after sustained failure or a `410`; null while it
+	// delivers.
+	DisabledAt     NilDateTime `json:"disabled_at"`
+	DisabledReason string      `json:"disabled_reason"`
+	// The HMAC key for `X-Freehire-Signature`. Store it now: it cannot be read again.
+	Secret string `json:"secret"`
+}
+
+// GetID returns the value of ID.
+func (s *ChangeWebhookCreated) GetID() int64 {
+	return s.ID
+}
+
+// GetURL returns the value of URL.
+func (s *ChangeWebhookCreated) GetURL() string {
+	return s.URL
+}
+
+// GetCompanySlugs returns the value of CompanySlugs.
+func (s *ChangeWebhookCreated) GetCompanySlugs() []string {
+	return s.CompanySlugs
+}
+
+// GetKinds returns the value of Kinds.
+func (s *ChangeWebhookCreated) GetKinds() []ChangeWebhookKind {
+	return s.Kinds
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *ChangeWebhookCreated) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetLastSuccessAt returns the value of LastSuccessAt.
+func (s *ChangeWebhookCreated) GetLastSuccessAt() NilDateTime {
+	return s.LastSuccessAt
+}
+
+// GetConsecutiveFailures returns the value of ConsecutiveFailures.
+func (s *ChangeWebhookCreated) GetConsecutiveFailures() int64 {
+	return s.ConsecutiveFailures
+}
+
+// GetLastError returns the value of LastError.
+func (s *ChangeWebhookCreated) GetLastError() string {
+	return s.LastError
+}
+
+// GetDisabledAt returns the value of DisabledAt.
+func (s *ChangeWebhookCreated) GetDisabledAt() NilDateTime {
+	return s.DisabledAt
+}
+
+// GetDisabledReason returns the value of DisabledReason.
+func (s *ChangeWebhookCreated) GetDisabledReason() string {
+	return s.DisabledReason
+}
+
+// GetSecret returns the value of Secret.
+func (s *ChangeWebhookCreated) GetSecret() string {
+	return s.Secret
+}
+
+// SetID sets the value of ID.
+func (s *ChangeWebhookCreated) SetID(val int64) {
+	s.ID = val
+}
+
+// SetURL sets the value of URL.
+func (s *ChangeWebhookCreated) SetURL(val string) {
+	s.URL = val
+}
+
+// SetCompanySlugs sets the value of CompanySlugs.
+func (s *ChangeWebhookCreated) SetCompanySlugs(val []string) {
+	s.CompanySlugs = val
+}
+
+// SetKinds sets the value of Kinds.
+func (s *ChangeWebhookCreated) SetKinds(val []ChangeWebhookKind) {
+	s.Kinds = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *ChangeWebhookCreated) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetLastSuccessAt sets the value of LastSuccessAt.
+func (s *ChangeWebhookCreated) SetLastSuccessAt(val NilDateTime) {
+	s.LastSuccessAt = val
+}
+
+// SetConsecutiveFailures sets the value of ConsecutiveFailures.
+func (s *ChangeWebhookCreated) SetConsecutiveFailures(val int64) {
+	s.ConsecutiveFailures = val
+}
+
+// SetLastError sets the value of LastError.
+func (s *ChangeWebhookCreated) SetLastError(val string) {
+	s.LastError = val
+}
+
+// SetDisabledAt sets the value of DisabledAt.
+func (s *ChangeWebhookCreated) SetDisabledAt(val NilDateTime) {
+	s.DisabledAt = val
+}
+
+// SetDisabledReason sets the value of DisabledReason.
+func (s *ChangeWebhookCreated) SetDisabledReason(val string) {
+	s.DisabledReason = val
+}
+
+// SetSecret sets the value of Secret.
+func (s *ChangeWebhookCreated) SetSecret(val string) {
+	s.Secret = val
+}
+
+// The kinds of change a webhook can ask for; the same as the change feed's.
+// Ref: #/components/schemas/ChangeWebhookKind
+type ChangeWebhookKind string
+
+const (
+	ChangeWebhookKindOpened   ChangeWebhookKind = "opened"
+	ChangeWebhookKindClosed   ChangeWebhookKind = "closed"
+	ChangeWebhookKindReopened ChangeWebhookKind = "reopened"
+)
+
+// AllValues returns all ChangeWebhookKind values.
+func (ChangeWebhookKind) AllValues() []ChangeWebhookKind {
+	return []ChangeWebhookKind{
+		ChangeWebhookKindOpened,
+		ChangeWebhookKindClosed,
+		ChangeWebhookKindReopened,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s ChangeWebhookKind) MarshalText() ([]byte, error) {
+	switch s {
+	case ChangeWebhookKindOpened:
+		return []byte(s), nil
+	case ChangeWebhookKindClosed:
+		return []byte(s), nil
+	case ChangeWebhookKindReopened:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *ChangeWebhookKind) UnmarshalText(data []byte) error {
+	switch ChangeWebhookKind(data) {
+	case ChangeWebhookKindOpened:
+		*s = ChangeWebhookKindOpened
+		return nil
+	case ChangeWebhookKindClosed:
+		*s = ChangeWebhookKindClosed
+		return nil
+	case ChangeWebhookKindReopened:
+		*s = ChangeWebhookKindReopened
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
 }
 
 // A single item: `{"data": ...}`.
@@ -6566,6 +7177,21 @@ func (s *CreateCVCreated) SetData(val CvRecord) {
 }
 
 // A single item: `{"data": ...}`.
+type CreateChangeWebhookCreated struct {
+	Data ChangeWebhookCreated `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *CreateChangeWebhookCreated) GetData() ChangeWebhookCreated {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *CreateChangeWebhookCreated) SetData(val ChangeWebhookCreated) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type CreateEmployerVacancyCreated struct {
 	Data jx.Raw `json:"data"`
 }
@@ -7063,11 +7689,23 @@ func (s *CvBaseSession) SetSessionID(val string) {
 // A stored cover letter; `present` is false, with no letter, when none was drafted.
 // Ref: #/components/schemas/CvCoverLetter
 type CvCoverLetter struct {
-	Present bool      `json:"present"`
-	Stale   OptBool   `json:"stale"`
-	Letter  jx.Raw    `json:"letter"`
-	Cited   jx.Raw    `json:"cited"`
-	Model   OptString `json:"model"`
+	EvidenceBlocked OptBool   `json:"evidence_blocked"`
+	EvidenceChanged OptBool   `json:"evidence_changed"`
+	Present         bool      `json:"present"`
+	Stale           OptBool   `json:"stale"`
+	Letter          jx.Raw    `json:"letter"`
+	Cited           jx.Raw    `json:"cited"`
+	Model           OptString `json:"model"`
+}
+
+// GetEvidenceBlocked returns the value of EvidenceBlocked.
+func (s *CvCoverLetter) GetEvidenceBlocked() OptBool {
+	return s.EvidenceBlocked
+}
+
+// GetEvidenceChanged returns the value of EvidenceChanged.
+func (s *CvCoverLetter) GetEvidenceChanged() OptBool {
+	return s.EvidenceChanged
 }
 
 // GetPresent returns the value of Present.
@@ -7093,6 +7731,16 @@ func (s *CvCoverLetter) GetCited() jx.Raw {
 // GetModel returns the value of Model.
 func (s *CvCoverLetter) GetModel() OptString {
 	return s.Model
+}
+
+// SetEvidenceBlocked sets the value of EvidenceBlocked.
+func (s *CvCoverLetter) SetEvidenceBlocked(val OptBool) {
+	s.EvidenceBlocked = val
+}
+
+// SetEvidenceChanged sets the value of EvidenceChanged.
+func (s *CvCoverLetter) SetEvidenceChanged(val OptBool) {
+	s.EvidenceChanged = val
 }
 
 // SetPresent sets the value of Present.
@@ -7919,6 +8567,9 @@ func (s *DeleteBankedAnswerOK) SetData(val Deleted) {
 
 // DeleteCVNoContent is response for DeleteCV operation.
 type DeleteCVNoContent struct{}
+
+// DeleteChangeWebhookNoContent is response for DeleteChangeWebhook operation.
+type DeleteChangeWebhookNoContent struct{}
 
 // A single item: `{"data": ...}`.
 type DeleteCompanyFeedbackOK struct {
@@ -8801,8 +9452,11 @@ type EmployerAccount struct {
 	Status      EmployerAccountStatus `json:"status"`
 	VerifiedAt  OptDateTime           `json:"verified_at"`
 	// Whether the claimant still owes the mailed code or is waiting on a moderator.
-	EmailConfirmed bool      `json:"email_confirmed"`
-	CreatedAt      time.Time `json:"created_at"`
+	EmailConfirmed bool `json:"email_confirmed"`
+	// True when the caller acts for the company as a member of its team rather than as its claimant;
+	// `work_email` is then the caller's own.
+	Member    bool      `json:"member"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // GetUserID returns the value of UserID.
@@ -8838,6 +9492,11 @@ func (s *EmployerAccount) GetVerifiedAt() OptDateTime {
 // GetEmailConfirmed returns the value of EmailConfirmed.
 func (s *EmployerAccount) GetEmailConfirmed() bool {
 	return s.EmailConfirmed
+}
+
+// GetMember returns the value of Member.
+func (s *EmployerAccount) GetMember() bool {
+	return s.Member
 }
 
 // GetCreatedAt returns the value of CreatedAt.
@@ -8878,6 +9537,11 @@ func (s *EmployerAccount) SetVerifiedAt(val OptDateTime) {
 // SetEmailConfirmed sets the value of EmailConfirmed.
 func (s *EmployerAccount) SetEmailConfirmed(val bool) {
 	s.EmailConfirmed = val
+}
+
+// SetMember sets the value of Member.
+func (s *EmployerAccount) SetMember(val bool) {
+	s.Member = val
 }
 
 // SetCreatedAt sets the value of CreatedAt.
@@ -8934,6 +9598,422 @@ func (s *EmployerAccountStatus) UnmarshalText(data []byte) error {
 	}
 }
 
+// One application sent on freehire to one of the caller's vacancies.
+// Ref: #/components/schemas/EmployerApplication
+type EmployerApplication struct {
+	ID int64 `json:"id"`
+	// The vacancy's public slug.
+	JobSlug  string `json:"job_slug"`
+	JobTitle string `json:"job_title"`
+	// The candidate's address; replies to the application email reach it too.
+	CandidateEmail string `json:"candidate_email"`
+	// "tailored" (a CV made for this vacancy) or "resume" (the candidate's uploaded file).
+	CvKind string `json:"cv_kind"`
+	// False for an application sent before its CV was kept: that CV reached you by email only.
+	HasCv bool `json:"has_cv"`
+	// The candidate's note, empty when none.
+	Note    string                      `json:"note"`
+	Answers []EmployerApplicationAnswer `json:"answers"`
+	Stage   EmployerApplicationStage    `json:"stage"`
+	// When you last moved it; absent while it has never been moved.
+	StageChangedAt OptDateTime `json:"stage_changed_at"`
+	// When the application reached you.
+	SentAt time.Time `json:"sent_at"`
+}
+
+// GetID returns the value of ID.
+func (s *EmployerApplication) GetID() int64 {
+	return s.ID
+}
+
+// GetJobSlug returns the value of JobSlug.
+func (s *EmployerApplication) GetJobSlug() string {
+	return s.JobSlug
+}
+
+// GetJobTitle returns the value of JobTitle.
+func (s *EmployerApplication) GetJobTitle() string {
+	return s.JobTitle
+}
+
+// GetCandidateEmail returns the value of CandidateEmail.
+func (s *EmployerApplication) GetCandidateEmail() string {
+	return s.CandidateEmail
+}
+
+// GetCvKind returns the value of CvKind.
+func (s *EmployerApplication) GetCvKind() string {
+	return s.CvKind
+}
+
+// GetHasCv returns the value of HasCv.
+func (s *EmployerApplication) GetHasCv() bool {
+	return s.HasCv
+}
+
+// GetNote returns the value of Note.
+func (s *EmployerApplication) GetNote() string {
+	return s.Note
+}
+
+// GetAnswers returns the value of Answers.
+func (s *EmployerApplication) GetAnswers() []EmployerApplicationAnswer {
+	return s.Answers
+}
+
+// GetStage returns the value of Stage.
+func (s *EmployerApplication) GetStage() EmployerApplicationStage {
+	return s.Stage
+}
+
+// GetStageChangedAt returns the value of StageChangedAt.
+func (s *EmployerApplication) GetStageChangedAt() OptDateTime {
+	return s.StageChangedAt
+}
+
+// GetSentAt returns the value of SentAt.
+func (s *EmployerApplication) GetSentAt() time.Time {
+	return s.SentAt
+}
+
+// SetID sets the value of ID.
+func (s *EmployerApplication) SetID(val int64) {
+	s.ID = val
+}
+
+// SetJobSlug sets the value of JobSlug.
+func (s *EmployerApplication) SetJobSlug(val string) {
+	s.JobSlug = val
+}
+
+// SetJobTitle sets the value of JobTitle.
+func (s *EmployerApplication) SetJobTitle(val string) {
+	s.JobTitle = val
+}
+
+// SetCandidateEmail sets the value of CandidateEmail.
+func (s *EmployerApplication) SetCandidateEmail(val string) {
+	s.CandidateEmail = val
+}
+
+// SetCvKind sets the value of CvKind.
+func (s *EmployerApplication) SetCvKind(val string) {
+	s.CvKind = val
+}
+
+// SetHasCv sets the value of HasCv.
+func (s *EmployerApplication) SetHasCv(val bool) {
+	s.HasCv = val
+}
+
+// SetNote sets the value of Note.
+func (s *EmployerApplication) SetNote(val string) {
+	s.Note = val
+}
+
+// SetAnswers sets the value of Answers.
+func (s *EmployerApplication) SetAnswers(val []EmployerApplicationAnswer) {
+	s.Answers = val
+}
+
+// SetStage sets the value of Stage.
+func (s *EmployerApplication) SetStage(val EmployerApplicationStage) {
+	s.Stage = val
+}
+
+// SetStageChangedAt sets the value of StageChangedAt.
+func (s *EmployerApplication) SetStageChangedAt(val OptDateTime) {
+	s.StageChangedAt = val
+}
+
+// SetSentAt sets the value of SentAt.
+func (s *EmployerApplication) SetSentAt(val time.Time) {
+	s.SentAt = val
+}
+
+// One answered question, as asked when the candidate applied.
+// Ref: #/components/schemas/EmployerApplicationAnswer
+type EmployerApplicationAnswer struct {
+	// The question's id on the vacancy's form. (e.g. `q1`).
+	ID string `json:"id"`
+	// The question as it read when the candidate applied.
+	Label string `json:"label"`
+	// "text", "boolean" (answer "true"/"false") or "select".
+	Type string `json:"type"`
+	// The candidate's answer.
+	Answer string `json:"answer"`
+}
+
+// GetID returns the value of ID.
+func (s *EmployerApplicationAnswer) GetID() string {
+	return s.ID
+}
+
+// GetLabel returns the value of Label.
+func (s *EmployerApplicationAnswer) GetLabel() string {
+	return s.Label
+}
+
+// GetType returns the value of Type.
+func (s *EmployerApplicationAnswer) GetType() string {
+	return s.Type
+}
+
+// GetAnswer returns the value of Answer.
+func (s *EmployerApplicationAnswer) GetAnswer() string {
+	return s.Answer
+}
+
+// SetID sets the value of ID.
+func (s *EmployerApplicationAnswer) SetID(val string) {
+	s.ID = val
+}
+
+// SetLabel sets the value of Label.
+func (s *EmployerApplicationAnswer) SetLabel(val string) {
+	s.Label = val
+}
+
+// SetType sets the value of Type.
+func (s *EmployerApplicationAnswer) SetType(val string) {
+	s.Type = val
+}
+
+// SetAnswer sets the value of Answer.
+func (s *EmployerApplicationAnswer) SetAnswer(val string) {
+	s.Answer = val
+}
+
+// Ref: #/components/schemas/EmployerApplicationMove
+type EmployerApplicationMove struct {
+	// The stage to move to: new, reviewing, interview, offer, hired or rejected. (e.g. `interview`).
+	Stage OptString `json:"stage"`
+	// Your words to the candidate, at most 2000 characters, quoted in their email. Accepted only with
+	// `interview`, `offer` or `rejected`, the stages that send one.
+	Message OptString `json:"message"`
+}
+
+// GetStage returns the value of Stage.
+func (s *EmployerApplicationMove) GetStage() OptString {
+	return s.Stage
+}
+
+// GetMessage returns the value of Message.
+func (s *EmployerApplicationMove) GetMessage() OptString {
+	return s.Message
+}
+
+// SetStage sets the value of Stage.
+func (s *EmployerApplicationMove) SetStage(val OptString) {
+	s.Stage = val
+}
+
+// SetMessage sets the value of Message.
+func (s *EmployerApplicationMove) SetMessage(val OptString) {
+	s.Message = val
+}
+
+// Ref: #/components/schemas/EmployerApplicationMoved
+type EmployerApplicationMoved struct {
+	Application EmployerApplication `json:"application"`
+	// Whether the candidate was emailed about this move. False when the stage sends no letter, nothing
+	// changed, or the letter failed.
+	CandidateNotified bool `json:"candidate_notified"`
+}
+
+// GetApplication returns the value of Application.
+func (s *EmployerApplicationMoved) GetApplication() EmployerApplication {
+	return s.Application
+}
+
+// GetCandidateNotified returns the value of CandidateNotified.
+func (s *EmployerApplicationMoved) GetCandidateNotified() bool {
+	return s.CandidateNotified
+}
+
+// SetApplication sets the value of Application.
+func (s *EmployerApplicationMoved) SetApplication(val EmployerApplication) {
+	s.Application = val
+}
+
+// SetCandidateNotified sets the value of CandidateNotified.
+func (s *EmployerApplicationMoved) SetCandidateNotified(val bool) {
+	s.CandidateNotified = val
+}
+
+// A stage of the employer's hiring pipeline. Every delivered application starts at `new`.
+// Ref: #/components/schemas/EmployerApplicationStage
+type EmployerApplicationStage string
+
+const (
+	EmployerApplicationStageNew       EmployerApplicationStage = "new"
+	EmployerApplicationStageReviewing EmployerApplicationStage = "reviewing"
+	EmployerApplicationStageInterview EmployerApplicationStage = "interview"
+	EmployerApplicationStageOffer     EmployerApplicationStage = "offer"
+	EmployerApplicationStageHired     EmployerApplicationStage = "hired"
+	EmployerApplicationStageRejected  EmployerApplicationStage = "rejected"
+)
+
+// AllValues returns all EmployerApplicationStage values.
+func (EmployerApplicationStage) AllValues() []EmployerApplicationStage {
+	return []EmployerApplicationStage{
+		EmployerApplicationStageNew,
+		EmployerApplicationStageReviewing,
+		EmployerApplicationStageInterview,
+		EmployerApplicationStageOffer,
+		EmployerApplicationStageHired,
+		EmployerApplicationStageRejected,
+	}
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (s EmployerApplicationStage) MarshalText() ([]byte, error) {
+	switch s {
+	case EmployerApplicationStageNew:
+		return []byte(s), nil
+	case EmployerApplicationStageReviewing:
+		return []byte(s), nil
+	case EmployerApplicationStageInterview:
+		return []byte(s), nil
+	case EmployerApplicationStageOffer:
+		return []byte(s), nil
+	case EmployerApplicationStageHired:
+		return []byte(s), nil
+	case EmployerApplicationStageRejected:
+		return []byte(s), nil
+	default:
+		return nil, errors.Errorf("invalid value: %q", s)
+	}
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler.
+func (s *EmployerApplicationStage) UnmarshalText(data []byte) error {
+	switch EmployerApplicationStage(data) {
+	case EmployerApplicationStageNew:
+		*s = EmployerApplicationStageNew
+		return nil
+	case EmployerApplicationStageReviewing:
+		*s = EmployerApplicationStageReviewing
+		return nil
+	case EmployerApplicationStageInterview:
+		*s = EmployerApplicationStageInterview
+		return nil
+	case EmployerApplicationStageOffer:
+		*s = EmployerApplicationStageOffer
+		return nil
+	case EmployerApplicationStageHired:
+		*s = EmployerApplicationStageHired
+		return nil
+	case EmployerApplicationStageRejected:
+		*s = EmployerApplicationStageRejected
+		return nil
+	default:
+		return errors.Errorf("invalid value: %q", data)
+	}
+}
+
+// Ref: #/components/schemas/EmployerApplicationsMeta
+type EmployerApplicationsMeta struct {
+	Total  int64 `json:"total"`
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+	// How many applications sit at each stage under the `job` filter, whatever `stage` is; a stage with
+	// none is absent.
+	StageCounts EmployerApplicationsMetaStageCounts `json:"stage_counts"`
+	// Query params this listing did not read, so the answer is wider than asked; absent when every param
+	// was read.
+	IgnoredParams []IgnoredParam `json:"ignored_params"`
+}
+
+// GetTotal returns the value of Total.
+func (s *EmployerApplicationsMeta) GetTotal() int64 {
+	return s.Total
+}
+
+// GetLimit returns the value of Limit.
+func (s *EmployerApplicationsMeta) GetLimit() int64 {
+	return s.Limit
+}
+
+// GetOffset returns the value of Offset.
+func (s *EmployerApplicationsMeta) GetOffset() int64 {
+	return s.Offset
+}
+
+// GetStageCounts returns the value of StageCounts.
+func (s *EmployerApplicationsMeta) GetStageCounts() EmployerApplicationsMetaStageCounts {
+	return s.StageCounts
+}
+
+// GetIgnoredParams returns the value of IgnoredParams.
+func (s *EmployerApplicationsMeta) GetIgnoredParams() []IgnoredParam {
+	return s.IgnoredParams
+}
+
+// SetTotal sets the value of Total.
+func (s *EmployerApplicationsMeta) SetTotal(val int64) {
+	s.Total = val
+}
+
+// SetLimit sets the value of Limit.
+func (s *EmployerApplicationsMeta) SetLimit(val int64) {
+	s.Limit = val
+}
+
+// SetOffset sets the value of Offset.
+func (s *EmployerApplicationsMeta) SetOffset(val int64) {
+	s.Offset = val
+}
+
+// SetStageCounts sets the value of StageCounts.
+func (s *EmployerApplicationsMeta) SetStageCounts(val EmployerApplicationsMetaStageCounts) {
+	s.StageCounts = val
+}
+
+// SetIgnoredParams sets the value of IgnoredParams.
+func (s *EmployerApplicationsMeta) SetIgnoredParams(val []IgnoredParam) {
+	s.IgnoredParams = val
+}
+
+// How many applications sit at each stage under the `job` filter, whatever `stage` is; a stage with
+// none is absent.
+type EmployerApplicationsMetaStageCounts map[string]int64
+
+func (s *EmployerApplicationsMetaStageCounts) init() EmployerApplicationsMetaStageCounts {
+	m := *s
+	if m == nil {
+		m = map[string]int64{}
+		*s = m
+	}
+	return m
+}
+
+// Ref: #/components/schemas/EmployerApplicationsPage
+type EmployerApplicationsPage struct {
+	Data []EmployerApplication    `json:"data"`
+	Meta EmployerApplicationsMeta `json:"meta"`
+}
+
+// GetData returns the value of Data.
+func (s *EmployerApplicationsPage) GetData() []EmployerApplication {
+	return s.Data
+}
+
+// GetMeta returns the value of Meta.
+func (s *EmployerApplicationsPage) GetMeta() EmployerApplicationsMeta {
+	return s.Meta
+}
+
+// SetData sets the value of Data.
+func (s *EmployerApplicationsPage) SetData(val []EmployerApplication) {
+	s.Data = val
+}
+
+// SetMeta sets the value of Meta.
+func (s *EmployerApplicationsPage) SetMeta(val EmployerApplicationsMeta) {
+	s.Meta = val
+}
+
 // Ref: #/components/schemas/EmployerClaim
 type EmployerClaim struct {
 	CompanyName OptString `json:"company_name"`
@@ -8985,16 +10065,19 @@ type EmployerCompany struct {
 	Status      EmployerAccountStatus `json:"status"`
 	VerifiedAt  OptDateTime           `json:"verified_at"`
 	// Whether the claimant still owes the mailed code or is waiting on a moderator.
-	EmailConfirmed bool      `json:"email_confirmed"`
-	CreatedAt      time.Time `json:"created_at"`
-	Tagline        OptString `json:"tagline"`
-	Description    OptString `json:"description"`
-	Website        OptString `json:"website"`
-	Industries     []string  `json:"industries"`
-	YearFounded    OptInt64  `json:"year_founded"`
-	EmployeeCount  OptInt64  `json:"employee_count"`
-	HqCountry      OptString `json:"hq_country"`
-	Subindustry    OptString `json:"subindustry"`
+	EmailConfirmed bool `json:"email_confirmed"`
+	// True when the caller acts for the company as a member of its team rather than as its claimant;
+	// `work_email` is then the caller's own.
+	Member        bool      `json:"member"`
+	CreatedAt     time.Time `json:"created_at"`
+	Tagline       OptString `json:"tagline"`
+	Description   OptString `json:"description"`
+	Website       OptString `json:"website"`
+	Industries    []string  `json:"industries"`
+	YearFounded   OptInt64  `json:"year_founded"`
+	EmployeeCount OptInt64  `json:"employee_count"`
+	HqCountry     OptString `json:"hq_country"`
+	Subindustry   OptString `json:"subindustry"`
 }
 
 // GetUserID returns the value of UserID.
@@ -9030,6 +10113,11 @@ func (s *EmployerCompany) GetVerifiedAt() OptDateTime {
 // GetEmailConfirmed returns the value of EmailConfirmed.
 func (s *EmployerCompany) GetEmailConfirmed() bool {
 	return s.EmailConfirmed
+}
+
+// GetMember returns the value of Member.
+func (s *EmployerCompany) GetMember() bool {
+	return s.Member
 }
 
 // GetCreatedAt returns the value of CreatedAt.
@@ -9110,6 +10198,11 @@ func (s *EmployerCompany) SetVerifiedAt(val OptDateTime) {
 // SetEmailConfirmed sets the value of EmailConfirmed.
 func (s *EmployerCompany) SetEmailConfirmed(val bool) {
 	s.EmailConfirmed = val
+}
+
+// SetMember sets the value of Member.
+func (s *EmployerCompany) SetMember(val bool) {
+	s.Member = val
 }
 
 // SetCreatedAt sets the value of CreatedAt.
@@ -9327,6 +10420,203 @@ func (s *EmployerRejected) GetRejected() bool {
 // SetRejected sets the value of Rejected.
 func (s *EmployerRejected) SetRejected(val bool) {
 	s.Rejected = val
+}
+
+// Ref: #/components/schemas/EmployerRemoved
+type EmployerRemoved struct {
+	Removed bool `json:"removed"`
+}
+
+// GetRemoved returns the value of Removed.
+func (s *EmployerRemoved) GetRemoved() bool {
+	return s.Removed
+}
+
+// SetRemoved sets the value of Removed.
+func (s *EmployerRemoved) SetRemoved(val bool) {
+	s.Removed = val
+}
+
+// Ref: #/components/schemas/EmployerTeam
+type EmployerTeam struct {
+	Members     []EmployerTeamMember     `json:"members"`
+	Invitations []EmployerTeamInvitation `json:"invitations"`
+}
+
+// GetMembers returns the value of Members.
+func (s *EmployerTeam) GetMembers() []EmployerTeamMember {
+	return s.Members
+}
+
+// GetInvitations returns the value of Invitations.
+func (s *EmployerTeam) GetInvitations() []EmployerTeamInvitation {
+	return s.Invitations
+}
+
+// SetMembers sets the value of Members.
+func (s *EmployerTeam) SetMembers(val []EmployerTeamMember) {
+	s.Members = val
+}
+
+// SetInvitations sets the value of Invitations.
+func (s *EmployerTeam) SetInvitations(val []EmployerTeamInvitation) {
+	s.Invitations = val
+}
+
+// An invitation whose link still works.
+// Ref: #/components/schemas/EmployerTeamInvitation
+type EmployerTeamInvitation struct {
+	ID        int64     `json:"id"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"created_at"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+// GetID returns the value of ID.
+func (s *EmployerTeamInvitation) GetID() int64 {
+	return s.ID
+}
+
+// GetEmail returns the value of Email.
+func (s *EmployerTeamInvitation) GetEmail() string {
+	return s.Email
+}
+
+// GetCreatedAt returns the value of CreatedAt.
+func (s *EmployerTeamInvitation) GetCreatedAt() time.Time {
+	return s.CreatedAt
+}
+
+// GetExpiresAt returns the value of ExpiresAt.
+func (s *EmployerTeamInvitation) GetExpiresAt() time.Time {
+	return s.ExpiresAt
+}
+
+// SetID sets the value of ID.
+func (s *EmployerTeamInvitation) SetID(val int64) {
+	s.ID = val
+}
+
+// SetEmail sets the value of Email.
+func (s *EmployerTeamInvitation) SetEmail(val string) {
+	s.Email = val
+}
+
+// SetCreatedAt sets the value of CreatedAt.
+func (s *EmployerTeamInvitation) SetCreatedAt(val time.Time) {
+	s.CreatedAt = val
+}
+
+// SetExpiresAt sets the value of ExpiresAt.
+func (s *EmployerTeamInvitation) SetExpiresAt(val time.Time) {
+	s.ExpiresAt = val
+}
+
+// What an invitation link offers before it is accepted.
+// Ref: #/components/schemas/EmployerTeamInvitationPreview
+type EmployerTeamInvitationPreview struct {
+	CompanyName string `json:"company_name"`
+	Email       string `json:"email"`
+}
+
+// GetCompanyName returns the value of CompanyName.
+func (s *EmployerTeamInvitationPreview) GetCompanyName() string {
+	return s.CompanyName
+}
+
+// GetEmail returns the value of Email.
+func (s *EmployerTeamInvitationPreview) GetEmail() string {
+	return s.Email
+}
+
+// SetCompanyName sets the value of CompanyName.
+func (s *EmployerTeamInvitationPreview) SetCompanyName(val string) {
+	s.CompanyName = val
+}
+
+// SetEmail sets the value of Email.
+func (s *EmployerTeamInvitationPreview) SetEmail(val string) {
+	s.Email = val
+}
+
+// Ref: #/components/schemas/EmployerTeamInvite
+type EmployerTeamInvite struct {
+	Email OptString `json:"email"`
+}
+
+// GetEmail returns the value of Email.
+func (s *EmployerTeamInvite) GetEmail() OptString {
+	return s.Email
+}
+
+// SetEmail sets the value of Email.
+func (s *EmployerTeamInvite) SetEmail(val OptString) {
+	s.Email = val
+}
+
+// Someone who acts for the company. `holder` is the claimant, who cannot be removed.
+// Ref: #/components/schemas/EmployerTeamMember
+type EmployerTeamMember struct {
+	UserID    int64     `json:"user_id"`
+	WorkEmail string    `json:"work_email"`
+	JoinedAt  time.Time `json:"joined_at"`
+	Holder    bool      `json:"holder"`
+}
+
+// GetUserID returns the value of UserID.
+func (s *EmployerTeamMember) GetUserID() int64 {
+	return s.UserID
+}
+
+// GetWorkEmail returns the value of WorkEmail.
+func (s *EmployerTeamMember) GetWorkEmail() string {
+	return s.WorkEmail
+}
+
+// GetJoinedAt returns the value of JoinedAt.
+func (s *EmployerTeamMember) GetJoinedAt() time.Time {
+	return s.JoinedAt
+}
+
+// GetHolder returns the value of Holder.
+func (s *EmployerTeamMember) GetHolder() bool {
+	return s.Holder
+}
+
+// SetUserID sets the value of UserID.
+func (s *EmployerTeamMember) SetUserID(val int64) {
+	s.UserID = val
+}
+
+// SetWorkEmail sets the value of WorkEmail.
+func (s *EmployerTeamMember) SetWorkEmail(val string) {
+	s.WorkEmail = val
+}
+
+// SetJoinedAt sets the value of JoinedAt.
+func (s *EmployerTeamMember) SetJoinedAt(val time.Time) {
+	s.JoinedAt = val
+}
+
+// SetHolder sets the value of Holder.
+func (s *EmployerTeamMember) SetHolder(val bool) {
+	s.Holder = val
+}
+
+// The token from the invitation link.
+// Ref: #/components/schemas/EmployerTeamToken
+type EmployerTeamToken struct {
+	Token OptString `json:"token"`
+}
+
+// GetToken returns the value of Token.
+func (s *EmployerTeamToken) GetToken() OptString {
+	return s.Token
+}
+
+// SetToken sets the value of Token.
+func (s *EmployerTeamToken) SetToken(val OptString) {
+	s.Token = val
 }
 
 // `title` is required, and `url` too unless `apply_mode` is "freehire".
@@ -10707,6 +11997,21 @@ func (s *GetCVAppearanceDefaultsOK) SetData(val CvAppearanceDefaultsResult) {
 }
 
 // A single item: `{"data": ...}`.
+type GetCVCoverLetterEvidenceOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetCVCoverLetterEvidenceOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetCVCoverLetterEvidenceOK) SetData(val jx.Raw) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type GetCVCoverLetterOK struct {
 	Data CvCoverLetter `json:"data"`
 }
@@ -10826,6 +12131,68 @@ func (s *GetEmbeddingProgressOK) SetData(val EmbeddingProgress) {
 	s.Data = val
 }
 
+type GetEmployerApplicationCVOK struct {
+	Data io.Reader
+}
+
+// Read reads data from the Data reader.
+//
+// Kept to satisfy the io.Reader interface.
+func (s GetEmployerApplicationCVOK) Read(p []byte) (n int, err error) {
+	if s.Data == nil {
+		return 0, io.EOF
+	}
+	return s.Data.Read(p)
+}
+
+// GetEmployerApplicationCVOKHeaders wraps GetEmployerApplicationCVOK with response headers.
+type GetEmployerApplicationCVOKHeaders struct {
+	CacheControl       string
+	ContentDisposition string
+	ContentType        string
+	Response           GetEmployerApplicationCVOK
+}
+
+// GetCacheControl returns the value of CacheControl.
+func (s *GetEmployerApplicationCVOKHeaders) GetCacheControl() string {
+	return s.CacheControl
+}
+
+// GetContentDisposition returns the value of ContentDisposition.
+func (s *GetEmployerApplicationCVOKHeaders) GetContentDisposition() string {
+	return s.ContentDisposition
+}
+
+// GetContentType returns the value of ContentType.
+func (s *GetEmployerApplicationCVOKHeaders) GetContentType() string {
+	return s.ContentType
+}
+
+// GetResponse returns the value of Response.
+func (s *GetEmployerApplicationCVOKHeaders) GetResponse() GetEmployerApplicationCVOK {
+	return s.Response
+}
+
+// SetCacheControl sets the value of CacheControl.
+func (s *GetEmployerApplicationCVOKHeaders) SetCacheControl(val string) {
+	s.CacheControl = val
+}
+
+// SetContentDisposition sets the value of ContentDisposition.
+func (s *GetEmployerApplicationCVOKHeaders) SetContentDisposition(val string) {
+	s.ContentDisposition = val
+}
+
+// SetContentType sets the value of ContentType.
+func (s *GetEmployerApplicationCVOKHeaders) SetContentType(val string) {
+	s.ContentType = val
+}
+
+// SetResponse sets the value of Response.
+func (s *GetEmployerApplicationCVOKHeaders) SetResponse(val GetEmployerApplicationCVOK) {
+	s.Response = val
+}
+
 // A single item: `{"data": ...}`.
 type GetEmployerCompanyOK struct {
 	Data EmployerCompany `json:"data"`
@@ -10838,6 +12205,21 @@ func (s *GetEmployerCompanyOK) GetData() EmployerCompany {
 
 // SetData sets the value of Data.
 func (s *GetEmployerCompanyOK) SetData(val EmployerCompany) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type GetEmployerTeamOK struct {
+	Data EmployerTeam `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *GetEmployerTeamOK) GetData() EmployerTeam {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *GetEmployerTeamOK) SetData(val EmployerTeam) {
 	s.Data = val
 }
 
@@ -12926,6 +14308,21 @@ func (s *Invite) SetPercentOff(val int64) {
 }
 
 // A single item: `{"data": ...}`.
+type InviteEmployerTeamMemberCreated struct {
+	Data EmployerTeamInvitation `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *InviteEmployerTeamMemberCreated) GetData() EmployerTeamInvitation {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *InviteEmployerTeamMemberCreated) SetData(val EmployerTeamInvitation) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type JobApplyFormOK struct {
 	Data jx.Raw `json:"data"`
 }
@@ -14107,6 +15504,21 @@ func (s *JobsActivity) SetMeta(val ActivityMeta) {
 }
 
 // A single item: `{"data": ...}`.
+type JoinEmployerTeamOK struct {
+	Data EmployerAccount `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *JoinEmployerTeamOK) GetData() EmployerAccount {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *JoinEmployerTeamOK) SetData(val EmployerAccount) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type LinkEmailOK struct {
 	Data InboxEmail `json:"data"`
 }
@@ -14279,6 +15691,36 @@ func (s *ListCVsOK) GetData() []CvTailored {
 
 // SetData sets the value of Data.
 func (s *ListCVsOK) SetData(val []CvTailored) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListCatalogueSnapshotsOK struct {
+	Data []CatalogueSnapshot `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListCatalogueSnapshotsOK) GetData() []CatalogueSnapshot {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListCatalogueSnapshotsOK) SetData(val []CatalogueSnapshot) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type ListChangeWebhooksOK struct {
+	Data []ChangeWebhook `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *ListChangeWebhooksOK) GetData() []ChangeWebhook {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *ListChangeWebhooksOK) SetData(val []ChangeWebhook) {
 	s.Data = val
 }
 
@@ -17038,6 +18480,21 @@ func (s *ModeratedUser) SetBanReason(val NilString) {
 }
 
 // A single item: `{"data": ...}`.
+type MoveEmployerApplicationOK struct {
+	Data EmployerApplicationMoved `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *MoveEmployerApplicationOK) GetData() EmployerApplicationMoved {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *MoveEmployerApplicationOK) SetData(val EmployerApplicationMoved) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type MyCompanyFeedbackOK struct {
 	Data []CompanyFeedback `json:"data"`
 }
@@ -18189,6 +19646,8 @@ func (s *NotificationPage) SetMeta(val NotificationListMeta) {
 
 // Ref: #/components/schemas/NotificationSettings
 type NotificationSettings struct {
+	// Opt-in Monday summary of application activity. Uses digest_time and account timezone.
+	ApplicationDigestEnabled bool `json:"application_digest_enabled"`
 	// Opt-in daily summary of classified hiring mail. Uses digest_time.
 	InboxDigestEnabled bool     `json:"inbox_digest_enabled"`
 	Enabled            bool     `json:"enabled"`
@@ -18199,6 +19658,11 @@ type NotificationSettings struct {
 	DigestIntervalHours int64     `json:"digest_interval_hours"`
 	QuietHoursStart     NilString `json:"quiet_hours_start"`
 	QuietHoursEnd       NilString `json:"quiet_hours_end"`
+}
+
+// GetApplicationDigestEnabled returns the value of ApplicationDigestEnabled.
+func (s *NotificationSettings) GetApplicationDigestEnabled() bool {
+	return s.ApplicationDigestEnabled
 }
 
 // GetInboxDigestEnabled returns the value of InboxDigestEnabled.
@@ -18239,6 +19703,11 @@ func (s *NotificationSettings) GetQuietHoursStart() NilString {
 // GetQuietHoursEnd returns the value of QuietHoursEnd.
 func (s *NotificationSettings) GetQuietHoursEnd() NilString {
 	return s.QuietHoursEnd
+}
+
+// SetApplicationDigestEnabled sets the value of ApplicationDigestEnabled.
+func (s *NotificationSettings) SetApplicationDigestEnabled(val bool) {
+	s.ApplicationDigestEnabled = val
 }
 
 // SetInboxDigestEnabled sets the value of InboxDigestEnabled.
@@ -18284,6 +19753,8 @@ func (s *NotificationSettings) SetQuietHoursEnd(val NilString) {
 // Every field is read as its zero value when left out. Times are `HH:MM`.
 // Ref: #/components/schemas/NotificationSettingsUpdate
 type NotificationSettingsUpdate struct {
+	// Omitted or null preserves the current weekly application digest choice.
+	ApplicationDigestEnabled OptNilBool `json:"application_digest_enabled"`
 	// Omitted or null preserves the current inbox digest choice.
 	InboxDigestEnabled OptNilBool `json:"inbox_digest_enabled"`
 	// Turn notifications on or off.
@@ -18296,6 +19767,11 @@ type NotificationSettingsUpdate struct {
 	DigestIntervalHours OptNilInt64       `json:"digest_interval_hours"`
 	QuietHoursStart     OptNilString      `json:"quiet_hours_start"`
 	QuietHoursEnd       OptNilString      `json:"quiet_hours_end"`
+}
+
+// GetApplicationDigestEnabled returns the value of ApplicationDigestEnabled.
+func (s *NotificationSettingsUpdate) GetApplicationDigestEnabled() OptNilBool {
+	return s.ApplicationDigestEnabled
 }
 
 // GetInboxDigestEnabled returns the value of InboxDigestEnabled.
@@ -18336,6 +19812,11 @@ func (s *NotificationSettingsUpdate) GetQuietHoursStart() OptNilString {
 // GetQuietHoursEnd returns the value of QuietHoursEnd.
 func (s *NotificationSettingsUpdate) GetQuietHoursEnd() OptNilString {
 	return s.QuietHoursEnd
+}
+
+// SetApplicationDigestEnabled sets the value of ApplicationDigestEnabled.
+func (s *NotificationSettingsUpdate) SetApplicationDigestEnabled(val OptNilBool) {
+	s.ApplicationDigestEnabled = val
 }
 
 // SetInboxDigestEnabled sets the value of InboxDigestEnabled.
@@ -21099,6 +22580,21 @@ func (s *PrefillSubmissionOK) SetData(val SubmissionPrefill) {
 }
 
 // A single item: `{"data": ...}`.
+type PreviewEmployerTeamInvitationOK struct {
+	Data EmployerTeamInvitationPreview `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *PreviewEmployerTeamInvitationOK) GetData() EmployerTeamInvitationPreview {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *PreviewEmployerTeamInvitationOK) SetData(val EmployerTeamInvitationPreview) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
 type PreviewPromoCodeOK struct {
 	Data PromoDiscount `json:"data"`
 }
@@ -22863,6 +24359,21 @@ func (s *ReleaseMailboxOK) SetData(val MailboxStatus) {
 	s.Data = val
 }
 
+// A single item: `{"data": ...}`.
+type RemoveEmployerTeamMemberOK struct {
+	Data EmployerRemoved `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *RemoveEmployerTeamMemberOK) GetData() EmployerRemoved {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *RemoveEmployerTeamMemberOK) SetData(val EmployerRemoved) {
+	s.Data = val
+}
+
 // RemoveFromWatchlistNoContent is response for RemoveFromWatchlist operation.
 type RemoveFromWatchlistNoContent struct{}
 
@@ -24278,6 +25789,21 @@ func (s *SaveBankedAnswerOK) GetData() Saved {
 
 // SetData sets the value of Data.
 func (s *SaveBankedAnswerOK) SetData(val Saved) {
+	s.Data = val
+}
+
+// A single item: `{"data": ...}`.
+type SaveCVCoverLetterEvidenceOK struct {
+	Data jx.Raw `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *SaveCVCoverLetterEvidenceOK) GetData() jx.Raw {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *SaveCVCoverLetterEvidenceOK) SetData(val jx.Raw) {
 	s.Data = val
 }
 
@@ -27497,6 +29023,9 @@ func (s *TalentRole) SetStack(val []string) {
 	s.Stack = val
 }
 
+// TestChangeWebhookNoContent is response for TestChangeWebhook operation.
+type TestChangeWebhookNoContent struct{}
+
 // A single item: `{"data": ...}`.
 type TestPushTokenOK struct {
 	Data PushTokenTestResult `json:"data"`
@@ -29375,6 +30904,21 @@ func (s *WatchlistPageHeaders) SetCacheControl(val string) {
 // SetResponse sets the value of Response.
 func (s *WatchlistPageHeaders) SetResponse(val WatchlistPage) {
 	s.Response = val
+}
+
+// A single item: `{"data": ...}`.
+type WithdrawEmployerTeamInvitationOK struct {
+	Data EmployerRemoved `json:"data"`
+}
+
+// GetData returns the value of Data.
+func (s *WithdrawEmployerTeamInvitationOK) GetData() EmployerRemoved {
+	return s.Data
+}
+
+// SetData sets the value of Data.
+func (s *WithdrawEmployerTeamInvitationOK) SetData(val EmployerRemoved) {
+	s.Data = val
 }
 
 // WithdrawMentorProfileNoContent is response for WithdrawMentorProfile operation.
